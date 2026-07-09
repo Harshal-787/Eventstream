@@ -1,0 +1,3 @@
+ALTER TABLE buildings
+ADD COLUMN owner_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+ADD COLUMN status VARCHAR(50) DEFAULT 'pending_approval';

@@ -18,10 +18,13 @@ type Config struct {
 	JWTSecret      string
 	JWTExpiryHours int
 	ServerPort     string
+	SendGridAPIKey string
+	SendGridFrom   string
+	GeoapifyAPIKey string
 }
 
 func Load() *Config {
-	if err := godotenv.Load(); err != nil {
+	if err := godotenv.Overload(); err != nil {
 		log.Println("No .env file found, reading from environment")
 	}
 
@@ -37,6 +40,9 @@ func Load() *Config {
 		JWTSecret:      getEnv("JWT_SECRET", "change-me"),
 		JWTExpiryHours: expiryHours,
 		ServerPort:     getEnv("SERVER_PORT", "8080"),
+		SendGridAPIKey: getEnv("SENDGRID_API_KEY", ""),
+		SendGridFrom:   getEnv("SENDGRID_FROM_EMAIL", "no-reply@yourdomain.com"),
+		GeoapifyAPIKey: getEnv("GEOAPIFY_API_KEY", ""),
 	}
 }
 
