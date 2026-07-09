@@ -8,6 +8,7 @@ import (
 	"eventstream/internal/handlers"
 	"eventstream/internal/middleware"
 	"eventstream/internal/repository"
+	"eventstream/internal/services"
 	_ "eventstream/docs"
 
 	swaggerFiles "github.com/swaggo/files"
@@ -43,8 +44,14 @@ func main() {
 	userRepo  := repository.NewUserRepository(db)
 	alertRepo := repository.NewAlertRepository(db)
 
-	authHandler  := handlers.NewAuthHandler(userRepo, cfg)
+	buildingRepo := repository.NewBuildingRepository(db)
+	emailService := services.NewEmailService(cfg)
+
+	authHandler  := handlers.NewAuthHandler(userRepo, buildingRepo, emailService, cfg)
 	alertHandler := handlers.NewAlertHandler(alertRepo)
+	buildingHandler := handlers.NewBuildingHandler(buildingRepo)
+	usersHandler := handlers.NewUsersHandler(userRepo)
+	addressHandler := handlers.NewAddressHandler(cfg)
 
 	r := gin.Default()
 
@@ -61,7 +68,14 @@ func main() {
 		{
 			auth.POST("/register", authHandler.Register)
 			auth.POST("/login", authHandler.Login)
+			auth.POST("/verify-otp", authHandler.VerifyOTP)
+			auth.POST("/reapply", authHandler.Reapply)
 			auth.GET("/me", middleware.AuthMiddleware(cfg), authHandler.Me)
+		}
+
+		addressRoutes := v1.Group("/address")
+		{
+			addressRoutes.GET("/autocomplete", addressHandler.Autocomplete)
 		}
 
 		alertRoutes := v1.Group("/alerts", middleware.AuthMiddleware(cfg))
@@ -70,6 +84,23 @@ func main() {
 			alertRoutes.GET("/:id",      alertHandler.Get)
 			alertRoutes.POST("/:id/acknowledge", alertHandler.Acknowledge)
 			alertRoutes.POST("/:id/resolve",     alertHandler.Resolve)
+		}
+
+		buildingRoutes := v1.Group("/buildings", middleware.AuthMiddleware(cfg))
+		{
+			buildingRoutes.GET("", buildingHandler.List)
+			buildingRoutes.POST("", buildingHandler.Create)
+			buildingRoutes.PATCH("/:id", buildingHandler.UpdateBuilding)
+			buildingRoutes.PATCH("/:id/status", buildingHandler.UpdateStatus)
+			buildingRoutes.DELETE("/:id", buildingHandler.Delete)
+		}
+
+		userRoutes := v1.Group("/users", middleware.AuthMiddleware(cfg))
+		{
+			userRoutes.GET("", usersHandler.List)
+			userRoutes.PATCH("/:id", usersHandler.UpdateUser)
+			userRoutes.PATCH("/:id/status", usersHandler.UpdateStatus)
+			userRoutes.DELETE("/:id", usersHandler.Delete)
 		}
 	}
 

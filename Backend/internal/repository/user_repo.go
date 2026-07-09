@@ -17,9 +17,9 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 
 func (r *UserRepository) FindByEmail(email string) (*models.User, error) {
 	user := &models.User{}
-	query := `SELECT id, name, email, password_hash, role, created_at FROM users WHERE email = $1 LIMIT 1`
+	query := `SELECT id, name, email, password_hash, role, status, otp_code, otp_expires_at, created_at FROM users WHERE email = $1 LIMIT 1`
 	err := r.db.QueryRow(query, email).Scan(
-		&user.ID, &user.Name, &user.Email, &user.PasswordHash, &user.Role, &user.CreatedAt,
+		&user.ID, &user.Name, &user.Email, &user.PasswordHash, &user.Role, &user.Status, &user.OTPCode, &user.OTPExpiresAt, &user.CreatedAt,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
@@ -32,9 +32,9 @@ func (r *UserRepository) FindByEmail(email string) (*models.User, error) {
 
 func (r *UserRepository) FindByID(id int) (*models.User, error) {
 	user := &models.User{}
-	query := `SELECT id, name, email, password_hash, role, created_at FROM users WHERE id = $1 LIMIT 1`
+	query := `SELECT id, name, email, password_hash, role, status, otp_code, otp_expires_at, created_at FROM users WHERE id = $1 LIMIT 1`
 	err := r.db.QueryRow(query, id).Scan(
-		&user.ID, &user.Name, &user.Email, &user.PasswordHash, &user.Role, &user.CreatedAt,
+		&user.ID, &user.Name, &user.Email, &user.PasswordHash, &user.Role, &user.Status, &user.OTPCode, &user.OTPExpiresAt, &user.CreatedAt,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
@@ -45,14 +45,78 @@ func (r *UserRepository) FindByID(id int) (*models.User, error) {
 	return user, nil
 }
 
-func (r *UserRepository) CreateUser(name, email, passwordHash string) (*models.User, error) {
+func (r *UserRepository) CreateUser(name, email, passwordHash, status string) (*models.User, error) {
 	user := &models.User{}
-	query := `INSERT INTO users (name, email, password_hash, role) VALUES ($1, $2, $3, 'user') RETURNING id, name, email, role, created_at`
-	err := r.db.QueryRow(query, name, email, passwordHash).Scan(
-		&user.ID, &user.Name, &user.Email, &user.Role, &user.CreatedAt,
+	query := `INSERT INTO users (name, email, password_hash, role, status) VALUES ($1, $2, $3, 'user', $4) RETURNING id, name, email, role, status, created_at`
+	err := r.db.QueryRow(query, name, email, passwordHash, status).Scan(
+		&user.ID, &user.Name, &user.Email, &user.Role, &user.Status, &user.CreatedAt,
 	)
 	if err != nil {
 		return nil, err
 	}
 	return user, nil
 }
+
+func (r *UserRepository) ListUsers() ([]*models.User, error) {
+	query := `SELECT id, name, email, role, status, created_at FROM users`
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []*models.User
+	for rows.Next() {
+		user := &models.User{}
+		err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.Role, &user.Status, &user.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+	return users, nil
+}
+
+func (r *UserRepository) UpdateUserStatus(id int, status string) error {
+	query := `UPDATE users SET status = $1 WHERE id = $2`
+	_, err := r.db.Exec(query, status, id)
+	return err
+}
+
+func (r *UserRepository) UpdateUserInfo(id int, name, status string) error {
+	query := `UPDATE users SET name = $1, status = $2 WHERE id = $3`
+	_, err := r.db.Exec(query, name, status, id)
+	return err
+}
+
+func (r *UserRepository) UpdateUserName(id int, name string) error {
+	query := `UPDATE users SET name = $1 WHERE id = $2`
+	_, err := r.db.Exec(query, name, id)
+	return err
+}
+
+func (r *UserRepository) DeleteUser(id int) error {
+	// Cascade delete buildings owned by the user
+	queryBuildings := `DELETE FROM buildings WHERE owner_id = $1`
+	_, err := r.db.Exec(queryBuildings, id)
+	if err != nil {
+		return err
+	}
+
+	query := `DELETE FROM users WHERE id = $1`
+	_, err = r.db.Exec(query, id)
+	return err
+}
+
+func (r *UserRepository) SaveOTP(id int, code string, expiresAt string) error {
+	query := `UPDATE users SET otp_code = $1, otp_expires_at = $2 WHERE id = $3`
+	_, err := r.db.Exec(query, code, expiresAt, id)
+	return err
+}
+
+func (r *UserRepository) ClearOTP(id int) error {
+	query := `UPDATE users SET otp_code = NULL, otp_expires_at = NULL WHERE id = $1`
+	_, err := r.db.Exec(query, id)
+	return err
+}
+
