@@ -13,6 +13,6 @@ INSERT INTO users (name, email, password_hash, role)
 VALUES (
     'Admin User',
     'admin@eventstream.com',
-    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
+    '$2a$10$fm/kTuqQ2G1Hlg4jqV1wwexkn7cMaErJffZszc3ASRIdKf2OSiTiq',
     'admin'
 ) ON CONFLICT (email) DO NOTHING;

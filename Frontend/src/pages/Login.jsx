@@ -1,144 +1,143 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuthStore } from "../store/useAuthStore";
+import { Box } from "../components/ui/Box";
+import { Input } from "../components/ui/Input";
+import { Button } from "../components/ui/Button";
+import { Activity, ArrowLeft } from "lucide-react";
 
-export default function Login() {
-  const { login } = useAuth();
-  const navigate = useNavigate();
+export function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [step, setStep] = useState(1); // 1 = credentials, 2 = OTP
+  
+  const login = useAuthStore(state => state.login);
+  const verifyOtp = useAuthStore(state => state.verifyOtp);
+  const error = useAuthStore(state => state.error);
+  const isLoading = useAuthStore(state => state.isLoading);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.email || !form.password) {
-      setError("All fields are required.");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
+    useAuthStore.setState({ error: null });
 
     try {
-      const res = await fetch("/api/v1/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: form.email, password: form.password }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || "Login failed. Please try again.");
-        return;
+      if (step === 1) {
+        if (!form.email || !form.password) {
+          useAuthStore.setState({ error: "All fields are required." });
+          return;
+        }
+        
+        const result = await login(form.email, form.password);
+        if (result && result.require_otp) {
+          setStep(2);
+        } else {
+          window.location.reload(); 
+        }
+      } else {
+        if (!otp || otp.length !== 6) {
+          useAuthStore.setState({ error: "Please enter the 6-digit code." });
+          return;
+        }
+        
+        await verifyOtp(form.email, otp);
+        window.location.reload(); 
       }
-
-      login(data.user, data.token);
-      navigate("/dashboard");
-    } catch {
-      setError("Unable to connect to server. Please try again.");
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      if (err.isRejected) {
+        navigate('/reapply', { state: { email: form.email, password: form.password } });
+      }
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        {/* Brand */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-blue-600 mb-4 shadow-lg shadow-blue-200">
-            <svg
-              className="w-6 h-6 text-white"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M13 10V3L4 14h7v7l9-11h-7z"
-              />
-            </svg>
+    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-(--color-background) p-4 py-12 relative">
+      <div className="absolute top-6 left-6 lg:top-8 lg:left-8">
+        <Link to="/">
+          <Button variant="ghost" size="sm" className="text-(--color-text-muted) hover:text-(--color-text-main)">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to site
+          </Button>
+        </Link>
+      </div>
+
+      <div className="w-full max-w-3xl">
+        <div className="text-center mb-8 relative">
+          <div className="flex justify-center mb-4">
+            <div className="w-12 h-12 bg-(--color-primary-600) flex items-center justify-center text-white">
+              <Activity className="w-8 h-8" />
+            </div>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
-            EventStream Go
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Sign in to your admin account
-          </p>
+          <h1 className="text-3xl font-bold text-(--color-text-main) tracking-tight">Sign In</h1>
+          <p className="text-(--color-text-muted) mt-2">Sign in to your dashboard</p>
         </div>
 
-        {/* Card */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-          {error && (
-            <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3 mb-5">
-              <svg
-                className="w-4 h-4 shrink-0"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              {error}
-            </div>
-          )}
+        {error && (
+          <div className="mb-6 p-4 text-sm text-red-500 bg-red-500/10 border border-red-500/20 text-center max-w-md mx-auto">
+            {error}
+          </div>
+        )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Email address
-              </label>
-              <input
-                type="email"
-                className="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-xl px-4 py-2.5 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                placeholder="admin@example.com"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-              />
-            </div>
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-sm font-medium text-gray-700">
-                  Password
-                </label>
-                <a
-                  href="#"
-                  className="text-xs text-blue-600 hover:text-blue-700 font-medium"
-                >
-                  Forgot password?
-                </a>
+        <Box className="p-8 max-w-md mx-auto">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {step === 1 ? (
+              <div className="space-y-4">
+                <div className="space-y-1 text-left">
+                  <label className="text-sm font-medium text-(--color-text-main)">Email address</label>
+                  <Input
+                    type="email"
+                    placeholder="name@company.com"
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-1 text-left">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-(--color-text-main)">Password</label>
+                    <a href="#" className="text-xs text-blue-500 hover:text-blue-400 font-medium">Forgot password?</a>
+                  </div>
+                  <Input
+                    type="password"
+                    placeholder="Enter your password"
+                    value={form.password}
+                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    required
+                  />
+                </div>
               </div>
-              <input
-                type="password"
-                className="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-xl px-4 py-2.5 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                placeholder="••••••••"
-                value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
-              />
-            </div>
-            <button
+            ) : (
+              <div className="space-y-4">
+                <div className="space-y-1 text-left">
+                  <label className="text-sm font-medium text-(--color-text-main)">6-Digit Verification Code</label>
+                  <div className="text-sm text-(--color-text-muted) mb-2">We've sent a code to your email.</div>
+                  <Input
+                    type="text"
+                    required
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    placeholder="000000"
+                    maxLength={6}
+                    className="text-center tracking-widest text-lg font-mono"
+                  />
+                </div>
+              </div>
+            )}
+            
+            <Button
               type="submit"
-              disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold rounded-xl py-2.5 text-sm shadow-sm shadow-blue-200 transition-colors"
+              className="w-full"
+              disabled={isLoading}
             >
-              {loading ? "Signing in..." : "Sign In"}
-            </button>
+              {isLoading ? (step === 1 ? "Signing in..." : "Verifying...") : (step === 1 ? "Sign In" : "Verify & Login")}
+            </Button>
+
+            <div className="text-center text-sm text-(--color-text-muted) mt-4">
+              Don't have an account?{' '}
+              <Link to="/register" className="text-blue-500 hover:text-blue-400 font-medium">Create one</Link>
+            </div>
           </form>
-        </div>
-
-        <p className="text-center text-sm text-gray-500 mt-5">
-          Don't have an account?{' '}
-          <Link to="/register" className="text-blue-600 font-medium hover:text-blue-700">
-            Create one
-          </Link>
-        </p>
-
+        </Box>
       </div>
     </div>
   );
