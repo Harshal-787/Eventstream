@@ -60,7 +60,9 @@ export function AddressAutocomplete({
       state: item.state || "",
       zip_code: item.postcode || "",
       country: item.country || "",
-      formatted: item.formatted || ""
+      formatted: item.formatted || "",
+      lat: item.lat || null,
+      lon: item.lon || null
     });
 
     setIsOpen(false);

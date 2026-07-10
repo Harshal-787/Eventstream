@@ -15,6 +15,27 @@
   --color-text-main: var(--text-main);
   --color-text-muted: var(--text-muted);
   --color-border-main: var(--border-main);
+
+  /* Brutalist Colors */
+  --color-brutal-bg: var(--brutal-bg);
+  --color-brutal-border: var(--brutal-border);
+  --color-brutal-shadow: var(--brutal-shadow);
+  --color-brutal-text: var(--brutal-text);
+  --color-brutal-text-inverse: var(--brutal-text-inverse);
+  --color-brutal-inverse-bg: var(--brutal-inverse-bg);
+  --color-brutal-hover: var(--brutal-hover-bg);
+
+  /* Remove all rounded corners */
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+  --radius-4xl: 0px;
+  --radius: 0px;
+  --radius-full: 0px;
 }
 
 :root {
@@ -24,21 +45,38 @@
   --text-main: #0f172a;
   --text-muted: #64748b;
   --border-main: #e2e8f0;
+
+  /* Brutalist Theme Variables */
+  --brutal-bg: var(--bg-surface);
+  --brutal-border: #475569; /* slate-600 */
+  --brutal-shadow: var(--color-primary-600); /* hint of green */
+  --brutal-text: var(--text-main);
+  --brutal-text-inverse: #ffffff;
+  --brutal-inverse-bg: var(--color-primary-600);
+  --brutal-hover-bg: var(--bg-surface-hover);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg-main: #020617;
-    --bg-surface: #0f172a;
-    --bg-surface-hover: #1e293b;
-    --text-main: #f8fafc;
-    --text-muted: #94a3b8;
-    --border-main: #334155;
-  }
+.dark {
+  --bg-main: #020617;
+  --bg-surface: #0f172a;
+  --bg-surface-hover: #1e293b;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --border-main: #334155;
+
+  /* Brutalist Theme Variables (Dark Mode Inverted) */
+  --brutal-bg: var(--bg-surface);
+  --brutal-border: #64748b; /* slate-500 */
+  --brutal-shadow: var(--color-primary-500); /* hint of green */
+  --brutal-text: var(--text-main);
+  --brutal-text-inverse: #020617;
+  --brutal-inverse-bg: var(--color-primary-500);
+  --brutal-hover-bg: var(--bg-surface-hover);
 }
 
 *, *::before, *::after {
   box-sizing: border-box;
+  border-radius: 0 !important;
 }
 
 body {

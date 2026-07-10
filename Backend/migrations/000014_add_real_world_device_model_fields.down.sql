@@ -1,0 +1,10 @@
+ALTER TABLE device_models
+DROP COLUMN connectivity_protocol,
+DROP COLUMN power_source,
+DROP COLUMN expected_battery_life_months,
+DROP COLUMN payload_decoder,
+DROP COLUMN ip_rating,
+DROP COLUMN min_operating_temp,
+DROP COLUMN max_operating_temp,
+DROP COLUMN documentation_url,
+DROP COLUMN image_url;

@@ -11,10 +11,10 @@ export function Button({
   ...props 
 }) {
   const variants = {
-    primary: "bg-(--color-primary-600) text-white hover:bg-(--color-primary-700) border border-transparent",
-    secondary: "bg-(--color-surface) text-(--color-text-main) border border-(--color-border-main) hover:bg-(--color-surface-hover)",
-    danger: "bg-red-600 text-white hover:bg-red-700 border border-transparent",
-    ghost: "bg-transparent text-(--color-text-main) hover:bg-(--color-surface-hover) border border-transparent",
+    primary: "bg-(--color-brutal-inverse-bg) text-(--color-brutal-text-inverse) border-2 border-(--color-brutal-border) hover:opacity-90 shadow-md    transition-all font-black uppercase tracking-wider",
+    secondary: "bg-(--color-brutal-bg) text-(--color-brutal-text) border-2 border-(--color-brutal-border) hover:bg-(--color-brutal-hover) shadow-md    transition-all font-bold uppercase tracking-wider",
+    danger: "bg-red-500 text-white border-2 border-(--color-brutal-border) hover:bg-red-600 shadow-md    transition-all font-bold uppercase tracking-wider",
+    ghost: "bg-transparent text-(--color-brutal-text) hover:bg-(--color-brutal-hover) border-2 border-transparent hover:border-(--color-brutal-border) transition-all font-bold uppercase tracking-wider",
   };
 
   const sizes = {
@@ -28,7 +28,7 @@ export function Button({
       type={type}
       disabled={disabled}
       className={cn(
-        "inline-flex items-center justify-center font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-(--color-primary-500) focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none rounded-none cursor-pointer",
+        "inline-flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-0 disabled:opacity-50 disabled:pointer-events-none cursor-pointer",
         variants[variant],
         sizes[size],
         className

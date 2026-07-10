@@ -45,6 +45,7 @@ func main() {
 	alertRepo := repository.NewAlertRepository(db)
 
 	buildingRepo := repository.NewBuildingRepository(db)
+	deviceRepo   := repository.NewDeviceRepo(db)
 	emailService := services.NewEmailService(cfg)
 
 	authHandler  := handlers.NewAuthHandler(userRepo, buildingRepo, emailService, cfg)
@@ -52,6 +53,7 @@ func main() {
 	buildingHandler := handlers.NewBuildingHandler(buildingRepo)
 	usersHandler := handlers.NewUsersHandler(userRepo)
 	addressHandler := handlers.NewAddressHandler(cfg)
+	deviceHandler := handlers.NewDeviceHandler(deviceRepo)
 
 	r := gin.Default()
 
@@ -89,10 +91,47 @@ func main() {
 		buildingRoutes := v1.Group("/buildings", middleware.AuthMiddleware(cfg))
 		{
 			buildingRoutes.GET("", buildingHandler.List)
+			buildingRoutes.GET("/:id", buildingHandler.Get)
 			buildingRoutes.POST("", buildingHandler.Create)
 			buildingRoutes.PATCH("/:id", buildingHandler.UpdateBuilding)
 			buildingRoutes.PATCH("/:id/status", buildingHandler.UpdateStatus)
 			buildingRoutes.DELETE("/:id", buildingHandler.Delete)
+			
+			buildingRoutes.GET("/:id/floors", deviceHandler.GetFloors)
+			buildingRoutes.POST("/:id/floors", deviceHandler.CreateFloor)
+		}
+
+		floorRoutes := v1.Group("/floors", middleware.AuthMiddleware(cfg))
+		{
+			floorRoutes.GET("/:id/rooms", deviceHandler.GetRooms)
+			floorRoutes.POST("/:id/rooms", deviceHandler.CreateRoom)
+			floorRoutes.PATCH("/:id", deviceHandler.UpdateFloor)
+			floorRoutes.DELETE("/:id", deviceHandler.DeleteFloor)
+		}
+
+		roomRoutes := v1.Group("/rooms", middleware.AuthMiddleware(cfg))
+		{
+			roomRoutes.PATCH("/:id", deviceHandler.UpdateRoom)
+			roomRoutes.DELETE("/:id", deviceHandler.DeleteRoom)
+		}
+
+		deviceRoutes := v1.Group("/devices", middleware.AuthMiddleware(cfg))
+		{
+			deviceRoutes.GET("", deviceHandler.ListDevices)
+			deviceRoutes.POST("", deviceHandler.CreateDevice)
+			deviceRoutes.POST("/bulk", deviceHandler.BulkCreateDevices)
+			deviceRoutes.PATCH("/:id/assign", deviceHandler.AssignDevice)
+			deviceRoutes.PATCH("/:id/status", deviceHandler.UpdateDeviceStatus)
+			deviceRoutes.DELETE("/:id", deviceHandler.DeleteDevice)
+			deviceRoutes.GET("/models", deviceHandler.GetModels)
+			deviceRoutes.POST("/models", deviceHandler.CreateModel)
+		}
+
+		sensorRequestRoutes := v1.Group("/sensor-requests", middleware.AuthMiddleware(cfg))
+		{
+			sensorRequestRoutes.GET("", deviceHandler.ListSensorRequests)
+			sensorRequestRoutes.POST("", deviceHandler.CreateSensorRequest)
+			sensorRequestRoutes.POST("/:id/fulfill", deviceHandler.FulfillSensorRequest)
 		}
 
 		userRoutes := v1.Group("/users", middleware.AuthMiddleware(cfg))
