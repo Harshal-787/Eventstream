@@ -3,52 +3,699 @@ import { deviceService } from '../../services/deviceService';
 import { Box } from '../../components/ui/Box';
 import { Spinner } from '../../components/ui/Spinner';
 import { EmptyState } from '../../components/ui/EmptyState';
-import { Cpu, Plus } from 'lucide-react';
+import { Cpu, Plus, Upload, Server, Search, Filter, Inbox, CheckCircle, Package, Trash2, Settings2, RefreshCcw, LogOut } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
+import { Badge } from '../../components/ui/Badge';
+import { Input } from '../../components/ui/Input';
+import { Modal } from '../../components/ui/Modal';
+import { Select } from '../../components/ui/Select';
+import { Tabs } from '../../components/ui/Tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/Table';
+import { toast } from 'react-hot-toast';
 
 export function Devices({ role }) {
+  const [activeTab, setActiveTab] = useState('inventory'); // inventory, requests, models
   const [devices, setDevices] = useState([]);
+  const [models, setModels] = useState([]);
+  const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  const [statusFilter, setStatusFilter] = useState('');
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const [formData, setFormData] = useState({ hardware_id: '', model_id: '' });
+
+  const [isFulfillOpen, setIsFulfillOpen] = useState(false);
+  const [isModelModalOpen, setIsModelModalOpen] = useState(false);
+  const [newModel, setNewModel] = useState({ 
+    brand: '', 
+    model_name: '', 
+    sensor_type: '',
+    connectivity_protocol: '',
+    power_source: '',
+    expected_battery_life_months: '',
+    payload_decoder: '',
+    ip_rating: '',
+    min_operating_temp: '',
+    max_operating_temp: '',
+    documentation_url: '',
+    image_url: ''
+  });
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [fulfillDeviceId, setFulfillDeviceId] = useState('');
 
   useEffect(() => {
-    fetchDevices();
-  }, []);
+    fetchData();
+  }, [statusFilter, role, activeTab]);
 
-  const fetchDevices = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
-      const data = await deviceService.getDevices();
-      setDevices(data || []);
+      if (activeTab === 'inventory') {
+        const data = await deviceService.getDevices(null, statusFilter);
+        setDevices(data || []);
+      } else if (activeTab === 'requests') {
+        const reqData = await deviceService.getSensorRequests();
+        setRequests(reqData || []);
+        
+        // Also fetch unassigned devices for fulfillment if not already fetched
+        if (devices.length === 0) {
+           const dData = await deviceService.getDevices(null, 'unassigned');
+           setDevices(dData || []);
+        }
+      } else if (activeTab === 'models') {
+        const mData = await deviceService.getModels();
+        setModels(mData || []);
+      }
+      
+      // Always keep models updated for registration form
+      if (role === 'admin' && models.length === 0 && activeTab !== 'models') {
+        const mData = await deviceService.getModels();
+        setModels(mData || []);
+      }
     } catch (err) {
       console.error(err);
+      toast.error('Failed to load data');
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) return <Spinner size="lg" />;
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    try {
+      const model = models.find(m => m.id.toString() === formData.model_id);
+      await deviceService.createDevice({
+        hardware_id: formData.hardware_id,
+        name: `${model.brand} ${model.sensor_type}`,
+        type: model.sensor_type,
+        model_id: parseInt(formData.model_id)
+      });
+      toast.success('Device added to inventory');
+      setIsRegisterOpen(false);
+      setFormData({ hardware_id: '', model_id: '' });
+      fetchData();
+    } catch (err) {
+      toast.error('Failed to register device');
+    }
+  };
+
+  const handleFulfill = async (e) => {
+    e.preventDefault();
+    try {
+      if (!selectedRequest.hardware_id && !fulfillDeviceId) {
+        toast.error('Please select a device from the inventory');
+        return;
+      }
+      await deviceService.fulfillSensorRequest(selectedRequest.id, fulfillDeviceId ? parseInt(fulfillDeviceId) : null);
+      toast.success('Request fulfilled and sensor deployed!');
+      setIsFulfillOpen(false);
+      setFulfillDeviceId('');
+      fetchData();
+    } catch (err) {
+      toast.error('Failed to fulfill request');
+    }
+  };
+
+  const handleDeleteDevice = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this sensor? This action cannot be undone.")) return;
+    try {
+      await deviceService.deleteDevice(id);
+      toast.success('Sensor deleted');
+      fetchData();
+    } catch (err) {
+      toast.error('Failed to delete sensor');
+    }
+  };
+
+  const handleToggleMaintenance = async (device) => {
+    const newStatus = device.status === 'maintenance' ? 'active' : 'maintenance';
+    try {
+      await deviceService.updateDeviceStatus(device.id, newStatus);
+      toast.success(`Device status updated to ${newStatus}`);
+      fetchData();
+    } catch (err) {
+      toast.error('Failed to update device status');
+    }
+  };
+
+  const handleUnassign = async (id) => {
+    if (!window.confirm("Unassign this device and return it to the warehouse?")) return;
+    try {
+      await deviceService.unassignDevice(id);
+      toast.success('Device unassigned successfully');
+      fetchData();
+    } catch (err) {
+      toast.error('Failed to unassign device');
+    }
+  };
+
+  const handleCreateModel = async (e) => {
+    e.preventDefault();
+    try {
+      const payload = {
+        ...newModel,
+        expected_battery_life_months: newModel.expected_battery_life_months ? parseInt(newModel.expected_battery_life_months, 10) : null,
+        min_operating_temp: newModel.min_operating_temp ? parseInt(newModel.min_operating_temp, 10) : null,
+        max_operating_temp: newModel.max_operating_temp ? parseInt(newModel.max_operating_temp, 10) : null,
+      };
+      
+      await deviceService.createModel(payload);
+      toast.success('Device model added successfully');
+      setIsModelModalOpen(false);
+      setNewModel({ 
+        brand: '', model_name: '', sensor_type: '',
+        connectivity_protocol: '', power_source: '', expected_battery_life_months: '',
+        payload_decoder: '', ip_rating: '', min_operating_temp: '', max_operating_temp: '',
+        documentation_url: '', image_url: ''
+      });
+      fetchData();
+    } catch (err) {
+      toast.error('Failed to add device model');
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'active': return 'success';
+      case 'fulfilled': return 'success';
+      case 'unassigned': return 'warning';
+      case 'pending': return 'warning';
+      case 'maintenance': return 'error';
+      case 'rejected': return 'danger';
+      default: return 'neutral';
+    }
+  };
+
+  if (loading && devices.length === 0 && requests.length === 0 && activeTab !== 'models') return <Spinner size="lg" />;
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-(--color-text-main)">Devices</h1>
-        {role === 'admin' && (
-          <Button><Plus className="w-4 h-4 mr-2" /> Register Device</Button>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-(--color-text-main)">Device Management</h1>
+          <p className="text-sm text-(--color-text-muted)">Manage virtual sensors and fulfill deployments</p>
+        </div>
+        
+        {role === 'admin' && activeTab === 'inventory' && (
+          <div className="flex items-center gap-3">
+            <Button variant="secondary" onClick={() => toast('Bulk upload coming soon!')}>
+              <Upload className="w-4 h-4 mr-2" /> Bulk CSV
+            </Button>
+            <Button onClick={() => setIsRegisterOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" /> Add to Inventory
+            </Button>
+          </div>
+        )}
+        {role === 'admin' && activeTab === 'models' && (
+          <div className="flex gap-2">
+            <Button onClick={() => setIsModelModalOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" /> Add Model
+            </Button>
+          </div>
         )}
       </div>
 
-      <Box>
-        {devices.length === 0 ? (
-          <EmptyState 
-            title="No Devices Found" 
-            description="There are no devices registered in your accessible buildings."
-            icon={Cpu}
-            action={role === 'admin' && <Button variant="secondary">Register Device</Button>}
+      {role === 'admin' && (
+        <Tabs 
+          tabs={[
+            { id: 'inventory', label: 'Warehouse Inventory', icon: Package },
+            { id: 'requests', label: 'Sensor Requests', icon: Inbox, badge: requests.filter(r => r.status === 'pending').length || undefined },
+            { id: 'models', label: 'Device Models', icon: Server }
+          ]}
+          activeTab={activeTab}
+          onChange={setActiveTab}
+        />
+      )}
+
+      {(role === 'user' || activeTab === 'inventory') && (
+        <Box className="overflow-hidden">
+          <div className="p-4 border-b border-(--color-border) bg-(--color-background-elevated) flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-(--color-text-muted)" />
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="bg-transparent border-none text-sm text-(--color-text-main) focus:ring-0 cursor-pointer outline-none"
+              >
+                <option value="">All Statuses</option>
+                {role === 'admin' && <option value="unassigned">Unassigned (Inventory)</option>}
+                <option value="active">Deployed (Active)</option>
+                <option value="maintenance">Maintenance</option>
+              </select>
+            </div>
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-(--color-text-muted)" />
+              <input 
+                type="text" 
+                placeholder="Search hardware ID..." 
+                className="pl-9 pr-4 py-1.5 bg-(--color-background) border border-(--color-border) rounded-lg text-sm w-64 focus:outline-none focus:ring-1 focus:ring-(--color-primary)"
+              />
+            </div>
+          </div>
+
+          {devices.length === 0 ? (
+            <EmptyState 
+              title={role === 'admin' ? "Warehouse Empty" : "No Active Sensors"} 
+              description={role === 'admin' ? "There are no devices matching the current filters." : "You do not have any sensors deployed to your buildings yet."}
+              icon={Server}
+              action={role === 'admin' && <Button onClick={() => setIsRegisterOpen(true)}>Register First Device</Button>}
+            />
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow hover={false}>
+                    <TableHead>Hardware ID</TableHead>
+                    <TableHead>Brand / Model</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Health</TableHead>
+                    {role === 'admin' && <TableHead className="text-right">Actions</TableHead>}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {devices.map(device => (
+                    <TableRow key={device.id}>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          <Cpu className="w-4 h-4 text-(--color-primary)" />
+                          {device.hardware_id || `VIRT-${device.id.toString().padStart(4, '0')}`}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm font-medium text-(--color-text-main)">{device.brand || 'Generic'}</div>
+                        <div className="text-xs text-(--color-text-muted)">{device.model_name || 'Standard'}</div>
+                      </TableCell>
+                      <TableCell className="capitalize">
+                        {device.type}
+                      </TableCell>
+                      <TableCell>
+                        {device.building_id ? (
+                          <div>
+                            <div className="text-sm font-medium text-(--color-text-main)">{device.building_name}</div>
+                            <div className="text-xs text-(--color-text-muted)">{device.floor_name || 'Unmapped'} / {device.room_name || 'Unmapped'}</div>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-(--color-text-muted) italic">Warehouse Shelf</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={getStatusColor(device.status)}>
+                          {device.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {device.status === 'active' ? (
+                          <div className="flex items-center gap-2">
+                            <div className="w-16 h-2 bg-(--color-border) rounded-full overflow-hidden">
+                              <div className={`h-full ${device.battery_pct > 20 ? 'bg-green-500' : 'bg-red-500'}`} style={{ width: `${device.battery_pct || 100}%` }} />
+                            </div>
+                            <span className="text-xs font-medium text-(--color-text-main)">{device.battery_pct || 100}%</span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-(--color-text-muted)">N/A</span>
+                        )}
+                      </TableCell>
+                      {role === 'admin' && (
+                        <TableCell className="text-right whitespace-nowrap">
+                          {device.building_id && (
+                            <Button size="sm" variant="secondary" className="mr-2" onClick={() => handleUnassign(device.id)} title="Unassign">
+                              <LogOut className="w-4 h-4" />
+                            </Button>
+                          )}
+                          <Button 
+                            size="sm" 
+                            variant="secondary" 
+                            className="mr-2" 
+                            onClick={() => handleToggleMaintenance(device)} 
+                            title={device.status === 'maintenance' ? 'Set Active' : 'Set Maintenance'}
+                          >
+                            <Settings2 className="w-4 h-4" />
+                          </Button>
+                          <Button size="sm" variant="danger" onClick={() => handleDeleteDevice(device.id)} title="Delete Sensor">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </Box>
+      )}
+
+      {role === 'admin' && activeTab === 'models' && (
+        <Box className="overflow-hidden">
+          {models.length === 0 ? (
+            <EmptyState 
+              title="No Models Found" 
+              description="Create a model to allow users to register sensors."
+            />
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow hover={false}>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Brand</TableHead>
+                    <TableHead>Model Name</TableHead>
+                    <TableHead>Sensor Type</TableHead>
+                    <TableHead>Protocol</TableHead>
+                    <TableHead>Power</TableHead>
+                    <TableHead>IP Rating</TableHead>
+                    <TableHead>Docs</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {models.map(model => (
+                    <TableRow key={model.id}>
+                      <TableCell className="font-medium text-(--color-text-muted)">
+                        {model.image_url ? (
+                           <img src={model.image_url} alt={model.model_name} className="w-8 h-8 object-contain bg-white inline-block mr-2 border border-(--color-border)" />
+                        ) : null}
+                        #{model.id}
+                      </TableCell>
+                      <TableCell className="font-bold">{model.brand}</TableCell>
+                      <TableCell>{model.model_name}</TableCell>
+                      <TableCell className="capitalize">{model.sensor_type.replace('_', ' ')}</TableCell>
+                      <TableCell>{model.connectivity_protocol || 'N/A'}</TableCell>
+                      <TableCell>{model.power_source || 'N/A'}</TableCell>
+                      <TableCell>{model.ip_rating || 'N/A'}</TableCell>
+                      <TableCell>
+                        {model.documentation_url ? (
+                          <a href={model.documentation_url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Link</a>
+                        ) : 'N/A'}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </Box>
+      )}
+
+      {role === 'admin' && activeTab === 'requests' && (
+        <Box className="overflow-hidden">
+          {requests.length === 0 ? (
+            <EmptyState 
+              title="No Pending Requests" 
+              description="Users have not requested any new sensors."
+              icon={Inbox}
+            />
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow hover={false}>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Requested By</TableHead>
+                    <TableHead>Hardware</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {requests.map(req => (
+                    <TableRow key={req.id}>
+                      <TableCell className="text-(--color-text-muted)">
+                        {new Date(req.created_at).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {req.user_name || 'System User'}
+                      </TableCell>
+                      <TableCell>
+                        {req.hardware_id ? (
+                          <>
+                            <div className="text-sm font-bold capitalize text-(--color-text-main)">{req.brand} {req.model_name}</div>
+                            <div className="text-xs text-(--color-text-muted)">ID: {req.hardware_id}</div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="text-sm font-bold capitalize text-(--color-text-main)">IT Request</div>
+                            <div className="text-xs text-(--color-text-muted)">Needs {req.sensor_type}</div>
+                          </>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm font-medium text-(--color-text-main)">{req.building_name}</div>
+                        <div className="text-xs text-(--color-text-muted)">{req.floor_name} - {req.room_name}</div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={getStatusColor(req.status)}>
+                          {req.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {req.status === 'pending' ? (
+                          <Button 
+                            size="sm" 
+                            onClick={() => { setSelectedRequest(req); setIsFulfillOpen(true); }}
+                          >
+                            <CheckCircle className="w-3 h-3 mr-2" /> Fulfill
+                          </Button>
+                        ) : (
+                          <span className="text-xs text-(--color-text-muted)">Completed</span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </Box>
+      )}
+
+      {/* Modals */}
+      <Modal isOpen={isRegisterOpen} onClose={() => setIsRegisterOpen(false)} title="Add to Global Inventory">
+        <form onSubmit={handleRegister} className="space-y-4">
+          <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+            <p className="text-sm text-blue-400 font-medium">Virtual Provisioning</p>
+            <p className="text-xs text-(--color-text-muted) mt-1">This will register a virtual sensor to the global warehouse. You can assign it to a building later.</p>
+          </div>
+          
+          <Select
+            label="Device Model Catalog"
+            value={formData.model_id}
+            onChange={e => setFormData({ ...formData, model_id: e.target.value })}
+            required
+            options={[
+              { value: '', label: 'Select a brand and model...' },
+              ...models.map(m => ({
+                value: m.id,
+                label: `${m.brand} - ${m.model_name} (${m.sensor_type})`
+              }))
+            ]}
           />
-        ) : (
-          <div className="p-6">Device list will appear here</div>
+          <Input
+            label="Virtual Hardware ID (MAC/EUI)"
+            value={formData.hardware_id}
+            onChange={e => setFormData({ ...formData, hardware_id: e.target.value })}
+            required
+            placeholder="e.g. SIM-HONEYWELL-001"
+          />
+          <div className="pt-4 flex justify-end gap-3">
+            <Button variant="secondary" type="button" onClick={() => setIsRegisterOpen(false)}>Cancel</Button>
+            <Button type="submit">Register Device</Button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal isOpen={isFulfillOpen} onClose={() => setIsFulfillOpen(false)} title="Register & Deploy Sensor">
+        {selectedRequest && (
+          <form onSubmit={handleFulfill} className="space-y-4">
+            <div className="p-4 bg-(--color-surface-hover) border border-(--color-border) rounded-lg mb-4">
+              <p className="text-xs text-(--color-text-muted) uppercase font-bold tracking-wider mb-1">Hardware Information</p>
+              {selectedRequest.hardware_id ? (
+                <>
+                  <p className="text-sm font-medium">{selectedRequest.brand} {selectedRequest.model_name}</p>
+                  <p className="text-xs text-(--color-text-muted) mt-1">MAC/EUI: {selectedRequest.hardware_id}</p>
+                </>
+              ) : (
+                <p className="text-sm font-medium text-purple-400">IT Request (Pending Assignment)</p>
+              )}
+              <p className="text-xs text-(--color-text-muted) mt-1">Type: <span className="capitalize font-bold">{selectedRequest.sensor_type}</span></p>
+              
+              <div className="mt-4 border-t border-(--color-border) pt-4">
+                <p className="text-xs text-(--color-text-muted) uppercase font-bold tracking-wider mb-1">Deployment Target</p>
+                <p className="text-sm font-medium">{selectedRequest.building_name} &rarr; {selectedRequest.floor_name} &rarr; {selectedRequest.room_name}</p>
+              </div>
+
+              <div className="mt-4 border-t border-(--color-border) pt-4">
+                <p className="text-xs text-(--color-text-muted) uppercase font-bold tracking-wider mb-1">User Notes</p>
+                <p className="text-sm italic">"{selectedRequest.reason}"</p>
+              </div>
+            </div>
+            
+            {selectedRequest.hardware_id ? (
+              <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+                <p className="text-sm text-green-400 font-medium">Automatic Registration</p>
+                <p className="text-xs text-(--color-text-muted) mt-1">Clicking "Register & Deploy" will automatically add this hardware ID to your inventory and link it to the room.</p>
+              </div>
+            ) : (
+              <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+                <p className="text-sm text-purple-400 font-medium mb-3">Manual Assignment</p>
+                <Select
+                  label="Select Sensor from Inventory"
+                  value={fulfillDeviceId}
+                  onChange={e => setFulfillDeviceId(e.target.value)}
+                  required
+                  options={[
+                    { value: '', label: 'Select a sensor...' },
+                    ...unassignedDevices
+                      .filter(d => d.type === selectedRequest.sensor_type)
+                      .map(d => ({
+                        value: d.id,
+                        label: `${d.hardware_id} - ${d.brand} ${d.model_name}`
+                      }))
+                  ]}
+                />
+                {unassignedDevices.filter(d => d.type === selectedRequest.sensor_type).length === 0 && (
+                  <p className="text-xs text-red-400 mt-2">You don't have any unassigned {selectedRequest.sensor_type} sensors in your warehouse.</p>
+                )}
+              </div>
+            )}
+
+            <div className="pt-4 flex justify-end gap-3">
+              <Button variant="secondary" type="button" onClick={() => setIsFulfillOpen(false)}>Cancel</Button>
+              <Button type="submit" disabled={!selectedRequest.hardware_id && !fulfillDeviceId}>
+                {selectedRequest.hardware_id ? 'Register & Deploy' : 'Assign & Deploy'}
+              </Button>
+            </div>
+          </form>
         )}
-      </Box>
+      </Modal>
+
+      {/* Add Model Modal */}
+      <Modal isOpen={isModelModalOpen} onClose={() => setIsModelModalOpen(false)} title="Add Device Model">
+        <form onSubmit={handleCreateModel} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Manufacturer (Brand)"
+              value={newModel.brand}
+              onChange={e => setNewModel({ ...newModel, brand: e.target.value })}
+              required
+              placeholder="e.g. Honeywell"
+            />
+            <Input
+              label="Model Name or Number"
+              value={newModel.model_name}
+              onChange={e => setNewModel({ ...newModel, model_name: e.target.value })}
+              required
+              placeholder="e.g. T6 Pro"
+            />
+          </div>
+          <Select
+            label="What does this sensor measure?"
+            value={newModel.sensor_type}
+            onChange={e => setNewModel({ ...newModel, sensor_type: e.target.value })}
+            required
+            options={[
+              { value: '', label: 'Select type...' },
+              { value: 'temperature', label: 'Temperature' },
+              { value: 'humidity', label: 'Humidity' },
+              { value: 'motion', label: 'Motion' },
+              { value: 'smoke', label: 'Smoke' },
+              { value: 'water_leak', label: 'Water Leak' },
+              { value: 'door', label: 'Door' },
+              { value: 'power', label: 'Power' }
+            ]}
+          />
+          
+          <div className="grid grid-cols-2 gap-4">
+            <Select
+              label="How does it connect to the internet?"
+              value={newModel.connectivity_protocol}
+              onChange={e => setNewModel({ ...newModel, connectivity_protocol: e.target.value })}
+              options={[
+                { value: '', label: 'None / Select...' },
+                { value: 'Wi-Fi', label: 'Wi-Fi' },
+                { value: 'LoRaWAN', label: 'LoRaWAN' },
+                { value: 'Zigbee', label: 'Zigbee' },
+                { value: 'Bluetooth (BLE)', label: 'Bluetooth (BLE)' },
+                { value: 'Cellular', label: 'Cellular (LTE-M/NB-IoT)' },
+                { value: 'Ethernet', label: 'Ethernet/PoE' }
+              ]}
+            />
+            <Select
+              label="How is it powered?"
+              value={newModel.power_source}
+              onChange={e => setNewModel({ ...newModel, power_source: e.target.value })}
+              options={[
+                { value: '', label: 'None / Select...' },
+                { value: 'Battery', label: 'Battery' },
+                { value: 'Mains Power', label: 'Mains Power' },
+                { value: 'PoE', label: 'PoE' },
+                { value: 'Solar', label: 'Solar' }
+              ]}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Battery Life (in months)"
+              type="number"
+              value={newModel.expected_battery_life_months}
+              onChange={e => setNewModel({ ...newModel, expected_battery_life_months: e.target.value })}
+              placeholder="e.g. 24"
+            />
+            <Input
+              label="Weatherproof Rating (e.g. IP67)"
+              value={newModel.ip_rating}
+              onChange={e => setNewModel({ ...newModel, ip_rating: e.target.value })}
+              placeholder="e.g. IP67"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Coldest Operating Temp (°C)"
+              type="number"
+              value={newModel.min_operating_temp}
+              onChange={e => setNewModel({ ...newModel, min_operating_temp: e.target.value })}
+              placeholder="e.g. -20"
+            />
+            <Input
+              label="Hottest Operating Temp (°C)"
+              type="number"
+              value={newModel.max_operating_temp}
+              onChange={e => setNewModel({ ...newModel, max_operating_temp: e.target.value })}
+              placeholder="e.g. 60"
+            />
+          </div>
+
+          <Input
+            label="Data Format (Payload Decoder)"
+            value={newModel.payload_decoder}
+            onChange={e => setNewModel({ ...newModel, payload_decoder: e.target.value })}
+            placeholder="e.g. CayenneLPP or custom-decoder-v2"
+          />
+
+          <Input
+            label="Link to User Manual"
+            value={newModel.documentation_url}
+            onChange={e => setNewModel({ ...newModel, documentation_url: e.target.value })}
+            placeholder="e.g. https://manufacturer.com/docs"
+          />
+
+          <Input
+            label="Link to Product Image"
+            value={newModel.image_url}
+            onChange={e => setNewModel({ ...newModel, image_url: e.target.value })}
+            placeholder="e.g. https://example.com/sensor.png"
+          />
+
+          <div className="flex justify-end gap-2 pt-4 border-t border-(--color-border)">
+            <Button type="button" variant="secondary" onClick={() => setIsModelModalOpen(false)}>Cancel</Button>
+            <Button type="submit">Add Model</Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

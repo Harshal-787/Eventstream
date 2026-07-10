@@ -35,8 +35,7 @@ func (h *AddressHandler) Autocomplete(c *gin.Context) {
 	}
 
 	// Build the Geoapify URL
-	// Restricting to India with filter=countrycode:in
-	geoapifyURL := "https://api.geoapify.com/v1/geocode/autocomplete?text=" + url.QueryEscape(query) + "&apiKey=" + h.cfg.GeoapifyAPIKey + "&format=json&filter=countrycode:in&limit=5"
+	geoapifyURL := "https://api.geoapify.com/v1/geocode/autocomplete?text=" + url.QueryEscape(query) + "&apiKey=" + h.cfg.GeoapifyAPIKey + "&format=json&limit=5"
 
 	// Make the HTTP GET request
 	resp, err := http.Get(geoapifyURL)

@@ -15,8 +15,8 @@ export function AddBuildingModal({ isOpen, onClose, onBuildingAdded }) {
   const [ownerId, setOwnerId] = useState('');
   
   const [societyName, setSocietyName] = useState('');
-  const [singleBuilding, setSingleBuilding] = useState({ name: '', address: '', city: '', state: '', zip_code: '' });
-  const [wings, setWings] = useState([{ name: '', address: '', city: '', state: '', zip_code: '' }]);
+  const [singleBuilding, setSingleBuilding] = useState({ name: '', address: '', city: '', state: '', zip_code: '', latitude: null, longitude: null, ubid: '', parcel_number: '', bin: '' });
+  const [wings, setWings] = useState([{ name: '', address: '', city: '', state: '', zip_code: '', latitude: null, longitude: null, ubid: '', parcel_number: '', bin: '' }]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -25,8 +25,8 @@ export function AddBuildingModal({ isOpen, onClose, onBuildingAdded }) {
       setType('single');
       setOwnerId('');
       setSocietyName('');
-      setSingleBuilding({ name: '', address: '', city: '', state: '', zip_code: '' });
-      setWings([{ name: '', address: '', city: '', state: '', zip_code: '' }]);
+      setSingleBuilding({ name: '', address: '', city: '', state: '', zip_code: '', latitude: null, longitude: null, ubid: '', parcel_number: '', bin: '' });
+      setWings([{ name: '', address: '', city: '', state: '', zip_code: '', latitude: null, longitude: null, ubid: '', parcel_number: '', bin: '' }]);
       
       const fetchUsers = async () => {
         try {
@@ -41,7 +41,7 @@ export function AddBuildingModal({ isOpen, onClose, onBuildingAdded }) {
   }, [isOpen]);
 
   const handleAddWing = () => {
-    setWings([...wings, { name: '', address: '', city: '', state: '', zip_code: '' }]);
+    setWings([...wings, { name: '', address: '', city: '', state: '', zip_code: '', latitude: null, longitude: null, ubid: '', parcel_number: '', bin: '' }]);
   };
 
   const handleRemoveWing = (index) => {
@@ -71,7 +71,12 @@ export function AddBuildingModal({ isOpen, onClose, onBuildingAdded }) {
         address: w.address,
         city: w.city,
         state: w.state,
-        zip_code: w.zip_code
+        zip_code: w.zip_code,
+        latitude: w.latitude,
+        longitude: w.longitude,
+        ubid: w.ubid || undefined,
+        parcel_number: w.parcel_number || undefined,
+        bin: w.bin || undefined
       }));
     }
 
@@ -85,6 +90,11 @@ export function AddBuildingModal({ isOpen, onClose, onBuildingAdded }) {
           city: b.city,
           state: b.state,
           zip_code: b.zip_code,
+          latitude: b.latitude,
+          longitude: b.longitude,
+          ubid: b.ubid || undefined,
+          parcel_number: b.parcel_number || undefined,
+          bin: b.bin || undefined,
           owner_id: parseInt(ownerId) // Admin endpoint should support passing owner_id
         });
       }
@@ -155,7 +165,9 @@ export function AddBuildingModal({ isOpen, onClose, onBuildingAdded }) {
                   address: data.address_line1,
                   city: data.city,
                   state: data.state,
-                  zip_code: data.zip_code
+                  zip_code: data.zip_code,
+                  latitude: data.lat,
+                  longitude: data.lon
                 })}
                 required
               />
@@ -172,6 +184,24 @@ export function AddBuildingModal({ isOpen, onClose, onBuildingAdded }) {
               <div className="space-y-1">
                 <label className="text-sm font-medium text-(--color-text-main)">Zip Code</label>
                 <Input placeholder="Zip" required value={singleBuilding.zip_code} onChange={e => setSingleBuilding({...singleBuilding, zip_code: e.target.value})} />
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-(--color-border-main)">
+              <h3 className="text-sm font-semibold text-(--color-text-main) mb-3">Additional Identifiers (Optional)</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-(--color-text-main)">UBID</label>
+                  <Input placeholder="UBID" value={singleBuilding.ubid} onChange={e => setSingleBuilding({...singleBuilding, ubid: e.target.value})} />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-(--color-text-main)">Parcel Number (APN)</label>
+                  <Input placeholder="APN" value={singleBuilding.parcel_number} onChange={e => setSingleBuilding({...singleBuilding, parcel_number: e.target.value})} />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-(--color-text-main)">BIN</label>
+                  <Input placeholder="BIN" value={singleBuilding.bin} onChange={e => setSingleBuilding({...singleBuilding, bin: e.target.value})} />
+                </div>
               </div>
             </div>
           </div>
@@ -210,6 +240,8 @@ export function AddBuildingModal({ isOpen, onClose, onBuildingAdded }) {
                         newWings[index].city = data.city;
                         newWings[index].state = data.state;
                         newWings[index].zip_code = data.zip_code;
+                        newWings[index].latitude = data.lat;
+                        newWings[index].longitude = data.lon;
                         setWings(newWings);
                       }}
                       required
@@ -219,6 +251,15 @@ export function AddBuildingModal({ isOpen, onClose, onBuildingAdded }) {
                     <Input placeholder="City" required value={wing.city} onChange={e => handleWingChange(index, 'city', e.target.value)} />
                     <Input placeholder="State" required value={wing.state} onChange={e => handleWingChange(index, 'state', e.target.value)} />
                     <Input placeholder="Zip" required value={wing.zip_code} onChange={e => handleWingChange(index, 'zip_code', e.target.value)} />
+                  </div>
+
+                  <div className="pt-3 mt-2 border-t border-(--color-border-main)">
+                    <h5 className="text-xs font-semibold text-(--color-text-main) mb-2">Additional Identifiers (Optional)</h5>
+                    <div className="grid grid-cols-3 gap-2">
+                      <Input placeholder="UBID" value={wing.ubid} onChange={e => handleWingChange(index, 'ubid', e.target.value)} />
+                      <Input placeholder="APN" value={wing.parcel_number} onChange={e => handleWingChange(index, 'parcel_number', e.target.value)} />
+                      <Input placeholder="BIN" value={wing.bin} onChange={e => handleWingChange(index, 'bin', e.target.value)} />
+                    </div>
                   </div>
                 </div>
               ))}

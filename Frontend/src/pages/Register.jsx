@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Box } from '../components/ui/Box';
 import { Input } from '../components/ui/Input';
@@ -12,16 +12,22 @@ export function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [contactNumber, setContactNumber] = useState('');
+  const [drivingLicense, setDrivingLicense] = useState('');
   const [type, setType] = useState(null); // 'single' or 'society'
 
   const [societyName, setSocietyName] = useState('');
-  const [singleBuilding, setSingleBuilding] = useState({ name: '', address: '', city: '', state: '', zip_code: '' });
-  const [wings, setWings] = useState([{ name: '', address: '', city: '', state: '', zip_code: '' }]);
+  const [singleBuilding, setSingleBuilding] = useState({ name: '', address: '', city: '', state: '', zip_code: '', latitude: null, longitude: null, ubid: '', parcel_number: '', bin: '' });
+  const [wings, setWings] = useState([{ name: '', address: '', city: '', state: '', zip_code: '', latitude: null, longitude: null, ubid: '', parcel_number: '', bin: '' }]);
 
   const { register, isLoading, error } = useAuthStore();
   
+  useEffect(() => {
+    useAuthStore.setState({ error: null });
+  }, []);
+
   const handleAddWing = () => {
-    setWings([...wings, { name: '', address: '', city: '', state: '', zip_code: '' }]);
+    setWings([...wings, { name: '', address: '', city: '', state: '', zip_code: '', latitude: null, longitude: null, ubid: '', parcel_number: '', bin: '' }]);
   };
 
   const handleRemoveWing = (index) => {
@@ -46,7 +52,12 @@ export function Register() {
         address: w.address,
         city: w.city,
         state: w.state,
-        zip_code: w.zip_code
+        zip_code: w.zip_code,
+        latitude: w.latitude,
+        longitude: w.longitude,
+        ubid: w.ubid || undefined,
+        parcel_number: w.parcel_number || undefined,
+        bin: w.bin || undefined
       }));
     }
 
@@ -54,6 +65,8 @@ export function Register() {
       name,
       email,
       password,
+      contact_number: contactNumber,
+      driving_license: drivingLicense,
       buildings: formattedBuildings
     };
 
@@ -90,25 +103,25 @@ export function Register() {
     <div className="min-h-screen w-full flex flex-col items-center justify-center bg-(--color-background) p-4 py-12 relative">
       <div className="absolute top-6 left-6 lg:top-8 lg:left-8">
         <Link to="/">
-          <Button variant="ghost" size="sm" className="text-(--color-text-muted) hover:text-(--color-text-main)">
+          <Button variant="secondary" size="sm">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to site
+            BACK TO SITE
           </Button>
         </Link>
       </div>
       <div className="w-full max-w-3xl">
         <div className="text-center mb-8 relative">
-          <div className="flex justify-center mb-4">
-            <div className="w-12 h-12 bg-(--color-primary-600) flex items-center justify-center text-white">
+          <div className="flex justify-center mb-6">
+            <div className="w-16 h-16 bg-(--color-brutal-inverse-bg) flex items-center justify-center text-(--color-brutal-text-inverse) shadow-md border-2 border-(--color-brutal-border)">
               <Activity className="w-8 h-8" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-(--color-text-main) tracking-tight">Create an Account</h1>
-          <p className="text-(--color-text-muted) mt-2">Get started with EventStream Go</p>
+          <h1 className="text-4xl font-black text-(--color-brutal-text) tracking-tighter uppercase mb-2">Create Account</h1>
+          <p className="text-sm font-bold uppercase tracking-widest text-(--color-text-muted)">Get started with EventStream</p>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 text-sm text-red-500 bg-red-500/10 border border-red-500/20 text-center">
+          <div className="mb-6 p-4 text-sm font-bold uppercase tracking-wide text-white bg-red-600 border-2 border-red-800 text-center max-w-md mx-auto shadow-[4px_4px_0px_0px_#7f1d1d]">
             {error}
           </div>
         )}
@@ -129,6 +142,16 @@ export function Register() {
                   <label className="text-sm font-medium text-(--color-text-main)">Password</label>
                   <Input placeholder="Enter your password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
                 </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1 text-left">
+                    <label className="text-sm font-medium text-(--color-text-main)">Contact Number</label>
+                    <Input placeholder="+1 234 567 8900" type="tel" value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} required />
+                  </div>
+                  <div className="space-y-1 text-left">
+                    <label className="text-sm font-medium text-(--color-text-main)">Driving License</label>
+                    <Input placeholder="DL12345678" type="text" value={drivingLicense} onChange={(e) => setDrivingLicense(e.target.value)} />
+                  </div>
+                </div>
               </div>
               <Button type="submit" className="w-full">Continue to Building Setup</Button>
               <div className="text-center text-sm text-(--color-text-muted) mt-4">
@@ -140,22 +163,22 @@ export function Register() {
 
         {step === 2 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto w-full">
-            <Box className="p-8 cursor-pointer hover:border-blue-500 transition-colors text-center space-y-4" onClick={() => { setType('single'); setStep(3); }}>
-              <div className="mx-auto w-16 h-16 bg-blue-500/10 text-blue-500 rounded flex items-center justify-center">
+            <Box className="p-8 cursor-pointer   transition-all text-center space-y-4 border-2 border-(--color-brutal-border) bg-(--color-brutal-bg)" onClick={() => { setType('single'); setStep(3); }}>
+              <div className="mx-auto w-16 h-16 bg-(--color-brutal-inverse-bg) text-(--color-brutal-text-inverse) flex items-center justify-center border-2 border-(--color-brutal-border) shadow-md">
                 <Building className="w-8 h-8" />
               </div>
-              <h2 className="text-xl font-bold text-(--color-text-main)">Single Building</h2>
-              <p className="text-(--color-text-muted) text-sm">Register a standalone commercial or residential building.</p>
+              <h2 className="text-xl font-black uppercase tracking-tight text-(--color-brutal-text)">Single Building</h2>
+              <p className="text-sm font-bold tracking-wider text-(--color-text-muted)">Register a standalone commercial or residential building.</p>
             </Box>
-            <Box className="p-8 cursor-pointer hover:border-blue-500 transition-colors text-center space-y-4" onClick={() => { setType('society'); setStep(3); }}>
-              <div className="mx-auto w-16 h-16 bg-purple-500/10 text-purple-500 rounded flex items-center justify-center">
+            <Box className="p-8 cursor-pointer   transition-all text-center space-y-4 border-2 border-(--color-brutal-border) bg-(--color-brutal-bg)" onClick={() => { setType('society'); setStep(3); }}>
+              <div className="mx-auto w-16 h-16 bg-(--color-brutal-inverse-bg) text-(--color-brutal-text-inverse) flex items-center justify-center border-2 border-(--color-brutal-border) shadow-md">
                 <Building2 className="w-8 h-8" />
               </div>
-              <h2 className="text-xl font-bold text-(--color-text-main)">Society / Multi-Wing</h2>
-              <p className="text-(--color-text-muted) text-sm">Register a society, campus, or complex with multiple wings or towers.</p>
+              <h2 className="text-xl font-black uppercase tracking-tight text-(--color-brutal-text)">Society / Multi-Wing</h2>
+              <p className="text-sm font-bold tracking-wider text-(--color-text-muted)">Register a society, campus, or complex with multiple wings.</p>
             </Box>
-            <div className="col-span-1 md:col-span-2 text-center mt-4">
-              <Button variant="ghost" onClick={() => setStep(1)}>Back</Button>
+            <div className="col-span-1 md:col-span-2 text-center mt-6">
+              <Button variant="secondary" onClick={() => setStep(1)}>BACK</Button>
             </div>
           </div>
         )}
@@ -186,7 +209,9 @@ export function Register() {
                         address: data.address_line1,
                         city: data.city,
                         state: data.state,
-                        zip_code: data.zip_code
+                        zip_code: data.zip_code,
+                        latitude: data.lat,
+                        longitude: data.lon
                       })}
                       required
                     />
@@ -203,6 +228,27 @@ export function Register() {
                     <div className="space-y-1 text-left">
                       <label className="text-sm font-medium text-(--color-text-main)">Zip Code</label>
                       <Input placeholder="94105" required value={singleBuilding.zip_code} onChange={e => setSingleBuilding({...singleBuilding, zip_code: e.target.value})} />
+                    </div>
+                  </div>
+                  
+                  <div className="pt-4 border-t border-(--color-border-main)">
+                    <h3 className="text-lg font-semibold text-(--color-text-main) mb-4">Additional Identifiers (Optional)</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-1 text-left">
+                        <label className="text-sm font-medium text-(--color-text-main)">UBID</label>
+                        <Input placeholder="e.g. 849VQGGV+V42-005-004" value={singleBuilding.ubid} onChange={e => setSingleBuilding({...singleBuilding, ubid: e.target.value})} />
+                        <p className="text-xs text-(--color-text-muted)">Unique Building Identifier</p>
+                      </div>
+                      <div className="space-y-1 text-left">
+                        <label className="text-sm font-medium text-(--color-text-main)">Parcel Number (APN)</label>
+                        <Input placeholder="Assessor's Parcel Number" value={singleBuilding.parcel_number} onChange={e => setSingleBuilding({...singleBuilding, parcel_number: e.target.value})} />
+                        <p className="text-xs text-(--color-text-muted)">Assigned by local county assessor</p>
+                      </div>
+                      <div className="space-y-1 text-left">
+                        <label className="text-sm font-medium text-(--color-text-main)">BIN</label>
+                        <Input placeholder="Building Identification Number" value={singleBuilding.bin} onChange={e => setSingleBuilding({...singleBuilding, bin: e.target.value})} />
+                        <p className="text-xs text-(--color-text-muted)">Assigned by city/state govt</p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -242,6 +288,8 @@ export function Register() {
                               newWings[index].city = data.city;
                               newWings[index].state = data.state;
                               newWings[index].zip_code = data.zip_code;
+                              newWings[index].latitude = data.lat;
+                              newWings[index].longitude = data.lon;
                               setWings(newWings);
                             }}
                             required
@@ -259,6 +307,24 @@ export function Register() {
                           <div className="space-y-1 text-left">
                             <label className="text-sm font-medium text-(--color-text-main)">Zip Code</label>
                             <Input placeholder="Zip" required value={wing.zip_code} onChange={e => handleWingChange(index, 'zip_code', e.target.value)} />
+                          </div>
+                        </div>
+
+                        <div className="mt-4 pt-4 border-t border-(--color-border-main)">
+                          <h5 className="text-sm font-semibold text-(--color-text-main) mb-3">Additional Identifiers (Optional)</h5>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="space-y-1 text-left">
+                              <label className="text-sm font-medium text-(--color-text-main)">UBID</label>
+                              <Input placeholder="UBID" value={wing.ubid} onChange={e => handleWingChange(index, 'ubid', e.target.value)} />
+                            </div>
+                            <div className="space-y-1 text-left">
+                              <label className="text-sm font-medium text-(--color-text-main)">Parcel Number (APN)</label>
+                              <Input placeholder="APN" value={wing.parcel_number} onChange={e => handleWingChange(index, 'parcel_number', e.target.value)} />
+                            </div>
+                            <div className="space-y-1 text-left">
+                              <label className="text-sm font-medium text-(--color-text-main)">BIN</label>
+                              <Input placeholder="BIN" value={wing.bin} onChange={e => handleWingChange(index, 'bin', e.target.value)} />
+                            </div>
                           </div>
                         </div>
                       </div>

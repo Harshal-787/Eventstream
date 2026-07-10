@@ -17,9 +17,9 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 
 func (r *UserRepository) FindByEmail(email string) (*models.User, error) {
 	user := &models.User{}
-	query := `SELECT id, name, email, password_hash, role, status, otp_code, otp_expires_at, created_at FROM users WHERE email = $1 LIMIT 1`
+	query := `SELECT id, name, email, password_hash, role, status, contact_number, driving_license, otp_code, otp_expires_at, created_at FROM users WHERE email = $1 LIMIT 1`
 	err := r.db.QueryRow(query, email).Scan(
-		&user.ID, &user.Name, &user.Email, &user.PasswordHash, &user.Role, &user.Status, &user.OTPCode, &user.OTPExpiresAt, &user.CreatedAt,
+		&user.ID, &user.Name, &user.Email, &user.PasswordHash, &user.Role, &user.Status, &user.ContactNumber, &user.DrivingLicense, &user.OTPCode, &user.OTPExpiresAt, &user.CreatedAt,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
@@ -32,9 +32,9 @@ func (r *UserRepository) FindByEmail(email string) (*models.User, error) {
 
 func (r *UserRepository) FindByID(id int) (*models.User, error) {
 	user := &models.User{}
-	query := `SELECT id, name, email, password_hash, role, status, otp_code, otp_expires_at, created_at FROM users WHERE id = $1 LIMIT 1`
+	query := `SELECT id, name, email, password_hash, role, status, contact_number, driving_license, otp_code, otp_expires_at, created_at FROM users WHERE id = $1 LIMIT 1`
 	err := r.db.QueryRow(query, id).Scan(
-		&user.ID, &user.Name, &user.Email, &user.PasswordHash, &user.Role, &user.Status, &user.OTPCode, &user.OTPExpiresAt, &user.CreatedAt,
+		&user.ID, &user.Name, &user.Email, &user.PasswordHash, &user.Role, &user.Status, &user.ContactNumber, &user.DrivingLicense, &user.OTPCode, &user.OTPExpiresAt, &user.CreatedAt,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
@@ -45,11 +45,17 @@ func (r *UserRepository) FindByID(id int) (*models.User, error) {
 	return user, nil
 }
 
-func (r *UserRepository) CreateUser(name, email, passwordHash, status string) (*models.User, error) {
+func (r *UserRepository) CreateUser(name, email, passwordHash, status, contactNumber, drivingLicense string) (*models.User, error) {
 	user := &models.User{}
-	query := `INSERT INTO users (name, email, password_hash, role, status) VALUES ($1, $2, $3, 'user', $4) RETURNING id, name, email, role, status, created_at`
-	err := r.db.QueryRow(query, name, email, passwordHash, status).Scan(
-		&user.ID, &user.Name, &user.Email, &user.Role, &user.Status, &user.CreatedAt,
+	query := `INSERT INTO users (name, email, password_hash, role, status, contact_number, driving_license) VALUES ($1, $2, $3, 'user', $4, $5, $6) RETURNING id, name, email, role, status, contact_number, driving_license, created_at`
+	
+	// Convert empty strings to null for optional fields
+	var cNumber, dLicense interface{}
+	if contactNumber != "" { cNumber = contactNumber }
+	if drivingLicense != "" { dLicense = drivingLicense }
+	
+	err := r.db.QueryRow(query, name, email, passwordHash, status, cNumber, dLicense).Scan(
+		&user.ID, &user.Name, &user.Email, &user.Role, &user.Status, &user.ContactNumber, &user.DrivingLicense, &user.CreatedAt,
 	)
 	if err != nil {
 		return nil, err
@@ -58,7 +64,7 @@ func (r *UserRepository) CreateUser(name, email, passwordHash, status string) (*
 }
 
 func (r *UserRepository) ListUsers() ([]*models.User, error) {
-	query := `SELECT id, name, email, role, status, created_at FROM users`
+	query := `SELECT id, name, email, role, status, contact_number, driving_license, created_at FROM users`
 	rows, err := r.db.Query(query)
 	if err != nil {
 		return nil, err
@@ -68,7 +74,7 @@ func (r *UserRepository) ListUsers() ([]*models.User, error) {
 	var users []*models.User
 	for rows.Next() {
 		user := &models.User{}
-		err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.Role, &user.Status, &user.CreatedAt)
+		err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.Role, &user.Status, &user.ContactNumber, &user.DrivingLicense, &user.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
