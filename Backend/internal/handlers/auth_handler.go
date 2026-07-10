@@ -28,18 +28,25 @@ func NewAuthHandler(userRepo *repository.UserRepository, buildingRepo *repositor
 }
 
 type registerBuilding struct {
-	Name    string `json:"name"`
-	Address string `json:"address"`
-	City    string `json:"city"`
-	State   string `json:"state"`
-	ZipCode string `json:"zip_code"`
+	Name      string   `json:"name"`
+	Address   string   `json:"address"`
+	City      string   `json:"city"`
+	State     string   `json:"state"`
+	ZipCode   string   `json:"zip_code"`
+	Latitude  *float64 `json:"latitude"`
+	Longitude *float64 `json:"longitude"`
+	UBID      *string  `json:"ubid"`
+	ParcelNumber *string `json:"parcel_number"`
+	BIN       *string  `json:"bin"`
 }
 
 type registerRequest struct {
-	Name      string             `json:"name" binding:"required"`
-	Email     string             `json:"email" binding:"required,email"`
-	Password  string             `json:"password" binding:"required,min=6"`
-	Buildings []registerBuilding `json:"buildings"`
+	Name           string             `json:"name" binding:"required"`
+	Email          string             `json:"email" binding:"required,email"`
+	Password       string             `json:"password" binding:"required,min=6"`
+	ContactNumber  string             `json:"contact_number"`
+	DrivingLicense string             `json:"driving_license"`
+	Buildings      []registerBuilding `json:"buildings"`
 }
 
 // Register godoc
@@ -76,14 +83,14 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	user, err := h.userRepo.CreateUser(req.Name, req.Email, string(hash), "pending_approval")
+	user, err := h.userRepo.CreateUser(req.Name, req.Email, string(hash), "pending_approval", req.ContactNumber, req.DrivingLicense)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not create user"})
 		return
 	}
 
 	for _, b := range req.Buildings {
-		_, err := h.buildingRepo.CreateBuilding(b.Name, b.Address, b.City, b.State, b.ZipCode, user.ID, "pending_approval")
+		_, err := h.buildingRepo.CreateBuilding(b.Name, b.Address, b.City, b.State, b.ZipCode, user.ID, "pending_approval", b.Latitude, b.Longitude, b.UBID, b.ParcelNumber, b.BIN)
 		if err != nil {
 			// Ideally this should be a transaction, but for now we just log/continue or return error
 			// The user is created, buildings may partially fail.
@@ -150,7 +157,7 @@ func (h *AuthHandler) Reapply(c *gin.Context) {
 	}
 
 	for _, b := range req.Buildings {
-		_, _ = h.buildingRepo.CreateBuilding(b.Name, b.Address, b.City, b.State, b.ZipCode, user.ID, "pending_approval")
+		_, _ = h.buildingRepo.CreateBuilding(b.Name, b.Address, b.City, b.State, b.ZipCode, user.ID, "pending_approval", b.Latitude, b.Longitude, b.UBID, b.ParcelNumber, b.BIN)
 	}
 
 	c.JSON(http.StatusOK, gin.H{

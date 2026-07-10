@@ -1,0 +1,3 @@
+ALTER TABLE sensor_requests ADD COLUMN IF NOT EXISTS brand VARCHAR(100);
+ALTER TABLE sensor_requests ADD COLUMN IF NOT EXISTS model_name VARCHAR(100);
+ALTER TABLE sensor_requests ADD COLUMN IF NOT EXISTS hardware_id VARCHAR(100);

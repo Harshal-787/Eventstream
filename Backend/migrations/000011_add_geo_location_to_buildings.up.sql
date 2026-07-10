@@ -1,0 +1,3 @@
+ALTER TABLE buildings
+ADD COLUMN latitude NUMERIC,
+ADD COLUMN longitude NUMERIC;

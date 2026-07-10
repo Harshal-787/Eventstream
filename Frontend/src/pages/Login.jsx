@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
 import { Box } from "../components/ui/Box";
@@ -16,6 +16,10 @@ export function Login() {
   const error = useAuthStore(state => state.error);
   const isLoading = useAuthStore(state => state.isLoading);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    useAuthStore.setState({ error: null });
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -54,26 +58,26 @@ export function Login() {
     <div className="min-h-screen w-full flex flex-col items-center justify-center bg-(--color-background) p-4 py-12 relative">
       <div className="absolute top-6 left-6 lg:top-8 lg:left-8">
         <Link to="/">
-          <Button variant="ghost" size="sm" className="text-(--color-text-muted) hover:text-(--color-text-main)">
+          <Button variant="secondary" size="sm">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to site
+            BACK TO SITE
           </Button>
         </Link>
       </div>
 
       <div className="w-full max-w-3xl">
         <div className="text-center mb-8 relative">
-          <div className="flex justify-center mb-4">
-            <div className="w-12 h-12 bg-(--color-primary-600) flex items-center justify-center text-white">
+          <div className="flex justify-center mb-6">
+            <div className="w-16 h-16 bg-(--color-brutal-inverse-bg) flex items-center justify-center text-(--color-brutal-text-inverse) shadow-md border-2 border-(--color-brutal-border)">
               <Activity className="w-8 h-8" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-(--color-text-main) tracking-tight">Sign In</h1>
-          <p className="text-(--color-text-muted) mt-2">Sign in to your dashboard</p>
+          <h1 className="text-4xl font-black text-(--color-brutal-text) tracking-tighter uppercase mb-2">Sign In</h1>
+          <p className="text-sm font-bold uppercase tracking-widest text-(--color-text-muted)">Authenticate to Access Dashboard</p>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 text-sm text-red-500 bg-red-500/10 border border-red-500/20 text-center max-w-md mx-auto">
+          <div className="mb-6 p-4 text-sm font-bold uppercase tracking-wide text-white bg-red-600 border-2 border-red-800 text-center max-w-md mx-auto shadow-[4px_4px_0px_0px_#7f1d1d]">
             {error}
           </div>
         )}
@@ -129,12 +133,12 @@ export function Login() {
               className="w-full"
               disabled={isLoading}
             >
-              {isLoading ? (step === 1 ? "Signing in..." : "Verifying...") : (step === 1 ? "Sign In" : "Verify & Login")}
+              {isLoading ? (step === 1 ? "AUTHENTICATING..." : "VERIFYING...") : (step === 1 ? "SIGN IN" : "VERIFY & LOGIN")}
             </Button>
 
-            <div className="text-center text-sm text-(--color-text-muted) mt-4">
+            <div className="text-center text-xs font-bold tracking-widest uppercase text-(--color-text-muted) mt-6">
               Don't have an account?{' '}
-              <Link to="/register" className="text-blue-500 hover:text-blue-400 font-medium">Create one</Link>
+              <Link to="/register" className="text-(--color-brutal-text) underline decoration-2 hover:bg-(--color-brutal-hover)">CREATE ONE</Link>
             </div>
           </form>
         </Box>

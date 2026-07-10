@@ -23,8 +23,13 @@ type createBuildingRequest struct {
 	Address string `json:"address" binding:"required"`
 	City    string `json:"city" binding:"required"`
 	State   string `json:"state" binding:"required"`
-	ZipCode string `json:"zip_code" binding:"required"`
-	OwnerID int    `json:"owner_id"`
+	ZipCode   string   `json:"zip_code" binding:"required"`
+	OwnerID   int      `json:"owner_id"`
+	Latitude  *float64 `json:"latitude"`
+	Longitude *float64 `json:"longitude"`
+	UBID      *string  `json:"ubid"`
+	ParcelNumber *string `json:"parcel_number"`
+	BIN       *string  `json:"bin"`
 }
 
 func (h *BuildingHandler) Create(c *gin.Context) {
@@ -48,7 +53,7 @@ func (h *BuildingHandler) Create(c *gin.Context) {
 	}
 
 	building, err := h.buildingRepo.CreateBuilding(
-		req.Name, req.Address, req.City, req.State, req.ZipCode, ownerID, status,
+		req.Name, req.Address, req.City, req.State, req.ZipCode, ownerID, status, req.Latitude, req.Longitude, req.UBID, req.ParcelNumber, req.BIN,
 	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not create building"})
@@ -77,6 +82,30 @@ func (h *BuildingHandler) List(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"data": buildings})
+}
+
+func (h *BuildingHandler) Get(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	role := c.GetString("user_role")
+	userID := c.GetInt("user_id")
+
+	building, err := h.buildingRepo.GetByID(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "building not found"})
+		return
+	}
+
+	if role != "admin" && (building.OwnerID == nil || *building.OwnerID != userID) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": building})
 }
 
 type updateStatusRequest struct {
@@ -112,11 +141,16 @@ func (h *BuildingHandler) UpdateStatus(c *gin.Context) {
 }
 
 type updateBuildingRequest struct {
-	Name    string `json:"name" binding:"required"`
-	Address string `json:"address" binding:"required"`
-	City    string `json:"city" binding:"required"`
-	State   string `json:"state" binding:"required"`
-	ZipCode string `json:"zip_code" binding:"required"`
+	Name      string   `json:"name" binding:"required"`
+	Address   string   `json:"address" binding:"required"`
+	City      string   `json:"city" binding:"required"`
+	State     string   `json:"state" binding:"required"`
+	ZipCode   string   `json:"zip_code" binding:"required"`
+	Latitude  *float64 `json:"latitude"`
+	Longitude *float64 `json:"longitude"`
+	UBID      *string  `json:"ubid"`
+	ParcelNumber *string `json:"parcel_number"`
+	BIN       *string  `json:"bin"`
 }
 
 func (h *BuildingHandler) UpdateBuilding(c *gin.Context) {
@@ -146,7 +180,7 @@ func (h *BuildingHandler) UpdateBuilding(c *gin.Context) {
 		return
 	}
 
-	err = h.buildingRepo.UpdateBuilding(id, req.Name, req.Address, req.City, req.State, req.ZipCode)
+	err = h.buildingRepo.UpdateBuilding(id, req.Name, req.Address, req.City, req.State, req.ZipCode, req.Latitude, req.Longitude, req.UBID, req.ParcelNumber, req.BIN)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not update building"})
 		return

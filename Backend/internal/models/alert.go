@@ -9,21 +9,19 @@ type Building struct {
 	City      string    `json:"city"`
 	State     string    `json:"state"`
 	ZipCode   string    `json:"zip_code"`
-	OwnerID   *int      `json:"owner_id"`
+	Latitude     *float64  `json:"latitude"`
+	Longitude    *float64  `json:"longitude"`
+	UBID         *string   `json:"ubid"`
+	ParcelNumber *string   `json:"parcel_number"`
+	BIN          *string   `json:"bin"`
+	OwnerID      *int      `json:"owner_id"`
 	Status    string    `json:"status"` // 'pending_approval', 'active', 'suspended'
 	CreatedAt time.Time `json:"created_at"`
+	
+	// Joined fields
+	OwnerName string `json:"owner_name,omitempty"`
 }
 
-type Device struct {
-	ID         int       `json:"id"`
-	Name       string    `json:"name"`
-	Type       string    `json:"type"`
-	BuildingID *int      `json:"building_id"`
-	Floor      string    `json:"floor"`
-	Room       string    `json:"room"`
-	Status     string    `json:"status"`
-	CreatedAt  time.Time `json:"created_at"`
-}
 
 type AlertRule struct {
 	ID         int       `json:"id"`

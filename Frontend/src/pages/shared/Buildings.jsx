@@ -6,15 +6,23 @@ import { Button } from '../../components/ui/Button';
 import { Spinner } from '../../components/ui/Spinner';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Badge } from '../../components/ui/Badge';
-import { Building2, Plus, CheckCircle, XCircle, Edit, Trash2 } from 'lucide-react';
+import { Building2, Plus, Edit, Trash2, Eye, Layers, Cpu } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { AddBuildingModal } from './AddBuildingModal';
 import { EditBuildingModal } from './EditBuildingModal';
+import { StatusActionDropdown } from '../../components/ui/StatusActionDropdown';
+import { Tabs } from '../../components/ui/Tabs';
+import { UserFloorsRoomsTab } from '../user/UserFloorsRoomsTab';
+import { UserRequestSensorTab } from '../user/UserRequestSensorTab';
 
 export function Buildings({ role }) {
   const [buildings, setBuildings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editBuilding, setEditBuilding] = useState(null);
+  
+  // Tab state for Users
+  const [activeTab, setActiveTab] = useState('buildings');
 
   useEffect(() => {
     fetchBuildings();
@@ -62,16 +70,28 @@ export function Buildings({ role }) {
 
   if (loading) return <Spinner size="lg" />;
 
+  const userTabs = [
+    { id: 'buildings', label: 'My Buildings', icon: Building2 },
+    { id: 'floors', label: 'Floors & Rooms', icon: Layers },
+    { id: 'request', label: 'Request Sensor', icon: Cpu }
+  ];
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center mb-2">
         <h1 className="text-2xl font-bold text-(--color-text-main)">Buildings</h1>
         {role === 'admin' && (
           <Button onClick={() => setIsAddModalOpen(true)}><Plus className="w-4 h-4 mr-2" /> Add Building</Button>
         )}
       </div>
 
-      <Box>
+      {role === 'user' && (
+        <Tabs tabs={userTabs} activeTab={activeTab} onChange={setActiveTab} />
+      )}
+
+      {/* Admin View or User "buildings" tab */}
+      {(role === 'admin' || activeTab === 'buildings') && (
+        <Box>
         {buildings.length === 0 ? (
           <EmptyState 
             title="No Buildings Found" 
@@ -86,7 +106,9 @@ export function Buildings({ role }) {
                 <TableHead>Name</TableHead>
                 <TableHead>Address</TableHead>
                 <TableHead>Location</TableHead>
+                <TableHead>Assigned User</TableHead>
                 <TableHead>Status</TableHead>
+                {role === 'admin' && <TableHead>Details</TableHead>}
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -96,11 +118,22 @@ export function Buildings({ role }) {
                   <TableCell className="font-medium">{bldg.name}</TableCell>
                   <TableCell>{bldg.address}</TableCell>
                   <TableCell>{bldg.city}, {bldg.state} {bldg.zip_code}</TableCell>
+                  <TableCell>{bldg.owner_name || '-'}</TableCell>
                   <TableCell>
-                    <Badge variant={bldg.status === 'active' ? 'success' : bldg.status === 'pending_approval' ? 'warning' : bldg.status === 'rejected' ? 'danger' : 'default'}>
-                      {bldg.status === 'pending_approval' ? 'Pending Setup' : bldg.status}
-                    </Badge>
+                    <StatusActionDropdown
+                      status={bldg.status}
+                      pendingLabel="Pending Setup"
+                      onApprove={() => handleApprove(bldg.id)}
+                      onReject={() => handleReject(bldg.id)}
+                    />
                   </TableCell>
+                  {role === 'admin' && (
+                    <TableCell>
+                      <Link to={`/${role}/buildings/${bldg.id}`}>
+                        <Button size="sm" variant="secondary"><Eye className="w-4 h-4 mr-2" /> More Details</Button>
+                      </Link>
+                    </TableCell>
+                  )}
                   <TableCell className="text-right space-x-2">
                     <Button size="sm" variant="secondary" onClick={() => setEditBuilding(bldg)} title="Edit Details">
                       <Edit className="w-4 h-4" />
@@ -110,16 +143,6 @@ export function Buildings({ role }) {
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     )}
-                    {role === 'admin' && bldg.status === 'pending_approval' && (
-                      <>
-                        <Button size="sm" variant="success" onClick={() => handleApprove(bldg.id)}>
-                          <CheckCircle className="w-4 h-4 mr-1" /> Approve
-                        </Button>
-                        <Button size="sm" variant="danger" onClick={() => handleReject(bldg.id)}>
-                          <XCircle className="w-4 h-4 mr-1" /> Reject
-                        </Button>
-                      </>
-                    )}
                   </TableCell>
                 </TableRow>
               ))}
@@ -127,6 +150,15 @@ export function Buildings({ role }) {
           </Table>
         )}
       </Box>
+      )}
+
+      {role === 'user' && activeTab === 'floors' && (
+        <UserFloorsRoomsTab buildings={buildings} />
+      )}
+
+      {role === 'user' && activeTab === 'request' && (
+        <UserRequestSensorTab buildings={buildings} />
+      )}
 
       {role === 'admin' && (
         <AddBuildingModal 
