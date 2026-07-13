@@ -5,10 +5,12 @@ import (
 
 	"eventstream/internal/config"
 	"eventstream/internal/database"
+	"eventstream/internal/events"
 	"eventstream/internal/handlers"
 	"eventstream/internal/middleware"
 	"eventstream/internal/repository"
 	"eventstream/internal/services"
+	"eventstream/internal/simulator"
 	_ "eventstream/docs"
 
 	swaggerFiles "github.com/swaggo/files"
@@ -48,12 +50,22 @@ func main() {
 	deviceRepo   := repository.NewDeviceRepo(db)
 	emailService := services.NewEmailService(cfg)
 
+	// Initialize Event Hub for SSE
+	hub := events.NewHub()
+	go hub.Run()
+
 	authHandler  := handlers.NewAuthHandler(userRepo, buildingRepo, emailService, cfg)
-	alertHandler := handlers.NewAlertHandler(alertRepo)
+	alertHandler := handlers.NewAlertHandler(alertRepo, hub)
 	buildingHandler := handlers.NewBuildingHandler(buildingRepo)
 	usersHandler := handlers.NewUsersHandler(userRepo)
 	addressHandler := handlers.NewAddressHandler(cfg)
 	deviceHandler := handlers.NewDeviceHandler(deviceRepo)
+
+	// Start Virtual Sensor Simulator
+	sim := simulator.NewSimulator(db, hub)
+	go sim.Run()
+
+	streamHandler := handlers.NewStreamHandler(hub)
 
 	r := gin.Default()
 
@@ -80,12 +92,16 @@ func main() {
 			addressRoutes.GET("/autocomplete", addressHandler.Autocomplete)
 		}
 
+		v1.GET("/stream", middleware.AuthMiddleware(cfg), streamHandler.StreamTelemetry)
+
 		alertRoutes := v1.Group("/alerts", middleware.AuthMiddleware(cfg))
 		{
 			alertRoutes.GET("",          alertHandler.List)
 			alertRoutes.GET("/:id",      alertHandler.Get)
 			alertRoutes.POST("/:id/acknowledge", alertHandler.Acknowledge)
 			alertRoutes.POST("/:id/resolve",     alertHandler.Resolve)
+			alertRoutes.DELETE("/clear", alertHandler.ClearAll)
+			alertRoutes.DELETE("/:id", alertHandler.Delete)
 		}
 
 		buildingRoutes := v1.Group("/buildings", middleware.AuthMiddleware(cfg))
@@ -132,6 +148,7 @@ func main() {
 			sensorRequestRoutes.GET("", deviceHandler.ListSensorRequests)
 			sensorRequestRoutes.POST("", deviceHandler.CreateSensorRequest)
 			sensorRequestRoutes.POST("/:id/fulfill", deviceHandler.FulfillSensorRequest)
+			sensorRequestRoutes.DELETE("/:id", deviceHandler.DeleteSensorRequest)
 		}
 
 		userRoutes := v1.Group("/users", middleware.AuthMiddleware(cfg))

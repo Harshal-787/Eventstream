@@ -12,6 +12,8 @@ import { Select } from '../../components/ui/Select';
 import { Tabs } from '../../components/ui/Tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/Table';
 import { toast } from 'react-hot-toast';
+import { useTelemetry } from '../../hooks/useTelemetry';
+import { useLiveAlerts } from '../../hooks/useLiveAlerts';
 
 export function Devices({ role }) {
   const [activeTab, setActiveTab] = useState('inventory'); // inventory, requests, models
@@ -23,6 +25,9 @@ export function Devices({ role }) {
   const [statusFilter, setStatusFilter] = useState('');
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [formData, setFormData] = useState({ hardware_id: '', model_id: '' });
+
+  const { telemetryMap, isConnected } = useTelemetry();
+  const { liveAlerts, alertUpdates } = useLiveAlerts();
 
   const [isFulfillOpen, setIsFulfillOpen] = useState(false);
   const [isModelModalOpen, setIsModelModalOpen] = useState(false);
@@ -99,15 +104,19 @@ export function Devices({ role }) {
     }
   };
 
-  const handleFulfill = async (e) => {
-    e.preventDefault();
+  const handleFulfill = async (e, autoProvision = false) => {
+    if (e) e.preventDefault();
     try {
-      if (!selectedRequest.hardware_id && !fulfillDeviceId) {
-        toast.error('Please select a device from the inventory');
+      if (!autoProvision && !selectedRequest.hardware_id && !fulfillDeviceId) {
+        toast.error('Please select a device from the inventory or use auto-provision');
         return;
       }
-      await deviceService.fulfillSensorRequest(selectedRequest.id, fulfillDeviceId ? parseInt(fulfillDeviceId) : null);
-      toast.success('Request fulfilled and sensor deployed!');
+      await deviceService.fulfillSensorRequest(
+        selectedRequest.id, 
+        fulfillDeviceId ? parseInt(fulfillDeviceId) : null,
+        autoProvision
+      );
+      toast.success(autoProvision ? 'Sensor auto-provisioned and deployed!' : 'Request fulfilled and sensor deployed!');
       setIsFulfillOpen(false);
       setFulfillDeviceId('');
       fetchData();
@@ -135,6 +144,17 @@ export function Devices({ role }) {
       fetchData();
     } catch (err) {
       toast.error('Failed to update device status');
+    }
+  };
+
+  const handleDeleteRequest = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this sensor request?")) return;
+    try {
+      await deviceService.deleteSensorRequest(id);
+      toast.success('Sensor request deleted');
+      fetchData();
+    } catch (err) {
+      toast.error('Failed to delete sensor request');
     }
   };
 
@@ -183,6 +203,83 @@ export function Devices({ role }) {
       case 'maintenance': return 'error';
       case 'rejected': return 'danger';
       default: return 'neutral';
+    }
+  };
+
+  const renderLiveData = (device) => {
+    const telemetry = telemetryMap[device.id];
+    if (!telemetry) return <span className="text-xs text-(--color-text-muted)">--</span>;
+
+    const payload = telemetry.payload || {};
+    
+    switch (device.type) {
+      case 'temperature':
+        return (
+          <div>
+            <div className="text-sm font-bold text-(--color-text-main)">{payload.temperature != null ? `${payload.temperature.toFixed(2)} °C` : '--'}</div>
+            {payload.humidity != null && <div className="text-xs text-(--color-text-muted)">{payload.humidity.toFixed(2)} %</div>}
+          </div>
+        );
+      case 'humidity':
+        return <div className="text-sm font-bold text-(--color-text-main)">{payload.humidity?.toFixed(2) || '--'} %</div>;
+      case 'temperature_humidity':
+      case 'multisensor':
+        return (
+          <div className="text-sm font-bold text-(--color-text-main)">
+            {payload.temperature && <div>{payload.temperature.toFixed(2)} °C</div>}
+            {payload.humidity && <div className="text-(--color-text-muted)">{payload.humidity.toFixed(2)} %</div>}
+            {payload.motion_detected !== undefined && (
+              <div className={payload.motion_detected ? "text-amber-500" : "text-(--color-text-muted)"}>
+                {payload.motion_detected ? 'MOTION' : 'CLEAR'}
+              </div>
+            )}
+          </div>
+        );
+      case 'smoke':
+        return (
+          <div className={`text-sm font-bold ${payload.smoke_detected ? 'text-red-500 animate-pulse' : 'text-green-500'}`}>
+            {payload.smoke_detected ? 'SMOKE DETECTED' : 'CLEAR'}
+          </div>
+        );
+      case 'water_leak':
+        return (
+          <div className={`text-sm font-bold ${payload.water_detected ? 'text-red-500 animate-pulse' : 'text-green-500'}`}>
+            {payload.water_detected ? 'LEAK DETECTED' : 'DRY'}
+          </div>
+        );
+      case 'door':
+        return (
+          <div className={`text-sm font-bold ${payload.door_open ? 'text-amber-500' : 'text-green-500'}`}>
+            {payload.door_open ? 'OPEN' : 'CLOSED'}
+          </div>
+        );
+      case 'motion':
+        return (
+          <div className={`text-sm font-bold ${payload.motion_detected ? 'text-amber-500 animate-pulse' : 'text-(--color-text-muted)'}`}>
+            {payload.motion_detected ? 'MOTION DETECTED' : 'CLEAR'}
+          </div>
+        );
+      case 'air_quality':
+        const aqi = payload.aqi || 0;
+        let aqiColor = 'text-green-600';
+        if (aqi > 100) aqiColor = 'text-red-600 animate-pulse';
+        else if (aqi > 50) aqiColor = 'text-amber-600';
+        return <div className={`text-sm font-bold ${aqiColor}`}>{aqi.toFixed(0)} AQI</div>;
+      case 'power':
+        return (
+          <div className="text-sm font-bold text-(--color-text-main)">
+            {payload.power_usage?.toFixed(2) || '--'} kW
+            <div className="text-xs text-(--color-text-muted)">{payload.voltage?.toFixed(1) || '--'} V</div>
+          </div>
+        );
+      default:
+        // Fallback for legacy data without payload
+        return (
+          <div className="text-sm font-bold text-(--color-text-main)">
+            {telemetry.temperature && <div>{telemetry.temperature.toFixed(2)} °C</div>}
+            {telemetry.humidity && <div className="text-(--color-text-muted)">{telemetry.humidity.toFixed(2)} %</div>}
+          </div>
+        );
     }
   };
 
@@ -269,18 +366,27 @@ export function Devices({ role }) {
                     <TableHead>Brand / Model</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Location</TableHead>
+                    <TableHead>Live Data</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Health</TableHead>
                     {role === 'admin' && <TableHead className="text-right">Actions</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {devices.map(device => (
-                    <TableRow key={device.id}>
+                  {devices.map(device => {
+                    const hasActiveAlert = liveAlerts.find(a => a.device_id === device.id && a.status === 'open');
+                    return (
+                    <TableRow key={device.id} className={hasActiveAlert ? 'bg-red-50 dark:bg-red-900/20 border border-red-500' : ''}>
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">
                           <Cpu className="w-4 h-4 text-(--color-primary)" />
                           {device.hardware_id || `VIRT-${device.id.toString().padStart(4, '0')}`}
+                          {telemetryMap[device.id] && (
+                             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" title="Live Connection Active" />
+                          )}
+                          {hasActiveAlert && (
+                             <AlertTriangle className="w-4 h-4 text-red-500 animate-bounce" title="Critical Alert" />
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -299,6 +405,9 @@ export function Devices({ role }) {
                         ) : (
                           <span className="text-sm text-(--color-text-muted) italic">Warehouse Shelf</span>
                         )}
+                      </TableCell>
+                      <TableCell>
+                         {renderLiveData(device)}
                       </TableCell>
                       <TableCell>
                         <Badge variant={getStatusColor(device.status)}>
@@ -339,7 +448,7 @@ export function Devices({ role }) {
                         </TableCell>
                       )}
                     </TableRow>
-                  ))}
+                  )})}
                 </TableBody>
               </Table>
             </div>
@@ -451,16 +560,23 @@ export function Devices({ role }) {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {req.status === 'pending' ? (
-                          <Button 
-                            size="sm" 
-                            onClick={() => { setSelectedRequest(req); setIsFulfillOpen(true); }}
-                          >
-                            <CheckCircle className="w-3 h-3 mr-2" /> Fulfill
-                          </Button>
-                        ) : (
-                          <span className="text-xs text-(--color-text-muted)">Completed</span>
-                        )}
+                        <div className="flex items-center gap-2">
+                          {req.status === 'pending' ? (
+                            <Button 
+                              size="sm" 
+                              onClick={() => { setSelectedRequest(req); setIsFulfillOpen(true); }}
+                            >
+                              <CheckCircle className="w-3 h-3 mr-2" /> Fulfill
+                            </Button>
+                          ) : (
+                            <span className="text-xs text-(--color-text-muted)">Completed</span>
+                          )}
+                          {role === 'admin' && (
+                            <Button size="sm" variant="danger" onClick={() => handleDeleteRequest(req.id)} title="Delete Request">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -539,31 +655,37 @@ export function Devices({ role }) {
               </div>
             ) : (
               <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-lg">
-                <p className="text-sm text-purple-400 font-medium mb-3">Manual Assignment</p>
+                <p className="text-sm text-purple-400 font-medium mb-3">Warehouse Assignment</p>
+                
                 <Select
                   label="Select Sensor from Inventory"
                   value={fulfillDeviceId}
                   onChange={e => setFulfillDeviceId(e.target.value)}
-                  required
                   options={[
-                    { value: '', label: 'Select a sensor...' },
-                    ...unassignedDevices
-                      .filter(d => d.type === selectedRequest.sensor_type)
+                    { value: '', label: 'Select a sensor (Optional)...' },
+                    ...devices
+                      .filter(d => d.status === 'unassigned' && d.type === selectedRequest.sensor_type)
                       .map(d => ({
                         value: d.id,
                         label: `${d.hardware_id} - ${d.brand} ${d.model_name}`
                       }))
                   ]}
                 />
-                {unassignedDevices.filter(d => d.type === selectedRequest.sensor_type).length === 0 && (
-                  <p className="text-xs text-red-400 mt-2">You don't have any unassigned {selectedRequest.sensor_type} sensors in your warehouse.</p>
+                
+                {devices.filter(d => d.status === 'unassigned' && d.type === selectedRequest.sensor_type).length === 0 && (
+                  <div className="mt-3 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg flex flex-col gap-2">
+                    <p className="text-xs text-amber-400">You don't have any unassigned {selectedRequest.sensor_type} sensors in your warehouse.</p>
+                    <Button type="button" size="sm" variant="secondary" onClick={() => handleFulfill(null, true)}>
+                      1-Click Auto-Provision Virtual Sensor
+                    </Button>
+                  </div>
                 )}
               </div>
             )}
 
             <div className="pt-4 flex justify-end gap-3">
               <Button variant="secondary" type="button" onClick={() => setIsFulfillOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={!selectedRequest.hardware_id && !fulfillDeviceId}>
+              <Button type="submit" disabled={!selectedRequest.hardware_id && !fulfillDeviceId && devices.filter(d => d.status === 'unassigned' && d.type === selectedRequest.sensor_type).length > 0}>
                 {selectedRequest.hardware_id ? 'Register & Deploy' : 'Assign & Deploy'}
               </Button>
             </div>
