@@ -12,6 +12,7 @@ import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Input';
 import { Select } from '../../components/ui/Select';
 import { toast } from 'react-hot-toast';
+import { useTelemetry } from '../../hooks/useTelemetry';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -55,6 +56,108 @@ export function BuildingDetails({ role }) {
   useEffect(() => {
     fetchData();
   }, [id]);
+
+  const deviceIds = devices.map(d => d.id);
+  const { telemetry, telemetryMap, isConnected } = useTelemetry(deviceIds);
+
+  // Live threshold monitor
+  useEffect(() => {
+    if (telemetry && telemetry.temperature > 30) {
+      toast.error(`CRITICAL SPIKE: Device ${telemetry.device_id} reached ${telemetry.temperature}°C!`, {
+        duration: 5000,
+        style: { border: '2px solid red', padding: '16px', color: 'white', backgroundColor: '#ef4444', fontWeight: '900' }
+      });
+    }
+  }, [telemetry]);
+
+  const renderLiveMetrics = (dev, liveData) => {
+    const payload = liveData.payload || {};
+    
+    switch (dev.type) {
+      case 'smoke':
+        return (
+          <div className="text-center w-full">
+            <p className="text-[10px] uppercase font-bold text-(--color-text-muted)">Status</p>
+            <p className={`text-xl font-black ${payload.smoke_detected ? 'text-red-600 animate-pulse' : 'text-green-600'}`}>
+              {payload.smoke_detected ? 'SMOKE DETECTED' : 'CLEAR'}
+            </p>
+          </div>
+        );
+      case 'water_leak':
+        return (
+          <div className="text-center w-full">
+            <p className="text-[10px] uppercase font-bold text-(--color-text-muted)">Status</p>
+            <p className={`text-xl font-black ${payload.water_detected ? 'text-red-600 animate-pulse' : 'text-green-600'}`}>
+              {payload.water_detected ? 'LEAK DETECTED' : 'DRY'}
+            </p>
+          </div>
+        );
+      case 'power':
+        return (
+          <>
+            <div className="text-center">
+              <p className="text-[10px] uppercase font-bold text-(--color-text-muted)">Power</p>
+              <p className="text-xl font-black text-(--color-brutal-text)">{payload.power_usage?.toFixed(2) || '--'} kW</p>
+            </div>
+            <div className="text-center">
+              <p className="text-[10px] uppercase font-bold text-(--color-text-muted)">Voltage</p>
+              <p className="text-xl font-black text-(--color-brutal-text)">{payload.voltage?.toFixed(1) || '--'} V</p>
+            </div>
+          </>
+        );
+      case 'door':
+        return (
+          <div className="text-center w-full">
+            <p className="text-[10px] uppercase font-bold text-(--color-text-muted)">Status</p>
+            <p className={`text-xl font-black ${payload.door_open ? 'text-amber-600' : 'text-green-600'}`}>
+              {payload.door_open ? 'OPEN' : 'CLOSED'}
+            </p>
+          </div>
+        );
+      case 'motion':
+        return (
+          <div className="text-center w-full">
+            <p className="text-[10px] uppercase font-bold text-(--color-text-muted)">Motion</p>
+            <p className={`text-xl font-black ${payload.motion_detected ? 'text-amber-600' : 'text-(--color-brutal-text)'}`}>
+              {payload.motion_detected ? 'DETECTED' : 'NONE'}
+            </p>
+          </div>
+        );
+      case 'air_quality':
+        const aqi = payload.aqi || 0;
+        let aqiColor = 'text-green-600';
+        if (aqi > 100) aqiColor = 'text-red-600 animate-pulse';
+        else if (aqi > 50) aqiColor = 'text-amber-600';
+        return (
+          <div className="text-center w-full">
+            <p className="text-[10px] uppercase font-bold text-(--color-text-muted)">Air Quality (AQI)</p>
+            <p className={`text-xl font-black ${aqiColor}`}>
+              {aqi.toFixed(0)}
+            </p>
+          </div>
+        );
+      default:
+        // Default to temperature/humidity
+        const temp = payload.temperature || liveData.temperature;
+        const hum = payload.humidity || liveData.humidity;
+        return (
+          <>
+            <div className="text-center">
+              <p className="text-[10px] uppercase font-bold text-(--color-text-muted)">Temp</p>
+              <p className={`text-xl font-black ${temp && temp > 30 ? 'text-red-600 animate-pulse' : 'text-(--color-brutal-text)'}`}>
+                {temp != null ? `${temp.toFixed(1)}°C` : '--'}
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-[10px] uppercase font-bold text-(--color-text-muted)">Humidity</p>
+              <p className="text-xl font-black text-(--color-brutal-text)">
+                {hum != null ? `${hum.toFixed(1)}%` : '--'}
+              </p>
+            </div>
+          </>
+        );
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -299,6 +402,9 @@ export function BuildingDetails({ role }) {
               <h3 className="text-xl font-black uppercase tracking-tight text-(--color-brutal-text) flex items-center">
                 <Cpu className="w-6 h-6 mr-3 text-(--color-brutal-text)" />
                 Deployed Devices
+                {isConnected && (
+                  <span className="ml-4 text-[10px] bg-green-400 text-black px-2 py-1 animate-pulse">LIVE CONNECTED</span>
+                )}
               </h3>
               <Button size="sm" onClick={() => setIsRequestModalOpen(true)}>
                 <Plus className="w-4 h-4 mr-2" /> Request Sensor
@@ -312,16 +418,34 @@ export function BuildingDetails({ role }) {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {devices.map(dev => (
-                  <div key={dev.id} className="p-5 border-2 border-(--color-brutal-border) bg-(--color-brutal-bg) shadow-md flex flex-col justify-between   transition-all">
+                {devices.map(dev => {
+                  const liveData = telemetryMap[dev.id];
+                  return (
+                  <div key={dev.id} className="p-5 border-2 border-(--color-brutal-border) bg-(--color-brutal-bg) shadow-md flex flex-col justify-between   transition-all relative overflow-hidden group">
+                    {isConnected && (
+                      <div className="absolute top-3 right-3 flex space-x-1">
+                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                      </div>
+                    )}
                     <div>
-                      <div className="flex justify-between items-start mb-2">
+                      <div className="flex justify-between items-start mb-2 pr-6">
                         <span className="font-black uppercase tracking-tight text-lg text-(--color-brutal-text) truncate">{dev.name}</span>
-                        <div className="border-2 border-(--color-brutal-border) bg-green-400 text-black text-[10px] font-black uppercase px-2 py-0.5">Active</div>
                       </div>
                       <p className="text-xs font-mono font-bold text-gray-600 mb-1">ID: {dev.hardware_id}</p>
                       <p className="text-xs font-bold uppercase tracking-wide text-gray-500">{dev.floor_name} <span className="text-(--color-brutal-text) px-1">/</span> {dev.room_name}</p>
                     </div>
+
+                    {/* Live Data Block */}
+                    {liveData ? (
+                      <div className="mt-4 p-3 bg-(--color-surface-hover) border-2 border-(--color-brutal-border) flex justify-around">
+                        {renderLiveMetrics(dev, liveData)}
+                      </div>
+                    ) : (
+                      <div className="mt-4 p-4 bg-gray-50 border-2 border-dashed border-gray-300 flex justify-center items-center">
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest animate-pulse">Waiting for Signal...</p>
+                      </div>
+                    )}
+
                     <div className="mt-5 pt-4 border-t-2 border-(--color-brutal-border) flex items-center justify-between">
                       <span className="text-[10px] uppercase font-black tracking-widest text-(--color-brutal-text) bg-(--color-brutal-bg) border border-(--color-brutal-border) px-2 py-1">{dev.type}</span>
                       <div className="flex items-center gap-3">
@@ -332,7 +456,7 @@ export function BuildingDetails({ role }) {
                       </div>
                     </div>
                   </div>
-                ))}
+                )})}
               </div>
             )}
           </div>
@@ -372,7 +496,18 @@ export function BuildingDetails({ role }) {
           </div>
 
           <Select label="Sensor Type" value={requestData.sensor_type} onChange={e => setRequestData({...requestData, sensor_type: e.target.value})}
-            options={[ {value: 'temperature', label: 'Temperature & Humidity'}, {value: 'motion', label: 'Motion'}, {value: 'smoke', label: 'Smoke / Fire'}, {value: 'power', label: 'Power Consumption'} ]} />
+            options={[ 
+              {value: 'temperature', label: 'Temperature'},
+              {value: 'humidity', label: 'Humidity'},
+              {value: 'temperature_humidity', label: 'Temperature & Humidity'}, 
+              {value: 'water_leak', label: 'Water Leak (Moisture)'},
+              {value: 'door', label: 'Door Access'},
+              {value: 'motion', label: 'Motion'}, 
+              {value: 'smoke', label: 'Smoke / Fire'}, 
+              {value: 'air_quality', label: 'Air Quality'},
+              {value: 'multisensor', label: 'Multisensor'},
+              {value: 'power', label: 'Power Consumption'} 
+            ]} />
           
           <div className="grid grid-cols-2 gap-4">
             <Input label="Brand (e.g., Honeywell)" value={requestData.brand} onChange={e => setRequestData({...requestData, brand: e.target.value})} required placeholder="Brand" />

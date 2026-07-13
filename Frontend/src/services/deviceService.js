@@ -55,9 +55,15 @@ export const deviceService = {
     const response = await apiClient.post('/sensor-requests', data);
     return response.data;
   },
-  fulfillSensorRequest: async (id, assignedDeviceId = null) => {
-    const payload = assignedDeviceId ? { assigned_device_id: assignedDeviceId } : {};
+  fulfillSensorRequest: async (id, assignedDeviceId = null, autoProvision = false) => {
+    const payload = {};
+    if (assignedDeviceId) payload.assigned_device_id = assignedDeviceId;
+    if (autoProvision) payload.auto_provision = true;
     const response = await apiClient.post(`/sensor-requests/${id}/fulfill`, payload);
+    return response.data;
+  },
+  deleteSensorRequest: async (id) => {
+    const response = await apiClient.delete(`/sensor-requests/${id}`);
     return response.data;
   }
 };

@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"eventstream/internal/events"
 	"eventstream/internal/models"
 	"eventstream/internal/repository"
 
@@ -13,10 +14,11 @@ import (
 
 type AlertHandler struct {
 	alertRepo *repository.AlertRepository
+	hub       *events.Hub
 }
 
-func NewAlertHandler(alertRepo *repository.AlertRepository) *AlertHandler {
-	return &AlertHandler{alertRepo: alertRepo}
+func NewAlertHandler(alertRepo *repository.AlertRepository, hub *events.Hub) *AlertHandler {
+	return &AlertHandler{alertRepo: alertRepo, hub: hub}
 }
 
 // List godoc
@@ -111,21 +113,33 @@ func (h *AlertHandler) Acknowledge(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "alert not found"})
 		return
 	}
-	if alert.Status != "open" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "only open alerts can be acknowledged"})
-		return
-	}
+	// We no longer need to check status here, the database transaction handles it securely.
 
 	var req actionRequest
-	c.ShouldBindJSON(&req)
-
-	if err := h.alertRepo.UpdateStatus(id, "acknowledged", time.Now()); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not update alert"})
+	if err := c.ShouldBindJSON(&req); err != nil && err.Error() != "EOF" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid json payload"})
 		return
 	}
 
 	userID := c.GetInt("user_id")
-	h.alertRepo.CreateActivityLog(id, userID, "acknowledged", req.Note)
+	
+	err = h.alertRepo.TransitionStatus(id, "open", "acknowledged", userID, req.Note, time.Now())
+	if err != nil {
+		if err.Error() == "conflict: alert not found or not in the expected state" {
+			c.JSON(http.StatusConflict, gin.H{"error": "alert is no longer open or does not exist"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not acknowledge alert"})
+		return
+	}
+
+	h.hub.Broadcast <- &events.StreamEvent{
+		Type: "alert_update",
+		Payload: map[string]interface{}{
+			"id": id,
+			"status": "acknowledged",
+		},
+	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "alert acknowledged"})
 }
@@ -155,21 +169,70 @@ func (h *AlertHandler) Resolve(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "alert not found"})
 		return
 	}
-	if alert.Status == "resolved" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "alert is already resolved"})
-		return
-	}
+	// We no longer need to check status here, the database transaction handles it securely.
 
 	var req actionRequest
-	c.ShouldBindJSON(&req)
-
-	if err := h.alertRepo.UpdateStatus(id, "resolved", time.Now()); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not update alert"})
+	if err := c.ShouldBindJSON(&req); err != nil && err.Error() != "EOF" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid json payload"})
 		return
 	}
 
 	userID := c.GetInt("user_id")
-	h.alertRepo.CreateActivityLog(id, userID, "resolved", req.Note)
+
+	// Usually we resolve acknowledged alerts, but we can also resolve open ones.
+	// So we pass the current status to the transition function.
+	err = h.alertRepo.TransitionStatus(id, alert.Status, "resolved", userID, req.Note, time.Now())
+	if err != nil {
+		if err.Error() == "conflict: alert not found or not in the expected state" {
+			c.JSON(http.StatusConflict, gin.H{"error": "alert state changed during request"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not resolve alert"})
+		return
+	}
+
+	h.hub.Broadcast <- &events.StreamEvent{
+		Type: "alert_update",
+		Payload: map[string]interface{}{
+			"id": id,
+			"status": "resolved",
+		},
+	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "alert resolved"})
+}
+
+// Delete godoc
+// @Summary      Delete an alert
+// @Description  Permanently deletes an alert
+// @Tags         Alerts
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id  path  int  true  "Alert ID"
+// @Success      200  {object}  map[string]string
+// @Failure      400  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /alerts/{id} [delete]
+func (h *AlertHandler) Delete(c *gin.Context) {
+	idParam := c.Param("id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid alert ID"})
+		return
+	}
+
+	if err := h.alertRepo.Delete(id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete alert"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "alert deleted successfully"})
+}
+
+func (h *AlertHandler) ClearAll(c *gin.Context) {
+	if err := h.alertRepo.DeleteAll(); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to clear alerts"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "all alerts cleared successfully"})
 }
