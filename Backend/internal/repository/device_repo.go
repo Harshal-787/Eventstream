@@ -239,3 +239,9 @@ func (r *DeviceRepo) UpdateSensorRequestStatus(reqID int, status string, fulfill
 	_, err := r.DB.Exec(query, status, fulfilledBy, reqID)
 	return err
 }
+
+func (r *DeviceRepo) DeleteSensorRequest(reqID int) error {
+	query := `DELETE FROM sensor_requests WHERE id = $1`
+	_, err := r.DB.Exec(query, reqID)
+	return err
+}

@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 	"eventstream/internal/models"
 	"eventstream/internal/repository"
 
@@ -440,13 +441,44 @@ func (h *DeviceHandler) FulfillSensorRequest(c *gin.Context) {
 
 	var reqBody struct {
 		AssignedDeviceID *int `json:"assigned_device_id"`
+		AutoProvision    bool `json:"auto_provision"`
 	}
 	// Try to bind JSON, but ignore errors if it's empty (for backwards compatibility)
 	c.ShouldBindJSON(&reqBody)
 
 	var devID int
 
-	if reqBody.AssignedDeviceID != nil {
+	if reqBody.AutoProvision {
+		// One-Click Provisioning: Generate virtual hardware ID and register
+		var modelID *int
+		var mID int
+		err = h.Repo.DB.QueryRow(`SELECT id FROM device_models WHERE brand=$1 AND model_name=$2`, sr.Brand, sr.ModelName).Scan(&mID)
+		if err == nil {
+			modelID = &mID
+		} else {
+			err = h.Repo.DB.QueryRow(`INSERT INTO device_models (brand, model_name, sensor_type) VALUES ($1, $2, $3) RETURNING id`, sr.Brand, sr.ModelName, sr.SensorType).Scan(&mID)
+			if err == nil {
+				modelID = &mID
+			}
+		}
+
+		newHardwareID := "VIRT-" + strconv.FormatInt(time.Now().UnixMilli(), 10)
+		dev := models.Device{
+			HardwareID: &newHardwareID,
+			Name:       sr.Brand + " " + sr.ModelName,
+			Type:       sr.SensorType,
+			ModelID:    modelID,
+			BuildingID: &sr.BuildingID,
+			FloorID:    &sr.FloorID,
+			RoomID:     &sr.RoomID,
+			Status:     "active",
+		}
+		if err := h.Repo.CreateDevice(&dev); err != nil {
+			log.Printf("Failed to auto-provision device: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to auto-provision device: " + err.Error()})
+			return
+		}
+	} else if reqBody.AssignedDeviceID != nil {
 		// Manual fulfillment: use the provided device ID
 		devID = *reqBody.AssignedDeviceID
 		
@@ -525,4 +557,20 @@ func (h *DeviceHandler) FulfillSensorRequest(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Request fulfilled and device registered & assigned"})
+}
+
+func (h *DeviceHandler) DeleteSensorRequest(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request ID"})
+		return
+	}
+
+	if err := h.Repo.DeleteSensorRequest(id); err != nil {
+		log.Printf("Failed to delete sensor request: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete sensor request: " + err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Sensor request deleted"})
 }

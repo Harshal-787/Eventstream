@@ -50,6 +50,10 @@ type Alert struct {
 	// Joined fields
 	DeviceName   string `json:"device_name,omitempty"`
 	BuildingName string `json:"building_name,omitempty"`
+	HardwareID   string `json:"hardware_id,omitempty"`
+	ModelName    string `json:"model_name,omitempty"`
+	FloorName    string `json:"floor_name,omitempty"`
+	RoomName     string `json:"room_name,omitempty"`
 }
 
 type AlertActivityLog struct {

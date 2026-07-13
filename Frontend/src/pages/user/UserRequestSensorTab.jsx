@@ -137,7 +137,18 @@ export function UserRequestSensorTab({ buildings }) {
             )}
 
             <Select label="Sensor Type" value={requestData.sensor_type} onChange={e => setRequestData({...requestData, sensor_type: e.target.value})}
-              options={[ {value: 'temperature', label: 'Temperature & Humidity'}, {value: 'motion', label: 'Motion'}, {value: 'smoke', label: 'Smoke / Fire'}, {value: 'power', label: 'Power Consumption'} ]} />
+              options={[ 
+                {value: 'temperature', label: 'Temperature'},
+                {value: 'humidity', label: 'Humidity'},
+                {value: 'temperature_humidity', label: 'Temperature & Humidity'}, 
+                {value: 'water_leak', label: 'Water Leak (Moisture)'},
+                {value: 'door', label: 'Door Access'},
+                {value: 'motion', label: 'Motion'}, 
+                {value: 'smoke', label: 'Smoke / Fire'}, 
+                {value: 'air_quality', label: 'Air Quality'},
+                {value: 'multisensor', label: 'Multisensor'},
+                {value: 'power', label: 'Power Consumption'} 
+              ]} />
             
             {requestData.is_byod && (
               <>
