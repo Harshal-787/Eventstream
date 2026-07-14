@@ -1,14 +1,25 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-heading: 'Outfit', ui-sans-serif, system-ui, sans-serif;
   
-  --color-primary-50: #f0fdfa;
-  --color-primary-100: #ccfbf1;
-  --color-primary-500: #14b8a6;
-  --color-primary-600: #0d9488;
-  --color-primary-700: #0f766e;
+  --color-primary-50: #eef2ff;
+  --color-primary-100: #e0e7ff;
+  --color-primary-200: #c7d2fe;
+  --color-primary-300: #a5b4fc;
+  --color-primary-400: #818cf8;
+  --color-primary-500: #6366f1;
+  --color-primary-600: #4f46e5;
+  --color-primary-700: #4338ca;
+  --color-primary-800: #3730a3;
+  --color-primary-900: #312e81; /* Midnight Indigo */
   
+  --color-accent-500: #8b5cf6; /* Electric Violet */
+  --color-accent-600: #7c3aed;
+
+  /* We keep the brutalist variable names for backward compatibility while we refactor,
+     but we completely change what they represent (they are no longer brutalist). */
   --color-background: var(--bg-main);
   --color-surface: var(--bg-surface);
   --color-surface-hover: var(--bg-surface-hover);
@@ -16,67 +27,40 @@
   --color-text-muted: var(--text-muted);
   --color-border-main: var(--border-main);
 
-  /* Brutalist Colors */
-  --color-brutal-bg: var(--brutal-bg);
-  --color-brutal-border: var(--brutal-border);
-  --color-brutal-shadow: var(--brutal-shadow);
-  --color-brutal-text: var(--brutal-text);
-  --color-brutal-text-inverse: var(--brutal-text-inverse);
-  --color-brutal-inverse-bg: var(--brutal-inverse-bg);
-  --color-brutal-hover: var(--brutal-hover-bg);
-
-  /* Remove all rounded corners */
-  --radius-xs: 0px;
-  --radius-sm: 0px;
-  --radius-md: 0px;
-  --radius-lg: 0px;
-  --radius-xl: 0px;
-  --radius-2xl: 0px;
-  --radius-3xl: 0px;
-  --radius-4xl: 0px;
-  --radius: 0px;
-  --radius-full: 0px;
+  --color-brutal-bg: var(--bg-surface);
+  --color-brutal-border: var(--border-main);
+  --color-brutal-shadow: var(--shadow-color);
+  --color-brutal-text: var(--text-main);
+  --color-brutal-text-inverse: #ffffff;
+  --color-brutal-inverse-bg: var(--color-primary-900);
+  --color-brutal-hover: var(--bg-surface-hover);
 }
 
 :root {
+  /* Light Theme - Sleek Minimalist */
   --bg-main: #f8fafc;
   --bg-surface: #ffffff;
   --bg-surface-hover: #f1f5f9;
   --text-main: #0f172a;
   --text-muted: #64748b;
   --border-main: #e2e8f0;
-
-  /* Brutalist Theme Variables */
-  --brutal-bg: var(--bg-surface);
-  --brutal-border: #475569; /* slate-600 */
-  --brutal-shadow: var(--color-primary-600); /* hint of green */
-  --brutal-text: var(--text-main);
-  --brutal-text-inverse: #ffffff;
-  --brutal-inverse-bg: var(--color-primary-600);
-  --brutal-hover-bg: var(--bg-surface-hover);
+  --shadow-color: rgba(49, 46, 129, 0.08); /* Soft indigo shadow */
 }
 
 .dark {
-  --bg-main: #020617;
-  --bg-surface: #0f172a;
-  --bg-surface-hover: #1e293b;
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --border-main: #334155;
-
-  /* Brutalist Theme Variables (Dark Mode Inverted) */
-  --brutal-bg: var(--bg-surface);
-  --brutal-border: #64748b; /* slate-500 */
-  --brutal-shadow: var(--color-primary-500); /* hint of green */
-  --brutal-text: var(--text-main);
-  --brutal-text-inverse: #020617;
-  --brutal-inverse-bg: var(--color-primary-500);
-  --brutal-hover-bg: var(--bg-surface-hover);
+  /* Dark Theme - Premium Obsidian */
+  --bg-main: #09090b;
+  --bg-surface: #18181b;
+  --bg-surface-hover: #27272a;
+  --text-main: #fafafa;
+  --text-muted: #a1a1aa;
+  --border-main: #3f3f46;
+  --shadow-color: rgba(0, 0, 0, 0.5); 
 }
 
+/* Global resets for the new aesthetic */
 *, *::before, *::after {
   box-sizing: border-box;
-  border-radius: 0 !important;
 }
 
 body {
@@ -88,23 +72,53 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Fix text selection visibility */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  letter-spacing: -0.02em;
+}
+
+/* Soft text selection */
 ::selection {
+  background-color: var(--color-primary-200);
+  color: var(--color-primary-900);
+}
+.dark ::selection {
   background-color: var(--color-primary-500);
   color: #ffffff;
 }
 
-/* Custom scrollbar for boxy feel */
+/* Modern clean scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--color-background); 
+  background: transparent; 
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border-main); 
+  background: var(--border-main); 
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-muted); 
+  background: var(--text-muted); 
+}
+
+/* Base utility overrides for the transition phase */
+.border-2 {
+  border-width: 1px !important;
+}
+
+/* We will gradually remove these brutalist utility classes from components,
+   but we redefine them here so the app looks instantly better before the full rewrite */
+.shadow-\[4px_4px_0px_0px_var\(--color-brutal-shadow\)\] {
+  box-shadow: 0 10px 25px -5px var(--shadow-color), 0 8px 10px -6px var(--shadow-color) !important;
+}
+
+.shadow-\[8px_8px_0px_0px_var\(--color-brutal-shadow\)\] {
+  box-shadow: 0 20px 25px -5px var(--shadow-color), 0 8px 10px -6px var(--shadow-color) !important;
+}
+
+/* Override borders to be rounded */
+.rounded-none {
+  border-radius: 1rem !important; /* 16px */
 }

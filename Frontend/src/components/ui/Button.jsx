@@ -11,10 +11,10 @@ export function Button({
   ...props 
 }) {
   const variants = {
-    primary: "bg-(--color-brutal-inverse-bg) text-(--color-brutal-text-inverse) border-2 border-(--color-brutal-border) hover:opacity-90 shadow-md    transition-all font-black uppercase tracking-wider",
-    secondary: "bg-(--color-brutal-bg) text-(--color-brutal-text) border-2 border-(--color-brutal-border) hover:bg-(--color-brutal-hover) shadow-md    transition-all font-bold uppercase tracking-wider",
-    danger: "bg-red-500 text-white border-2 border-(--color-brutal-border) hover:bg-red-600 shadow-md    transition-all font-bold uppercase tracking-wider",
-    ghost: "bg-transparent text-(--color-brutal-text) hover:bg-(--color-brutal-hover) border-2 border-transparent hover:border-(--color-brutal-border) transition-all font-bold uppercase tracking-wider",
+    primary: "bg-gradient-to-b from-indigo-500 to-indigo-600 text-white hover:from-indigo-600 hover:to-indigo-700 shadow-md shadow-indigo-600/20 hover:shadow-lg hover:shadow-indigo-600/30 active:scale-[0.98] active:shadow-sm transition-all font-semibold rounded-xl border border-indigo-700/50",
+    secondary: "bg-white dark:bg-(--color-surface-hover) text-slate-900 dark:text-white border border-slate-300 dark:border-zinc-600 hover:bg-slate-50 dark:hover:bg-zinc-700 shadow-sm hover:shadow-md active:scale-[0.98] transition-all font-semibold rounded-xl",
+    danger: "bg-gradient-to-b from-rose-500 to-rose-600 text-white hover:from-rose-600 hover:to-rose-700 shadow-md shadow-rose-600/20 hover:shadow-lg hover:shadow-rose-600/30 active:scale-[0.98] active:shadow-sm transition-all font-semibold rounded-xl border border-rose-700/50",
+    ghost: "bg-transparent text-slate-800 dark:text-(--color-text-main) hover:bg-slate-100 dark:hover:bg-(--color-surface-hover) active:scale-[0.98] transition-all font-semibold rounded-xl",
   };
 
   const sizes = {
@@ -26,9 +26,9 @@ export function Button({
   return (
     <button
       type={type}
-      disabled={disabled}
+      disabled={disabled ? true : undefined}
       className={cn(
-        "inline-flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-0 disabled:opacity-50 disabled:pointer-events-none cursor-pointer",
+        "inline-flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-0 disabled:opacity-60 disabled:pointer-events-none cursor-pointer",
         variants[variant],
         sizes[size],
         className

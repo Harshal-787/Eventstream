@@ -1,0 +1,9 @@
+CREATE TABLE sessions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    device_info VARCHAR(255),
+    ip_address VARCHAR(45),
+    is_active BOOLEAN DEFAULT TRUE,
+    last_active_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
