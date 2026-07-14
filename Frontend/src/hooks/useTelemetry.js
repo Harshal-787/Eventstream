@@ -1,57 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useStreamStore } from '../store/useStreamStore';
+import { useMemo } from 'react';
 
-// Custom hook to connect to the SSE Telemetry Stream
+// Custom hook to consume telemetry from the global stream store
 export const useTelemetry = (filterDeviceIds = null) => {
-  const [telemetry, setTelemetry] = useState(null);
-  const [telemetryMap, setTelemetryMap] = useState({});
-  const [isConnected, setIsConnected] = useState(false);
+  const { telemetry, telemetryMap, isConnected } = useStreamStore();
 
-  useEffect(() => {
-    // We assume the user has a token in localStorage
-    const token = localStorage.getItem('token');
-    
-    // Note: Standard EventSource doesn't support Authorization headers easily.
-    // If your backend requires it, you can pass it as a query param like ?token=
-    // Here we connect to the stream endpoint using relative path to utilize Vite proxy:
-    const eventSource = new EventSource(`/api/v1/stream?token=${token}`);
-
-    eventSource.onopen = () => {
-      setIsConnected(true);
-      console.log('Connected to real-time telemetry stream');
-    };
-
-    eventSource.addEventListener('telemetry', (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        // If filterDeviceIds is provided, only accept matching devices
-        if (filterDeviceIds && filterDeviceIds.length > 0) {
-          if (!filterDeviceIds.includes(data.device_id)) {
-            return; // Ignore this payload
-          }
-        }
-        
-        setTelemetry(data);
-        setTelemetryMap(prev => ({
-          ...prev,
-          [data.device_id]: data
-        }));
-      } catch (e) {
-        console.error('Error parsing telemetry JSON', e);
+  // If filterDeviceIds is provided, we return a filtered version of the maps
+  const filteredTelemetryMap = useMemo(() => {
+    if (!filterDeviceIds || filterDeviceIds.length === 0) return telemetryMap;
+    const filtered = {};
+    for (const id of filterDeviceIds) {
+      if (telemetryMap[id]) {
+        filtered[id] = telemetryMap[id];
       }
-    });
+    }
+    return filtered;
+  }, [telemetryMap, filterDeviceIds]);
 
-    eventSource.onerror = (error) => {
-      console.error('SSE Error:', error);
-      setIsConnected(false);
-      eventSource.close();
-      
-      // Auto-reconnect logic could go here, or rely on browser's native reconnect
-    };
-
-    return () => {
-      eventSource.close();
-    };
-  }, []);
-
-  return { telemetry, telemetryMap, isConnected };
+  return { 
+    telemetry: filterDeviceIds && filterDeviceIds.length > 0 && telemetry && !filterDeviceIds.includes(telemetry.device_id) ? null : telemetry, 
+    telemetryMap: filteredTelemetryMap, 
+    isConnected 
+  };
 };
