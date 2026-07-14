@@ -17,9 +17,9 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 
 func (r *UserRepository) FindByEmail(email string) (*models.User, error) {
 	user := &models.User{}
-	query := `SELECT id, name, email, password_hash, role, status, contact_number, driving_license, otp_code, otp_expires_at, created_at FROM users WHERE email = $1 LIMIT 1`
+	query := `SELECT id, name, email, password_hash, role, status, contact_number, driving_license, otp_code, otp_expires_at, reset_token, reset_token_expires_at, created_at FROM users WHERE email = $1 LIMIT 1`
 	err := r.db.QueryRow(query, email).Scan(
-		&user.ID, &user.Name, &user.Email, &user.PasswordHash, &user.Role, &user.Status, &user.ContactNumber, &user.DrivingLicense, &user.OTPCode, &user.OTPExpiresAt, &user.CreatedAt,
+		&user.ID, &user.Name, &user.Email, &user.PasswordHash, &user.Role, &user.Status, &user.ContactNumber, &user.DrivingLicense, &user.OTPCode, &user.OTPExpiresAt, &user.ResetToken, &user.ResetTokenExpiresAt, &user.CreatedAt,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
@@ -32,9 +32,9 @@ func (r *UserRepository) FindByEmail(email string) (*models.User, error) {
 
 func (r *UserRepository) FindByID(id int) (*models.User, error) {
 	user := &models.User{}
-	query := `SELECT id, name, email, password_hash, role, status, contact_number, driving_license, otp_code, otp_expires_at, created_at FROM users WHERE id = $1 LIMIT 1`
+	query := `SELECT id, name, email, password_hash, role, status, contact_number, driving_license, otp_code, otp_expires_at, reset_token, reset_token_expires_at, created_at FROM users WHERE id = $1 LIMIT 1`
 	err := r.db.QueryRow(query, id).Scan(
-		&user.ID, &user.Name, &user.Email, &user.PasswordHash, &user.Role, &user.Status, &user.ContactNumber, &user.DrivingLicense, &user.OTPCode, &user.OTPExpiresAt, &user.CreatedAt,
+		&user.ID, &user.Name, &user.Email, &user.PasswordHash, &user.Role, &user.Status, &user.ContactNumber, &user.DrivingLicense, &user.OTPCode, &user.OTPExpiresAt, &user.ResetToken, &user.ResetTokenExpiresAt, &user.CreatedAt,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
@@ -123,6 +123,33 @@ func (r *UserRepository) SaveOTP(id int, code string, expiresAt string) error {
 func (r *UserRepository) ClearOTP(id int) error {
 	query := `UPDATE users SET otp_code = NULL, otp_expires_at = NULL WHERE id = $1`
 	_, err := r.db.Exec(query, id)
+	return err
+}
+
+func (r *UserRepository) SaveResetToken(email string, token string, expiresAt string) error {
+	query := `UPDATE users SET reset_token = $1, reset_token_expires_at = $2 WHERE email = $3`
+	_, err := r.db.Exec(query, token, expiresAt, email)
+	return err
+}
+
+func (r *UserRepository) FindByResetToken(token string) (*models.User, error) {
+	user := &models.User{}
+	query := `SELECT id, name, email, password_hash, role, status, contact_number, driving_license, otp_code, otp_expires_at, reset_token, reset_token_expires_at, created_at FROM users WHERE reset_token = $1 LIMIT 1`
+	err := r.db.QueryRow(query, token).Scan(
+		&user.ID, &user.Name, &user.Email, &user.PasswordHash, &user.Role, &user.Status, &user.ContactNumber, &user.DrivingLicense, &user.OTPCode, &user.OTPExpiresAt, &user.ResetToken, &user.ResetTokenExpiresAt, &user.CreatedAt,
+	)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (r *UserRepository) UpdatePassword(id int, passwordHash string) error {
+	query := `UPDATE users SET password_hash = $1, reset_token = NULL, reset_token_expires_at = NULL WHERE id = $2`
+	_, err := r.db.Exec(query, passwordHash, id)
 	return err
 }
 

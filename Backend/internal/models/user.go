@@ -11,7 +11,9 @@ type User struct {
 	Status         string     `json:"status"` // 'pending_approval', 'active'
 	ContactNumber  *string    `json:"contact_number"`
 	DrivingLicense *string    `json:"driving_license"`
-	OTPCode        *string    `json:"-"`
-	OTPExpiresAt   *time.Time `json:"-"`
-	CreatedAt      time.Time  `json:"created_at"`
+	OTPCode             *string    `json:"-"`
+	OTPExpiresAt        *time.Time `json:"-"`
+	ResetToken          *string    `json:"-"`
+	ResetTokenExpiresAt *time.Time `json:"-"`
+	CreatedAt           time.Time  `json:"created_at"`
 }

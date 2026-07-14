@@ -23,19 +23,6 @@ type Building struct {
 }
 
 
-type AlertRule struct {
-	ID         int       `json:"id"`
-	Name       string    `json:"name"`
-	DeviceType string    `json:"device_type"`
-	Metric     string    `json:"metric"`
-	Operator   string    `json:"operator"`
-	Threshold  *float64  `json:"threshold"`
-	BoolValue  *bool     `json:"bool_value"`
-	Severity   string    `json:"severity"`
-	IsActive   bool      `json:"is_active"`
-	CreatedAt  time.Time `json:"created_at"`
-}
-
 type Alert struct {
 	ID             int        `json:"id"`
 	DeviceID       *int       `json:"device_id"`

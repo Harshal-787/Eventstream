@@ -8,16 +8,18 @@ import (
 	"time"
 	"eventstream/internal/models"
 	"eventstream/internal/repository"
+	"eventstream/internal/services"
 
 	"github.com/gin-gonic/gin"
 )
 
 type DeviceHandler struct {
-	Repo *repository.DeviceRepo
+	Repo   *repository.DeviceRepo
+	logger *services.AuditLogger
 }
 
-func NewDeviceHandler(repo *repository.DeviceRepo) *DeviceHandler {
-	return &DeviceHandler{Repo: repo}
+func NewDeviceHandler(repo *repository.DeviceRepo, logger *services.AuditLogger) *DeviceHandler {
+	return &DeviceHandler{Repo: repo, logger: logger}
 }
 
 // --- Models ---
@@ -240,6 +242,11 @@ func (h *DeviceHandler) CreateDevice(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create device"})
 		return
 	}
+
+	userID := c.GetInt("user_id")
+	entityType := "device"
+	h.logger.Log(&userID, "DEVICE_CREATED", &entityType, &dev.ID, dev, c.ClientIP())
+
 	c.JSON(http.StatusCreated, dev)
 }
 
@@ -256,6 +263,11 @@ func (h *DeviceHandler) DeleteDevice(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete device: " + err.Error()})
 		return
 	}
+
+	userID := c.GetInt("user_id")
+	entityType := "device"
+	h.logger.Log(&userID, "DEVICE_DELETED", &entityType, &id, map[string]interface{}{}, c.ClientIP())
+
 	c.JSON(http.StatusOK, gin.H{"message": "Device deleted"})
 }
 

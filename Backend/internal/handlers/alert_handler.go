@@ -8,6 +8,7 @@ import (
 	"eventstream/internal/events"
 	"eventstream/internal/models"
 	"eventstream/internal/repository"
+	"eventstream/internal/services"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,10 +16,15 @@ import (
 type AlertHandler struct {
 	alertRepo *repository.AlertRepository
 	hub       *events.Hub
+	logger    *services.AuditLogger
 }
 
-func NewAlertHandler(alertRepo *repository.AlertRepository, hub *events.Hub) *AlertHandler {
-	return &AlertHandler{alertRepo: alertRepo, hub: hub}
+func NewAlertHandler(alertRepo *repository.AlertRepository, hub *events.Hub, logger *services.AuditLogger) *AlertHandler {
+	return &AlertHandler{
+		alertRepo: alertRepo,
+		hub:       hub,
+		logger:    logger,
+	}
 }
 
 // List godoc
@@ -133,6 +139,9 @@ func (h *AlertHandler) Acknowledge(c *gin.Context) {
 		return
 	}
 
+	entityType := "alert"
+	h.logger.Log(&userID, "ALERT_ACKNOWLEDGED", &entityType, &id, map[string]interface{}{"note": req.Note}, c.ClientIP())
+
 	h.hub.Broadcast <- &events.StreamEvent{
 		Type: "alert_update",
 		Payload: map[string]interface{}{
@@ -190,6 +199,9 @@ func (h *AlertHandler) Resolve(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not resolve alert"})
 		return
 	}
+
+	entityType := "alert"
+	h.logger.Log(&userID, "ALERT_RESOLVED", &entityType, &id, map[string]interface{}{"note": req.Note}, c.ClientIP())
 
 	h.hub.Broadcast <- &events.StreamEvent{
 		Type: "alert_update",

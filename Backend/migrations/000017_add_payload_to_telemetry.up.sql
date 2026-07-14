@@ -1,0 +1,1 @@
+ALTER TABLE telemetry ADD COLUMN IF NOT EXISTS payload JSONB;
