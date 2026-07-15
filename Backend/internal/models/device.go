@@ -3,11 +3,12 @@ package models
 import "time"
 
 type Floor struct {
-	ID         int       `json:"id"`
-	BuildingID int       `json:"building_id"`
-	Level      int       `json:"level"`
-	Name       string    `json:"name"`
-	CreatedAt  time.Time `json:"created_at"`
+	ID           int       `json:"id"`
+	BuildingID   int       `json:"building_id"`
+	Level        int       `json:"level"`
+	Name         string    `json:"name"`
+	FloorPlanURL *string   `json:"floor_plan_url,omitempty"`
+	CreatedAt    time.Time `json:"created_at"`
 }
 
 type Room struct {
@@ -37,19 +38,27 @@ type DeviceModel struct {
 }
 
 type Device struct {
-	ID             int        `json:"id"`
-	HardwareID     *string    `json:"hardware_id"`
-	Name           string     `json:"name"`
-	Type           string     `json:"type"`
-	ModelID        *int       `json:"model_id"`
-	BuildingID     *int       `json:"building_id"`
-	FloorID        *int       `json:"floor_id"`
-	RoomID         *int       `json:"room_id"`
-	Status         string     `json:"status"` // unassigned, active, offline, maintenance, retired
-	Metadata       *string    `json:"metadata"` // JSONB as string for simple handling, or map[string]interface{}
-	BatteryPct     *int       `json:"battery_pct"`
-	SignalStrength *string    `json:"signal_strength"`
-	CreatedAt      time.Time  `json:"created_at"`
+	ID                  int        `json:"id"`
+	OrganizationID      int        `json:"organization_id"`
+	DeviceGroupID       *int       `json:"device_group_id,omitempty"`
+	HardwareID          *string    `json:"hardware_id"`
+	Name                string     `json:"name"`
+	Type                string     `json:"type"`
+	ModelID             *int       `json:"model_id"`
+	BuildingID          *int       `json:"building_id"`
+	FloorID             *int       `json:"floor_id"`
+	RoomID              *int       `json:"room_id"`
+	Status              string     `json:"status"` // unassigned, active, offline, maintenance, retired
+	Metadata            *string    `json:"metadata"` // JSONB as string for simple handling, or map[string]interface{}
+	BatteryPct          *int       `json:"battery_pct"`
+	SignalStrength      *string    `json:"signal_strength"`
+	FirmwareVersion     *string    `json:"firmware_version,omitempty"`
+	LastCommunicationAt *time.Time `json:"last_communication_at,omitempty"`
+	ActivationStatus    string     `json:"activation_status"` // pending, active, inactive, disabled
+	ProvisioningToken   *string    `json:"provisioning_token,omitempty"`
+	MapX                *float64   `json:"map_x,omitempty"`
+	MapY                *float64   `json:"map_y,omitempty"`
+	CreatedAt           time.Time  `json:"created_at"`
 
 	// Joined fields for easier UI rendering
 	ModelName    string `json:"model_name,omitempty"`
@@ -57,6 +66,24 @@ type Device struct {
 	BuildingName string `json:"building_name,omitempty"`
 	FloorName    string `json:"floor_name,omitempty"`
 	RoomName     string `json:"room_name,omitempty"`
+}
+
+type DeviceGroup struct {
+	ID             int       `json:"id"`
+	OrganizationID int       `json:"organization_id"`
+	Name           string    `json:"name"`
+	Description    *string   `json:"description,omitempty"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
+}
+
+type DeviceTwin struct {
+	DeviceID      int                    `json:"device_id"`
+	DesiredState  map[string]interface{} `json:"desired_state"`
+	ReportedState map[string]interface{} `json:"reported_state"`
+	Configuration map[string]interface{} `json:"configuration"`
+	HealthScore   int                    `json:"health_score"`
+	UpdatedAt     time.Time              `json:"updated_at"`
 }
 
 type SensorRequest struct {

@@ -3,20 +3,21 @@ package models
 import "time"
 
 type Building struct {
-	ID        int       `json:"id"`
-	Name      string    `json:"name"`
-	Address   string    `json:"address"`
-	City      string    `json:"city"`
-	State     string    `json:"state"`
-	ZipCode   string    `json:"zip_code"`
-	Latitude     *float64  `json:"latitude"`
-	Longitude    *float64  `json:"longitude"`
-	UBID         *string   `json:"ubid"`
-	ParcelNumber *string   `json:"parcel_number"`
-	BIN          *string   `json:"bin"`
-	OwnerID      *int      `json:"owner_id"`
-	Status    string    `json:"status"` // 'pending_approval', 'active', 'suspended'
-	CreatedAt time.Time `json:"created_at"`
+	ID             int       `json:"id"`
+	OrganizationID int       `json:"organization_id"`
+	Name           string    `json:"name"`
+	Address        string    `json:"address"`
+	City           string    `json:"city"`
+	State          string    `json:"state"`
+	ZipCode        string    `json:"zip_code"`
+	Latitude       *float64  `json:"latitude"`
+	Longitude      *float64  `json:"longitude"`
+	UBID           *string   `json:"ubid"`
+	ParcelNumber   *string   `json:"parcel_number"`
+	BIN            *string   `json:"bin"`
+	OwnerID        *int      `json:"owner_id"`
+	Status         string    `json:"status"` // 'pending_approval', 'active', 'suspended'
+	CreatedAt      time.Time `json:"created_at"`
 	
 	// Joined fields
 	OwnerName string `json:"owner_name,omitempty"`
@@ -25,6 +26,7 @@ type Building struct {
 
 type Alert struct {
 	ID             int        `json:"id"`
+	OrganizationID int        `json:"organization_id"`
 	DeviceID       *int       `json:"device_id"`
 	AlertRuleID    *int       `json:"alert_rule_id"`
 	Type           string     `json:"type"`

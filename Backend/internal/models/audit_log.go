@@ -6,9 +6,10 @@ import (
 )
 
 type AuditLog struct {
-	ID         int                    `json:"id"`
-	UserID     *int                   `json:"user_id"`
-	UserName   *string                `json:"user_name,omitempty"` // For joining with users table
+	ID             int                    `json:"id"`
+	OrganizationID int                    `json:"organization_id"`
+	UserID         *int                   `json:"user_id"`
+	UserName       *string                `json:"user_name,omitempty"` // For joining with users table
 	UserRole   *string                `json:"user_role,omitempty"`
 	Action     string                 `json:"action"`
 	EntityType *string                `json:"entity_type"`

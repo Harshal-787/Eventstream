@@ -39,7 +39,7 @@ export function StatusActionDropdown({ status, pendingLabel, onApprove, onReject
       </button>
 
       {isOpen && (
-        <div className="origin-top-left absolute left-0 mt-1 w-36 rounded-none shadow-lg bg-(--color-surface) z-50 border border-(--color-border-main)">
+        <div className="origin-top-left absolute left-0 mt-1 w-36 rounded-xl shadow-lg bg-(--color-surface) z-50 border border-(--color-border-main) overflow-hidden">
           <div className="py-1 flex flex-col" role="menu" aria-orientation="vertical">
             <button
               onClick={() => {

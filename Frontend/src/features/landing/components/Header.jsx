@@ -26,10 +26,10 @@ export function Header() {
   return (
     <header 
       className={cn(
-        'fixed top-0 left-0 right-0 z-50 h-20 transition-all duration-300 flex items-center',
+        'fixed top-0 left-0 right-0 z-50 h-20 transition-all duration-300 flex items-center border-b',
         scrolled 
-          ? 'bg-(--color-surface) border-b border-(--color-border-main) shadow-sm' 
-          : 'bg-transparent'
+          ? 'bg-(--color-surface) border-(--color-border-main) shadow-sm' 
+          : 'bg-transparent border-transparent'
       )}
     >
       <div className="w-full max-w-7xl mx-auto flex justify-between items-center px-6">

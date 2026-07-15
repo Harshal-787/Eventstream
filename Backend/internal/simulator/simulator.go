@@ -13,16 +13,19 @@ import (
 	"eventstream/internal/events"
 	"eventstream/internal/models"
 	"eventstream/internal/repository"
+	"eventstream/internal/services"
 )
 
 type Simulator struct {
-	db       *sql.DB
-	hub      *events.Hub
-	ruleRepo *repository.AlertRuleRepository
+	db                  *sql.DB
+	hub                 *events.Hub
+	ruleRepo            *repository.AlertRuleRepository
+	anomalyDetector     *services.AnomalyDetector
+	notificationService *services.NotificationService
 }
 
-func NewSimulator(db *sql.DB, hub *events.Hub, ruleRepo *repository.AlertRuleRepository) *Simulator {
-	return &Simulator{db: db, hub: hub, ruleRepo: ruleRepo}
+func NewSimulator(db *sql.DB, hub *events.Hub, ruleRepo *repository.AlertRuleRepository, anomalyDetector *services.AnomalyDetector, notificationService *services.NotificationService) *Simulator {
+	return &Simulator{db: db, hub: hub, ruleRepo: ruleRepo, anomalyDetector: anomalyDetector, notificationService: notificationService}
 }
 
 func (s *Simulator) Run() {
@@ -192,6 +195,9 @@ func (s *Simulator) Run() {
 			}
 			t.ID = id
 
+			// Run anomaly detection
+			go s.anomalyDetector.Process(t)
+
 			// Broadcast to SSE hub
 			s.hub.Broadcast <- &events.StreamEvent{
 				Type:    "telemetry",
@@ -266,20 +272,33 @@ func (s *Simulator) Run() {
 							s.hub.Broadcast <- &events.StreamEvent{
 								Type: "alert",
 								Payload: map[string]interface{}{
-									"id": alertID,
-									"device_id": deviceID,
-									"device_name": devName.String,
-									"building_name": bName.String,
-									"room_name": rName.String,
-									"floor_name": fName.String,
-									"hardware_id": hardwareID.String,
-									"model_name": modelName.String,
-									"type": rule.Metric,
-									"severity": rule.Severity,
-									"message": "Rule Triggered: " + rule.Name,
-									"status": "open",
+									"id":           alertID,
+									"device_id":    deviceID,
+									"device_name":  devName.String,
+									"rule_name":    rule.Name,
+									"metric":       rule.Metric,
+									"severity":     rule.Severity,
+									"message":      "Rule Triggered: " + rule.Name,
 									"triggered_at": time.Now(),
 								},
+							}
+
+							if s.notificationService != nil {
+								var orgID int
+								s.db.QueryRow("SELECT organization_id FROM devices WHERE id = $1", deviceID).Scan(&orgID)
+								
+								alertModel := &models.Alert{
+									ID:             alertID,
+									OrganizationID: orgID,
+									DeviceID:       &deviceID,
+									AlertRuleID:    &rule.ID,
+									Type:           "rule",
+									Severity:       rule.Severity,
+									Status:         "open",
+									Message:        "Rule Triggered: " + rule.Name,
+									TriggeredAt:    time.Now(),
+								}
+								s.notificationService.DispatchAlert(alertModel)
 							}
 						}
 					}

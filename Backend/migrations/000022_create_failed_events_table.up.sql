@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS failed_events (
+    id SERIAL PRIMARY KEY,
+    payload JSONB NOT NULL,
+    error_reason TEXT NOT NULL,
+    source_ip VARCHAR(45),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
