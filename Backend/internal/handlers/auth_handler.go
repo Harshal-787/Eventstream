@@ -266,7 +266,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	token, err := middleware.GenerateToken(user.ID, user.Email, user.Role, session.ID, h.cfg)
+	token, err := middleware.GenerateToken(user.ID, user.OrganizationID, user.Email, user.Role, session.ID, h.cfg)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not generate token"})
 		return
@@ -359,7 +359,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 	}
 
 	sessionID, _ := c.Get("session_id")
-	token, err := middleware.GenerateToken(user.ID, user.Email, user.Role, sessionID.(string), h.cfg)
+	token, err := middleware.GenerateToken(user.ID, user.OrganizationID, user.Email, user.Role, sessionID.(string), h.cfg)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not generate token"})
 		return
@@ -424,7 +424,7 @@ func (h *AuthHandler) VerifyOTP(c *gin.Context) {
 		return
 	}
 
-	token, err := middleware.GenerateToken(user.ID, user.Email, user.Role, session.ID, h.cfg)
+	token, err := middleware.GenerateToken(user.ID, user.OrganizationID, user.Email, user.Role, session.ID, h.cfg)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not generate token"})
 		return

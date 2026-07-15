@@ -3,7 +3,7 @@ import { deviceService } from '../services/deviceService';
 import { Box } from '../../../components/ui/Box';
 import { Spinner } from '../../../components/ui/Spinner';
 import { EmptyState } from '../../../components/ui/EmptyState';
-import { Cpu, Plus, Upload, Server, Search, Filter, Inbox, CheckCircle, Package, Trash2, Settings2, RefreshCcw, LogOut, AlertTriangle } from 'lucide-react';
+import { Cpu, Plus, Upload, Server, Search, Filter, Inbox, CheckCircle, Package, Trash2, Settings2, RefreshCcw, LogOut, AlertTriangle, Key, Activity } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { Badge } from '../../../components/ui/Badge';
 import { Input } from '../../../components/ui/Input';
@@ -50,6 +50,16 @@ export function Devices({ role }) {
   });
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [fulfillDeviceId, setFulfillDeviceId] = useState('');
+
+  // Phase 2 states
+  const [isProvisionOpen, setIsProvisionOpen] = useState(false);
+  const [provisionToken, setProvisionToken] = useState('');
+  const [selectedDevice, setSelectedDevice] = useState(null);
+
+  const [isTwinOpen, setIsTwinOpen] = useState(false);
+  const [deviceTwin, setDeviceTwin] = useState(null);
+  const [desiredStateInput, setDesiredStateInput] = useState('');
+  const [configInput, setConfigInput] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -247,6 +257,49 @@ export function Devices({ role }) {
     }
   };
 
+  const handleProvision = async (device) => {
+    try {
+      const res = await deviceService.provisionDevice(device.id);
+      setProvisionToken(res.token);
+      setSelectedDevice(device);
+      setIsProvisionOpen(true);
+      fetchData(); // Refresh to update status
+    } catch (err) {
+      toast.error('Failed to generate provisioning token');
+    }
+  };
+
+  const handleOpenTwin = async (device) => {
+    try {
+      setSelectedDevice(device);
+      const twin = await deviceService.getDeviceTwin(device.id);
+      setDeviceTwin(twin);
+      setDesiredStateInput(twin.desired_state ? JSON.stringify(twin.desired_state, null, 2) : '{\n  \n}');
+      setConfigInput(twin.configuration ? JSON.stringify(twin.configuration, null, 2) : '{\n  \n}');
+      setIsTwinOpen(true);
+    } catch (err) {
+      toast.error('Failed to load device twin');
+    }
+  };
+
+  const handleSaveTwin = async () => {
+    try {
+      let desiredParsed = null;
+      let configParsed = null;
+      if (desiredStateInput.trim()) desiredParsed = JSON.parse(desiredStateInput);
+      if (configInput.trim()) configParsed = JSON.parse(configInput);
+
+      await deviceService.updateDeviceTwin(selectedDevice.id, {
+        desired_state: desiredParsed,
+        configuration: configParsed
+      });
+      toast.success('Digital Twin updated');
+      setIsTwinOpen(false);
+    } catch (err) {
+      toast.error('Invalid JSON format in twin configuration');
+    }
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'active': return 'success';
@@ -254,6 +307,7 @@ export function Devices({ role }) {
       case 'unassigned': return 'warning';
       case 'pending': return 'warning';
       case 'maintenance': return 'error';
+      case 'offline': return 'danger';
       case 'rejected': return 'danger';
       default: return 'neutral';
     }
@@ -493,6 +547,12 @@ export function Devices({ role }) {
                               <LogOut className="w-4 h-4" />
                             </Button>
                           )}
+                          <Button size="icon" variant="ghost" className="h-8 w-8 rounded-md text-amber-600 hover:bg-amber-50 transition-colors mr-1" onClick={() => handleProvision(device)} title="Provisioning Token">
+                            <Key className="w-4 h-4" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-8 w-8 rounded-md text-emerald-600 hover:bg-emerald-50 transition-colors mr-1" onClick={() => handleOpenTwin(device)} title="Digital Twin">
+                            <Activity className="w-4 h-4" />
+                          </Button>
                           <Button 
                             size="icon" 
                             variant="ghost" 
@@ -909,6 +969,61 @@ export function Devices({ role }) {
             <Button type="submit">Import Devices</Button>
           </div>
         </form>
+      </Modal>
+
+      {/* Provisioning Modal */}
+      <Modal isOpen={isProvisionOpen} onClose={() => setIsProvisionOpen(false)} title="Provision Device">
+        <div className="space-y-4">
+          <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+            <p className="text-sm font-medium text-amber-500">Security Token Generated</p>
+            <p className="text-xs text-(--color-text-muted) mt-1">This token must be programmed into the physical device. It is used to securely identify the device via Webhooks.</p>
+          </div>
+          <div className="bg-(--color-surface-hover) border border-(--color-border) p-4 rounded-xl flex items-center justify-between">
+            <code className="text-sm font-mono text-(--color-text-main) break-all">{provisionToken}</code>
+            <Button size="sm" variant="secondary" onClick={() => {
+              navigator.clipboard.writeText(provisionToken);
+              toast.success('Token copied to clipboard');
+            }}>Copy</Button>
+          </div>
+          <div className="flex justify-end gap-3 pt-4 border-t border-(--color-border)">
+            <Button onClick={() => setIsProvisionOpen(false)}>Done</Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Digital Twin Modal */}
+      <Modal isOpen={isTwinOpen} onClose={() => setIsTwinOpen(false)} title="Device Digital Twin">
+        <div className="space-y-4">
+          <div className="p-4 bg-(--color-surface-hover) border border-(--color-border) rounded-xl mb-4">
+            <p className="text-xs font-bold uppercase tracking-wider text-(--color-text-muted) mb-2">Reported State (Read-Only)</p>
+            <pre className="text-xs font-mono text-(--color-text-main) bg-slate-900/5 dark:bg-black/30 p-3 rounded-lg overflow-x-auto">
+              {deviceTwin?.reported_state ? JSON.stringify(deviceTwin.reported_state, null, 2) : 'No state reported yet'}
+            </pre>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-(--color-text-muted) mb-2">Desired State (JSON)</p>
+              <textarea
+                value={desiredStateInput}
+                onChange={e => setDesiredStateInput(e.target.value)}
+                className="w-full bg-(--color-background) border border-(--color-border) rounded-xl p-3 text-xs font-mono focus:ring-2 focus:ring-(--color-primary) focus:outline-none transition-all shadow-inner h-48"
+              />
+            </div>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-(--color-text-muted) mb-2">Configuration (JSON)</p>
+              <textarea
+                value={configInput}
+                onChange={e => setConfigInput(e.target.value)}
+                className="w-full bg-(--color-background) border border-(--color-border) rounded-xl p-3 text-xs font-mono focus:ring-2 focus:ring-(--color-primary) focus:outline-none transition-all shadow-inner h-48"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 pt-4 border-t border-(--color-border)">
+            <Button type="button" variant="secondary" onClick={() => setIsTwinOpen(false)}>Cancel</Button>
+            <Button type="button" onClick={handleSaveTwin}>Sync Twin</Button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

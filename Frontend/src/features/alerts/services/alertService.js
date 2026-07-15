@@ -1,8 +1,15 @@
 import apiClient from '../../../services/apiClient';
 
 export const alertService = {
-  getAlerts: async () => {
-    const response = await apiClient.get('/alerts');
+  getAlerts: async (filters = {}) => {
+    const params = new URLSearchParams();
+    if (filters.status) params.append('status', filters.status);
+    if (filters.severity) params.append('severity', filters.severity);
+    if (filters.building_id) params.append('building_id', filters.building_id);
+    if (filters.start_date) params.append('start_date', new Date(filters.start_date).toISOString());
+    if (filters.end_date) params.append('end_date', new Date(filters.end_date).toISOString());
+    
+    const response = await apiClient.get(`/alerts?${params.toString()}`);
     return response.data.data;
   },
   getAlert: async (id) => {

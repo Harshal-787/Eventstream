@@ -12,19 +12,21 @@ import (
 )
 
 type Claims struct {
-	UserID    int    `json:"user_id"`
-	Email     string `json:"email"`
-	Role      string `json:"role"`
-	SessionID string `json:"session_id"`
+	UserID         int    `json:"user_id"`
+	OrganizationID int    `json:"organization_id"`
+	Email          string `json:"email"`
+	Role           string `json:"role"`
+	SessionID      string `json:"session_id"`
 	jwt.RegisteredClaims
 }
 
-func GenerateToken(userID int, email, role, sessionID string, cfg *config.Config) (string, error) {
+func GenerateToken(userID int, orgID int, email, role, sessionID string, cfg *config.Config) (string, error) {
 	claims := Claims{
-		UserID:    userID,
-		Email:     email,
-		Role:      role,
-		SessionID: sessionID,
+		UserID:         userID,
+		OrganizationID: orgID,
+		Email:          email,
+		Role:           role,
+		SessionID:      sessionID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(cfg.JWTExpiryHours) * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -76,6 +78,7 @@ func AuthMiddleware(cfg *config.Config, sessionRepo *repository.SessionRepositor
 		}
 
 		c.Set("user_id", claims.UserID)
+		c.Set("organization_id", claims.OrganizationID)
 		c.Set("email", claims.Email)
 		c.Set("user_role", claims.Role)
 		c.Set("session_id", claims.SessionID)

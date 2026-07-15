@@ -137,7 +137,7 @@ export function AddBuildingModal({ isOpen, onClose, onBuildingAdded }) {
         <div className="space-y-2">
           <label className="text-sm font-medium text-(--color-text-main)">Assign Customer / Owner (Mandatory)</label>
           <select 
-            className="w-full h-10 px-3 py-2 bg-transparent border border-(--color-border) rounded-md text-(--color-text-main) outline-hidden focus:ring-2 focus:ring-blue-500 transition-shadow disabled:opacity-50"
+            className="appearance-none flex h-11 w-full border border-(--color-border-main) bg-(--color-surface) px-4 py-2 pr-10 text-sm text-(--color-text-main) transition-all focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl shadow-sm cursor-pointer"
             required
             value={ownerId}
             onChange={(e) => setOwnerId(e.target.value)}

@@ -45,6 +45,18 @@ export const deviceService = {
     const response = await apiClient.patch(`/devices/${id}/assign`, data);
     return response.data;
   },
+  provisionDevice: async (id) => {
+    const response = await apiClient.post(`/devices/${id}/provision`);
+    return response.data;
+  },
+  getDeviceTwin: async (id) => {
+    const response = await apiClient.get(`/devices/${id}/twin`);
+    return response.data;
+  },
+  updateDeviceTwin: async (id, payload) => {
+    const response = await apiClient.put(`/devices/${id}/twin`, payload);
+    return response.data;
+  },
   getSensorRequests: async (buildingId) => {
     let url = '/sensor-requests';
     if (buildingId) url += `?building_id=${buildingId}`;

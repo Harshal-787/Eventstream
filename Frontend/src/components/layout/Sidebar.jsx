@@ -12,7 +12,9 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  ClipboardList
+  ClipboardList,
+  FileText,
+  Webhook
 } from 'lucide-react';
 import { useAuthStore } from '../../features/auth/store/useAuthStore';
 import { Logo } from '../ui/Logo';
@@ -28,6 +30,8 @@ export function Sidebar({ role }) {
     { title: 'Events', icon: Activity, path: '/admin/events' },
     { title: 'Alerts', icon: Bell, path: '/admin/alerts' },
     { title: 'Alert Rules', icon: Settings, path: '/admin/alert-rules' },
+    { title: 'Channels', icon: Webhook, path: '/admin/notification-channels' },
+    { title: 'Reports', icon: FileText, path: '/admin/reports' },
     { title: 'Users', icon: Users, path: '/admin/users' },
     { title: 'Audit Logs', icon: ClipboardList, path: '/admin/audit-logs' },
   ];

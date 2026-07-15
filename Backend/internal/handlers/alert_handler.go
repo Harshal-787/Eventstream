@@ -38,8 +38,14 @@ func NewAlertHandler(alertRepo *repository.AlertRepository, hub *events.Hub, log
 // @Failure      500  {object}  map[string]string
 // @Router       /alerts [get]
 func (h *AlertHandler) List(c *gin.Context) {
-	status := c.Query("status") // optional filter: open, acknowledged, resolved
-	alerts, err := h.alertRepo.List(status)
+	filters := map[string]interface{}{}
+	if status := c.Query("status"); status != "" { filters["status"] = status }
+	if severity := c.Query("severity"); severity != "" { filters["severity"] = severity }
+	if buildingID := c.Query("building_id"); buildingID != "" { filters["building_id"] = buildingID }
+	if startDate := c.Query("start_date"); startDate != "" { filters["start_date"] = startDate }
+	if endDate := c.Query("end_date"); endDate != "" { filters["end_date"] = endDate }
+
+	alerts, err := h.alertRepo.List(filters)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not fetch alerts"})
 		return

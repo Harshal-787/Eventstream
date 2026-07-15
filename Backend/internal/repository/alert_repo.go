@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"errors"
+	"strconv"
 	"time"
 
 	"eventstream/internal/models"
@@ -15,8 +16,15 @@ type AlertRepository struct {
 func NewAlertRepository(db *sql.DB) *AlertRepository {
 	return &AlertRepository{db: db}
 }
+func (r *AlertRepository) Create(alert *models.Alert) error {
+	query := `INSERT INTO alerts (organization_id, device_id, alert_rule_id, type, severity, status, message, triggered_at)
+	          VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`
+	
+	err := r.db.QueryRow(query, alert.OrganizationID, alert.DeviceID, alert.AlertRuleID, alert.Type, alert.Severity, alert.Status, alert.Message, alert.TriggeredAt).Scan(&alert.ID)
+	return err
+}
 
-func (r *AlertRepository) List(status string) ([]*models.Alert, error) {
+func (r *AlertRepository) List(filters map[string]interface{}) ([]*models.Alert, error) {
 	query := `
 		SELECT a.id, a.device_id, a.alert_rule_id, a.type, a.severity, a.status,
 		       a.message, a.triggered_at, a.acknowledged_at, a.resolved_at,
@@ -30,11 +38,46 @@ func (r *AlertRepository) List(status string) ([]*models.Alert, error) {
 		LEFT JOIN floors f ON d.floor_id = f.id
 		LEFT JOIN rooms r ON d.room_id = r.id`
 
+	whereClauses := []string{}
 	args := []interface{}{}
-	if status != "" {
-		query += ` WHERE a.status = $1`
+	argCount := 1
+
+	if status, ok := filters["status"].(string); ok && status != "" {
+		whereClauses = append(whereClauses, `a.status = $`+strconv.Itoa(argCount))
 		args = append(args, status)
+		argCount++
 	}
+	if severity, ok := filters["severity"].(string); ok && severity != "" {
+		whereClauses = append(whereClauses, `a.severity = $`+strconv.Itoa(argCount))
+		args = append(args, severity)
+		argCount++
+	}
+	if buildingID, ok := filters["building_id"].(string); ok && buildingID != "" {
+		whereClauses = append(whereClauses, `d.building_id = $`+strconv.Itoa(argCount))
+		args = append(args, buildingID)
+		argCount++
+	}
+	if startDate, ok := filters["start_date"].(string); ok && startDate != "" {
+		whereClauses = append(whereClauses, `a.triggered_at >= $`+strconv.Itoa(argCount))
+		args = append(args, startDate)
+		argCount++
+	}
+	if endDate, ok := filters["end_date"].(string); ok && endDate != "" {
+		whereClauses = append(whereClauses, `a.triggered_at <= $`+strconv.Itoa(argCount))
+		args = append(args, endDate)
+		argCount++
+	}
+
+	if len(whereClauses) > 0 {
+		query += " WHERE "
+		for i, wc := range whereClauses {
+			if i > 0 {
+				query += " AND "
+			}
+			query += wc
+		}
+	}
+
 	query += ` ORDER BY a.triggered_at DESC`
 
 	rows, err := r.db.Query(query, args...)

@@ -3,8 +3,9 @@ package models
 import "time"
 
 type AlertRule struct {
-	ID         int        `json:"id"`
-	Name       string     `json:"name"`
+	ID             int        `json:"id"`
+	OrganizationID int        `json:"organization_id"`
+	Name           string     `json:"name"`
 	DeviceType string     `json:"device_type"` // e.g., 'temperature', 'motion'
 	Metric     string     `json:"metric"`      // e.g., 'temperature', 'motion_detected'
 	Operator   string     `json:"operator"`    // e.g., '>', '<', '==', '!='

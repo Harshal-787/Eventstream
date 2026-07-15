@@ -128,6 +128,8 @@ func (r *DeviceRepo) CreateDevice(d *models.Device) error {
 	return r.DB.QueryRow(query, d.HardwareID, d.Name, d.Type, d.ModelID, d.BuildingID, d.FloorID, d.RoomID, d.Status, d.Metadata, d.BatteryPct, d.SignalStrength).Scan(&d.ID, &d.CreatedAt)
 }
 
+
+
 func (r *DeviceRepo) UpdateDevice(d *models.Device) error {
 	query := `UPDATE devices SET hardware_id=$1, name=$2, type=$3, model_id=$4, building_id=$5, floor_id=$6, room_id=$7, status=$8, metadata=$9, battery_pct=$10, signal_strength=$11 WHERE id=$12`
 	_, err := r.DB.Exec(query, d.HardwareID, d.Name, d.Type, d.ModelID, d.BuildingID, d.FloorID, d.RoomID, d.Status, d.Metadata, d.BatteryPct, d.SignalStrength, d.ID)
