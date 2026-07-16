@@ -131,8 +131,8 @@ func (r *DeviceRepo) CreateDevice(d *models.Device) error {
 
 
 func (r *DeviceRepo) UpdateDevice(d *models.Device) error {
-	query := `UPDATE devices SET hardware_id=$1, name=$2, type=$3, model_id=$4, building_id=$5, floor_id=$6, room_id=$7, status=$8, metadata=$9, battery_pct=$10, signal_strength=$11 WHERE id=$12`
-	_, err := r.DB.Exec(query, d.HardwareID, d.Name, d.Type, d.ModelID, d.BuildingID, d.FloorID, d.RoomID, d.Status, d.Metadata, d.BatteryPct, d.SignalStrength, d.ID)
+	query := `UPDATE devices SET hardware_id=$1, name=$2, type=$3, model_id=$4, building_id=$5, floor_id=$6, room_id=$7, status=$8, metadata=$9, battery_pct=$10, signal_strength=$11, activation_status=$12, provisioning_token=$13 WHERE id=$14`
+	_, err := r.DB.Exec(query, d.HardwareID, d.Name, d.Type, d.ModelID, d.BuildingID, d.FloorID, d.RoomID, d.Status, d.Metadata, d.BatteryPct, d.SignalStrength, d.ActivationStatus, d.ProvisioningToken, d.ID)
 	return err
 }
 
@@ -168,7 +168,7 @@ func (r *DeviceRepo) CreateModel(model *models.DeviceModel) error {
 
 func (r *DeviceRepo) GetDevices(buildingID *int, status string, ownerID *int) ([]models.Device, error) {
 	query := `
-		SELECT d.id, d.hardware_id, d.name, d.type, d.model_id, d.building_id, d.floor_id, d.room_id, d.status, d.metadata, d.battery_pct, d.signal_strength, d.created_at,
+		SELECT d.id, d.hardware_id, d.name, d.type, d.model_id, d.building_id, d.floor_id, d.room_id, d.status, d.metadata, d.battery_pct, d.signal_strength, d.is_maintenance, d.created_at,
 		       COALESCE(dm.model_name, ''), COALESCE(dm.brand, ''), COALESCE(b.name, ''), COALESCE(f.name, ''), COALESCE(r.name, '')
 		FROM devices d
 		LEFT JOIN device_models dm ON d.model_id = dm.id
@@ -189,7 +189,7 @@ func (r *DeviceRepo) GetDevices(buildingID *int, status string, ownerID *int) ([
 	var devices []models.Device
 	for rows.Next() {
 		var d models.Device
-		err := rows.Scan(&d.ID, &d.HardwareID, &d.Name, &d.Type, &d.ModelID, &d.BuildingID, &d.FloorID, &d.RoomID, &d.Status, &d.Metadata, &d.BatteryPct, &d.SignalStrength, &d.CreatedAt,
+		err := rows.Scan(&d.ID, &d.HardwareID, &d.Name, &d.Type, &d.ModelID, &d.BuildingID, &d.FloorID, &d.RoomID, &d.Status, &d.Metadata, &d.BatteryPct, &d.SignalStrength, &d.IsMaintenance, &d.CreatedAt,
 			&d.ModelName, &d.Brand, &d.BuildingName, &d.FloorName, &d.RoomName)
 		if err != nil {
 			return nil, err

@@ -68,7 +68,7 @@ func (r *AlertRuleRepository) List() ([]models.AlertRule, error) {
 
 func (r *AlertRuleRepository) GetActiveRules() ([]models.AlertRule, error) {
 	query := `
-		SELECT id, name, device_type, metric, operator, threshold, bool_value, severity, is_active, target_type, target_id
+		SELECT id, name, device_type, metric, operator, threshold, bool_value, severity, is_active, target_type, target_id, conditions
 		FROM alert_rules
 		WHERE is_active = true
 	`
@@ -80,15 +80,13 @@ func (r *AlertRuleRepository) GetActiveRules() ([]models.AlertRule, error) {
 
 	var rules []models.AlertRule
 	for rows.Next() {
-		var rule models.AlertRule
-		err := rows.Scan(
-			&rule.ID, &rule.Name, &rule.DeviceType, &rule.Metric, &rule.Operator,
-			&rule.Threshold, &rule.BoolValue, &rule.Severity, &rule.IsActive, &rule.TargetType, &rule.TargetID,
-		)
-		if err != nil {
+		var r models.AlertRule
+		if err := rows.Scan(
+			&r.ID, &r.Name, &r.DeviceType, &r.Metric, &r.Operator, &r.Threshold, &r.BoolValue, &r.Severity, &r.IsActive, &r.TargetType, &r.TargetID, &r.Conditions,
+		); err != nil {
 			return nil, err
 		}
-		rules = append(rules, rule)
+		rules = append(rules, r)
 	}
 	return rules, nil
 }

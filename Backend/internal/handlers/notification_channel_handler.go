@@ -18,7 +18,7 @@ func NewNotificationChannelHandler(repo *repository.NotificationChannelRepo) *No
 }
 
 func (h *NotificationChannelHandler) Create(c *gin.Context) {
-	orgIDVal, exists := c.Get("org_id")
+	orgIDVal, exists := c.Get("organization_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
@@ -41,7 +41,7 @@ func (h *NotificationChannelHandler) Create(c *gin.Context) {
 }
 
 func (h *NotificationChannelHandler) List(c *gin.Context) {
-	orgIDVal, exists := c.Get("org_id")
+	orgIDVal, exists := c.Get("organization_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
@@ -58,7 +58,7 @@ func (h *NotificationChannelHandler) List(c *gin.Context) {
 }
 
 func (h *NotificationChannelHandler) Update(c *gin.Context) {
-	orgIDVal, exists := c.Get("org_id")
+	orgIDVal, exists := c.Get("organization_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
@@ -89,7 +89,7 @@ func (h *NotificationChannelHandler) Update(c *gin.Context) {
 }
 
 func (h *NotificationChannelHandler) Delete(c *gin.Context) {
-	orgIDVal, exists := c.Get("org_id")
+	orgIDVal, exists := c.Get("organization_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return

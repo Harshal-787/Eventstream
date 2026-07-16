@@ -17,9 +17,9 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 
 func (r *UserRepository) FindByEmail(email string) (*models.User, error) {
 	user := &models.User{}
-	query := `SELECT id, name, email, password_hash, role, status, contact_number, driving_license, otp_code, otp_expires_at, reset_token, reset_token_expires_at, created_at FROM users WHERE email = $1 LIMIT 1`
+	query := `SELECT id, organization_id, name, email, password_hash, role, status, contact_number, driving_license, otp_code, otp_expires_at, reset_token, reset_token_expires_at, created_at FROM users WHERE email = $1 LIMIT 1`
 	err := r.db.QueryRow(query, email).Scan(
-		&user.ID, &user.Name, &user.Email, &user.PasswordHash, &user.Role, &user.Status, &user.ContactNumber, &user.DrivingLicense, &user.OTPCode, &user.OTPExpiresAt, &user.ResetToken, &user.ResetTokenExpiresAt, &user.CreatedAt,
+		&user.ID, &user.OrganizationID, &user.Name, &user.Email, &user.PasswordHash, &user.Role, &user.Status, &user.ContactNumber, &user.DrivingLicense, &user.OTPCode, &user.OTPExpiresAt, &user.ResetToken, &user.ResetTokenExpiresAt, &user.CreatedAt,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
@@ -32,9 +32,9 @@ func (r *UserRepository) FindByEmail(email string) (*models.User, error) {
 
 func (r *UserRepository) FindByID(id int) (*models.User, error) {
 	user := &models.User{}
-	query := `SELECT id, name, email, password_hash, role, status, contact_number, driving_license, otp_code, otp_expires_at, reset_token, reset_token_expires_at, created_at FROM users WHERE id = $1 LIMIT 1`
+	query := `SELECT id, organization_id, name, email, password_hash, role, status, contact_number, driving_license, otp_code, otp_expires_at, reset_token, reset_token_expires_at, created_at FROM users WHERE id = $1 LIMIT 1`
 	err := r.db.QueryRow(query, id).Scan(
-		&user.ID, &user.Name, &user.Email, &user.PasswordHash, &user.Role, &user.Status, &user.ContactNumber, &user.DrivingLicense, &user.OTPCode, &user.OTPExpiresAt, &user.ResetToken, &user.ResetTokenExpiresAt, &user.CreatedAt,
+		&user.ID, &user.OrganizationID, &user.Name, &user.Email, &user.PasswordHash, &user.Role, &user.Status, &user.ContactNumber, &user.DrivingLicense, &user.OTPCode, &user.OTPExpiresAt, &user.ResetToken, &user.ResetTokenExpiresAt, &user.CreatedAt,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
