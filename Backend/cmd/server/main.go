@@ -48,52 +48,58 @@ func main() {
 		log.Fatalf("failed to run migrations: %v", err)
 	}
 
-	userRepo  := repository.NewUserRepository(db)
+	userRepo := repository.NewUserRepository(db)
 	alertRepo := repository.NewAlertRepository(db)
 	buildingRepo := repository.NewBuildingRepository(db)
-	deviceRepo   := repository.NewDeviceRepo(db)
-	auditRepo    := repository.NewAuditLogRepository(db)
+	deviceRepo := repository.NewDeviceRepo(db)
 	telemetryRepo := repository.NewTelemetryRepository(db)
+	auditRepo := repository.NewAuditLogRepository(db)
 	failedEventRepo := repository.NewFailedEventRepository(db)
-	ruleRepo     := repository.NewAlertRuleRepository(db)
-	sessionRepo  := repository.NewSessionRepository(db)
+	ruleRepo := repository.NewAlertRuleRepository(db)
+	sessionRepo := repository.NewSessionRepository(db)
 	deviceTwinRepo := repository.NewDeviceTwinRepository(db)
 	notificationChannelRepo := repository.NewNotificationChannelRepo(db)
+	deviceGroupRepo := repository.NewDeviceGroupRepository(db)
+	aiConfigRepo := repository.NewAIConfigRepo(db)
 
 	emailService := services.NewEmailService(cfg)
-	auditLogger  := services.NewAuditLogger(auditRepo)
+	auditLogger := services.NewAuditLogger(auditRepo)
 	notificationService := services.NewNotificationService(notificationChannelRepo)
 	alertEngine := services.NewAlertEngine(ruleRepo, alertRepo, deviceRepo, notificationService)
-	reportingService := services.NewReportingService(telemetryRepo, alertRepo, deviceRepo)
+	reportingService := services.NewReportingService(db, telemetryRepo, alertRepo, deviceRepo)
 	anomalyDetector := services.NewAnomalyDetector(alertRepo, notificationService)
+	telemetryIngestService := services.NewTelemetryIngestService(telemetryRepo, deviceRepo, anomalyDetector, alertEngine)
+	aiService := services.NewAIService(aiConfigRepo)
 
 	// Initialize Event Hub for SSE
 	hub := events.NewHub()
 	go hub.Run()
 
-	authHandler  := handlers.NewAuthHandler(userRepo, buildingRepo, sessionRepo, emailService, cfg, auditLogger)
+	authHandler := handlers.NewAuthHandler(userRepo, buildingRepo, sessionRepo, emailService, cfg, auditLogger)
 	alertHandler := handlers.NewAlertHandler(alertRepo, hub, auditLogger)
 	buildingHandler := handlers.NewBuildingHandler(buildingRepo)
 	usersHandler := handlers.NewUsersHandler(userRepo)
 	addressHandler := handlers.NewAddressHandler(cfg)
 	deviceHandler := handlers.NewDeviceHandler(deviceRepo, auditLogger)
 	auditLogHandler := handlers.NewAuditLogHandler(auditRepo)
-	telemetryHandler := handlers.NewTelemetryHandler(telemetryRepo, failedEventRepo, anomalyDetector, alertEngine)
+	telemetryHandler := handlers.NewTelemetryHandler(telemetryIngestService, telemetryRepo, failedEventRepo)
 	failedEventHandler := handlers.NewFailedEventHandler(failedEventRepo)
 	ruleHandler := handlers.NewAlertRuleHandler(ruleRepo, auditLogger)
 	deviceTwinHandler := handlers.NewDeviceTwinHandler(deviceTwinRepo, deviceRepo)
 	provisioningHandler := handlers.NewProvisioningHandler(deviceRepo)
-	wsIngestHandler := handlers.NewWSIngestHandler(telemetryRepo, deviceRepo, anomalyDetector)
-	webhookHandler := handlers.NewWebhookHandler(telemetryRepo, deviceRepo, anomalyDetector)
+	wsIngestHandler := handlers.NewWSIngestHandler(telemetryIngestService, deviceRepo)
+	webhookHandler := handlers.NewWebhookHandler(telemetryIngestService, deviceRepo)
 	notificationChannelHandler := handlers.NewNotificationChannelHandler(notificationChannelRepo)
 	reportHandler := handlers.NewReportHandler(reportingService)
+	deviceGroupHandler := handlers.NewDeviceGroupHandler(deviceGroupRepo)
+	aiHandler := handlers.NewAIHandler(aiConfigRepo, aiService, alertRepo, telemetryRepo, deviceRepo)
 
 	// Start Background Workers
 	heartbeatMonitor := workers.NewHeartbeatMonitor(db, 1*time.Minute)
 	heartbeatMonitor.Start()
 
 	// In a real app, MQTT broker URI and client ID would be in config
-	mqttWorker := workers.NewMQTTWorker("tcp://localhost:1883", "eventstream-backend", telemetryRepo, deviceRepo, anomalyDetector)
+	mqttWorker := workers.NewMQTTWorker("tcp://localhost:1883", "eventstream-backend", telemetryIngestService, deviceRepo)
 	mqttWorker.Start()
 
 	// Start Virtual Sensor Simulator
@@ -157,10 +163,10 @@ func main() {
 
 		alertRoutes := v1.Group("/alerts", middleware.AuthMiddleware(cfg, sessionRepo))
 		{
-			alertRoutes.GET("",          alertHandler.List)
-			alertRoutes.GET("/:id",      alertHandler.Get)
+			alertRoutes.GET("", alertHandler.List)
+			alertRoutes.GET("/:id", alertHandler.Get)
 			alertRoutes.POST("/:id/acknowledge", alertHandler.Acknowledge)
-			alertRoutes.POST("/:id/resolve",     alertHandler.Resolve)
+			alertRoutes.POST("/:id/resolve", alertHandler.Resolve)
 			alertRoutes.DELETE("/clear", alertHandler.ClearAll)
 			alertRoutes.DELETE("/:id", alertHandler.Delete)
 		}
@@ -173,7 +179,7 @@ func main() {
 			buildingRoutes.PATCH("/:id", buildingHandler.UpdateBuilding)
 			buildingRoutes.PATCH("/:id/status", buildingHandler.UpdateStatus)
 			buildingRoutes.DELETE("/:id", buildingHandler.Delete)
-			
+
 			buildingRoutes.GET("/:id/floors", deviceHandler.GetFloors)
 			buildingRoutes.POST("/:id/floors", deviceHandler.CreateFloor)
 		}
@@ -200,6 +206,7 @@ func main() {
 			deviceRoutes.POST("/bulk", deviceHandler.BulkCreateDevices)
 			deviceRoutes.PATCH("/:id/assign", deviceHandler.AssignDevice)
 			deviceRoutes.PATCH("/:id/status", deviceHandler.UpdateDeviceStatus)
+			deviceRoutes.PATCH("/:id/maintenance", deviceHandler.ToggleMaintenance)
 			deviceRoutes.DELETE("/:id", deviceHandler.DeleteDevice)
 			deviceRoutes.GET("/models", deviceHandler.GetModels)
 			deviceRoutes.POST("/models", deviceHandler.CreateModel)
@@ -238,15 +245,13 @@ func main() {
 		{
 			// Legacy Webhook for IoT devices
 			eventRoutes.POST("/ingest", telemetryHandler.IngestEvent)
-			
+
 			// Phase 2 Webhook
 			eventRoutes.POST("/webhook-ingest", webhookHandler.HandleWebhook)
 
-
-
 			// Phase 2 WebSockets
 			eventRoutes.GET("/ws/ingest", middleware.AuthMiddleware(cfg, sessionRepo), wsIngestHandler.HandleIngest)
-			
+
 			// Dashboard retrieval
 			eventRoutes.GET("", middleware.AuthMiddleware(cfg, sessionRepo), telemetryHandler.GetEvents)
 		}
@@ -259,10 +264,27 @@ func main() {
 			notificationRoutes.DELETE("/:id", notificationChannelHandler.Delete)
 		}
 
+		deviceGroupRoutes := v1.Group("/device-groups", middleware.AuthMiddleware(cfg, sessionRepo))
+		{
+			deviceGroupRoutes.GET("", deviceGroupHandler.List)
+			deviceGroupRoutes.POST("", deviceGroupHandler.Create)
+			deviceGroupRoutes.DELETE("/:id", deviceGroupHandler.Delete)
+			deviceGroupRoutes.POST("/:id/members/:deviceId", deviceGroupHandler.AddMember)
+			deviceGroupRoutes.DELETE("/:id/members/:deviceId", deviceGroupHandler.RemoveMember)
+		}
+
 		reportRoutes := v1.Group("/reports", middleware.AuthMiddleware(cfg, sessionRepo))
 		{
-			reportRoutes.GET("/telemetry/:deviceId", reportHandler.DownloadTelemetryCSV)
-			reportRoutes.GET("/building-health/:buildingId", reportHandler.DownloadBuildingHealthPDF)
+			reportRoutes.GET("/export", reportHandler.ExportReport)
+		}
+
+		aiRoutes := v1.Group("/ai", middleware.AuthMiddleware(cfg, sessionRepo))
+		{
+			aiRoutes.GET("/config", aiHandler.GetConfig)
+			aiRoutes.POST("/config", aiHandler.SetConfig)
+			aiRoutes.GET("/summary", aiHandler.GenerateEventSummary)
+			aiRoutes.GET("/alerts/:id/rca", aiHandler.AnalyzeAlertRCA)
+			aiRoutes.GET("/devices/:id/predictive-maintenance", aiHandler.PredictMaintenance)
 		}
 
 		ruleRoutes := v1.Group("/alert-rules", middleware.AuthMiddleware(cfg, sessionRepo))

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"crypto/rand"
 	"encoding/hex"
 	"eventstream/internal/repository"
@@ -42,6 +43,7 @@ func (h *ProvisioningHandler) GenerateToken(c *gin.Context) {
 	}
 
 	device, err := h.deviceRepo.GetDeviceByID(deviceID)
+	log.Printf("Err: %v, device: %v, org: %d", err, device, orgID)
 	if err != nil || device == nil || device.OrganizationID != orgID {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Device not found"})
 		return

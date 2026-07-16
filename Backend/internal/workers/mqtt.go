@@ -12,13 +12,12 @@ import (
 )
 
 type MQTTWorker struct {
-	client          mqtt.Client
-	telemetryRepo   *repository.TelemetryRepository
-	deviceRepo      *repository.DeviceRepo
-	anomalyDetector *services.AnomalyDetector
+	client        mqtt.Client
+	ingestService *services.TelemetryIngestService
+	deviceRepo    *repository.DeviceRepo
 }
 
-func NewMQTTWorker(brokerURI, clientID string, telemetryRepo *repository.TelemetryRepository, deviceRepo *repository.DeviceRepo, anomalyDetector *services.AnomalyDetector) *MQTTWorker {
+func NewMQTTWorker(brokerURI, clientID string, ingestService *services.TelemetryIngestService, deviceRepo *repository.DeviceRepo) *MQTTWorker {
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(brokerURI)
 	opts.SetClientID(clientID)
@@ -26,10 +25,9 @@ func NewMQTTWorker(brokerURI, clientID string, telemetryRepo *repository.Telemet
 	client := mqtt.NewClient(opts)
 
 	return &MQTTWorker{
-		client:          client,
-		telemetryRepo:   telemetryRepo,
-		deviceRepo:      deviceRepo,
-		anomalyDetector: anomalyDetector,
+		client:        client,
+		ingestService: ingestService,
+		deviceRepo:    deviceRepo,
 	}
 }
 
@@ -78,6 +76,5 @@ func (w *MQTTWorker) messageHandler(client mqtt.Client, msg mqtt.Message) {
 		Payload:        payload,
 	}
 
-	_ = w.telemetryRepo.Insert(tel)
-	go w.anomalyDetector.Process(tel)
+	_ = w.ingestService.Ingest(tel)
 }

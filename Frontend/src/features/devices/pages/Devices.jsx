@@ -3,7 +3,7 @@ import { deviceService } from '../services/deviceService';
 import { Box } from '../../../components/ui/Box';
 import { Spinner } from '../../../components/ui/Spinner';
 import { EmptyState } from '../../../components/ui/EmptyState';
-import { Cpu, Plus, Upload, Server, Search, Filter, Inbox, CheckCircle, Package, Trash2, Settings2, RefreshCcw, LogOut, AlertTriangle, Key, Activity } from 'lucide-react';
+import { Cpu, Plus, Upload, Server, Search, Filter, Inbox, CheckCircle, Package, Trash2, Settings2, RefreshCcw, LogOut, AlertTriangle, Key, Activity, Folder } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { Badge } from '../../../components/ui/Badge';
 import { Input } from '../../../components/ui/Input';
@@ -15,6 +15,7 @@ import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { useTelemetry } from '../../../hooks/useTelemetry';
 import { useLiveAlerts } from '../../alerts/hooks/useLiveAlerts';
+import { DeviceGroupsTab } from '../components/DeviceGroupsTab';
 
 export function Devices({ role }) {
   const [activeTab, setActiveTab] = useState('inventory'); // inventory, requests, models
@@ -200,13 +201,13 @@ export function Devices({ role }) {
   };
 
   const handleToggleMaintenance = async (device) => {
-    const newStatus = device.status === 'maintenance' ? 'active' : 'maintenance';
+    const newMaintenanceStatus = !device.is_maintenance;
     try {
-      await deviceService.updateDeviceStatus(device.id, newStatus);
-      toast.success(`Device status updated to ${newStatus}`);
+      await deviceService.toggleMaintenance(device.id, newMaintenanceStatus);
+      toast.success(`Device maintenance mode ${newMaintenanceStatus ? 'enabled' : 'disabled'}`);
       fetchData();
     } catch (err) {
-      toast.error('Failed to update device status');
+      toast.error('Failed to update maintenance mode');
     }
   };
 
@@ -424,7 +425,8 @@ export function Devices({ role }) {
           tabs={[
             { id: 'inventory', label: 'Warehouse Inventory', icon: Package },
             { id: 'requests', label: 'Sensor Requests', icon: Inbox, badge: requests.filter(r => r.status === 'pending').length || undefined },
-            { id: 'models', label: 'Device Models', icon: Server }
+            { id: 'models', label: 'Device Models', icon: Server },
+            { id: 'groups', label: 'Device Groups', icon: Folder }
           ]}
           activeTab={activeTab}
           onChange={setActiveTab}
@@ -524,9 +526,16 @@ export function Devices({ role }) {
                          {renderLiveData(device)}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={getStatusColor(device.status)}>
-                          {device.status}
-                        </Badge>
+                        <div className="flex flex-col gap-1">
+                          <Badge variant={getStatusColor(device.status)}>
+                            {device.status}
+                          </Badge>
+                          {device.is_maintenance && (
+                            <Badge variant="warning" className="text-[10px] uppercase">
+                              Maintenance
+                            </Badge>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         {device.status === 'active' ? (
@@ -556,9 +565,9 @@ export function Devices({ role }) {
                           <Button 
                             size="icon" 
                             variant="ghost" 
-                            className="h-8 w-8 rounded-md text-slate-600 hover:bg-slate-100 transition-colors mr-1" 
+                            className={`h-8 w-8 rounded-md transition-colors mr-1 ${device.is_maintenance ? 'text-amber-500 bg-amber-50' : 'text-slate-600 hover:bg-slate-100'}`}
                             onClick={() => handleToggleMaintenance(device)} 
-                            title={device.status === 'maintenance' ? 'Set Active' : 'Set Maintenance'}
+                            title={device.is_maintenance ? 'Disable Maintenance' : 'Enable Maintenance'}
                           >
                             <Settings2 className="w-4 h-4" />
                           </Button>
@@ -574,6 +583,10 @@ export function Devices({ role }) {
             </div>
           )}
         </motion.div>
+      )}
+
+      {role === 'admin' && activeTab === 'groups' && (
+        <DeviceGroupsTab role={role} devices={devices} />
       )}
 
       {role === 'admin' && activeTab === 'models' && (
