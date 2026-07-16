@@ -7,8 +7,13 @@ import { Modal } from '../../../components/ui/Modal';
 import { Input } from '../../../components/ui/Input';
 import { Layers } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../../auth/store/useAuthStore';
 
 export function UserFloorsRoomsTab({ buildings }) {
+  const navigate = useNavigate();
+  const { user } = useAuthStore();
+  const role = user?.role?.toLowerCase() === 'admin' ? 'admin' : 'user';
   const [selectedBuildingId, setSelectedBuildingId] = useState('');
   const [floors, setFloors] = useState([]);
   const [rooms, setRooms] = useState([]);
@@ -18,6 +23,7 @@ export function UserFloorsRoomsTab({ buildings }) {
   const [editingFloor, setEditingFloor] = useState(null);
   const [floorName, setFloorName] = useState('');
   const [floorLevel, setFloorLevel] = useState(1);
+  const [floorPlanURL, setFloorPlanURL] = useState('');
 
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState(null);
@@ -58,10 +64,10 @@ export function UserFloorsRoomsTab({ buildings }) {
     e.preventDefault();
     try {
       if (editingFloor) {
-        await buildingService.updateFloor(editingFloor.id, { name: floorName, level: parseInt(floorLevel) });
+        await buildingService.updateFloor(editingFloor.id, { name: floorName, level: parseInt(floorLevel), floor_plan_url: floorPlanURL || null });
         toast.success('Floor updated');
       } else {
-        await buildingService.createFloor(selectedBuildingId, { name: floorName, level: parseInt(floorLevel) });
+        await buildingService.createFloor(selectedBuildingId, { name: floorName, level: parseInt(floorLevel), floor_plan_url: floorPlanURL || null });
         toast.success('Floor created');
       }
       setIsFloorModalOpen(false);
@@ -109,10 +115,12 @@ export function UserFloorsRoomsTab({ buildings }) {
       setEditingFloor(floor);
       setFloorName(floor.name);
       setFloorLevel(floor.level);
+      setFloorPlanURL(floor.floor_plan_url || '');
     } else {
       setEditingFloor(null);
       setFloorName('');
       setFloorLevel(1);
+      setFloorPlanURL('');
     }
     setIsFloorModalOpen(true);
   };
@@ -168,6 +176,9 @@ export function UserFloorsRoomsTab({ buildings }) {
                   <div className="flex justify-between items-center">
                     <p className="font-bold text-sm text-(--color-text-main)">{floor.name} (Lvl {floor.level})</p>
                     <div className="flex gap-2 opacity-0 group-hover/floor:opacity-100 transition-opacity">
+                      {floor.floor_plan_url && (
+                        <button onClick={() => navigate(`/${role}/floors/${floor.id}/map`)} className="text-xs text-(--color-primary) hover:text-(--color-primary-600) font-bold">View Map</button>
+                      )}
                       <button onClick={() => openFloorModal(floor)} className="text-xs text-(--color-text-muted) hover:text-(--color-primary)">Edit</button>
                       <button onClick={() => handleDeleteFloor(floor.id)} className="text-xs text-(--color-text-muted) hover:text-(--color-danger)">Delete</button>
                     </div>
@@ -197,6 +208,7 @@ export function UserFloorsRoomsTab({ buildings }) {
         <form onSubmit={handleSaveFloor} className="space-y-4">
           <Input label="Floor Name (e.g. Ground Floor)" value={floorName} onChange={e => setFloorName(e.target.value)} required />
           <Input type="number" label="Level Number (e.g. 1)" value={floorLevel} onChange={e => setFloorLevel(e.target.value)} required />
+          <Input label="Floor Plan URL (optional blueprint image link)" value={floorPlanURL} onChange={e => setFloorPlanURL(e.target.value)} placeholder="https://example.com/blueprint.png" />
           <div className="pt-4 flex justify-end gap-3">
             <Button variant="secondary" type="button" onClick={() => setIsFloorModalOpen(false)}>Cancel</Button>
             <Button type="submit">{editingFloor ? "Save Changes" : "Create"}</Button>

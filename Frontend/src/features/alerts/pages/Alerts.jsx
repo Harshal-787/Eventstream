@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { alertService } from '../services/alertService';
+import apiClient from '../../../services/apiClient';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../components/ui/Table';
 import { Button } from '../../../components/ui/Button';
 import { Spinner } from '../../../components/ui/Spinner';
@@ -15,21 +16,50 @@ export function Alerts({ role }) {
   const [searchQuery, setSearchQuery] = useState('');
   
   const { liveAlerts, alertUpdates } = useLiveAlerts();
+  
+  const [filters, setFilters] = useState({
+    status: '',
+    severity: '',
+    building_id: '',
+    start_date: '',
+    end_date: ''
+  });
+  const [buildings, setBuildings] = useState([]);
 
   useEffect(() => {
     fetchAlerts();
+  }, [filters]); // Refetch on filter change
+
+  useEffect(() => {
+    // Fetch buildings for filter
+    apiClient.get('/buildings').then(res => setBuildings(res.data.data || [])).catch(err => console.error(err));
   }, []);
 
   const fetchAlerts = async () => {
     try {
       setLoading(true);
-      const data = await alertService.getAlerts();
+      const data = await alertService.getAlerts(filters);
       setAlerts(data || []);
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters(prev => ({ ...prev, [name]: value }));
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      status: '',
+      severity: '',
+      building_id: '',
+      start_date: '',
+      end_date: ''
+    });
   };
 
   useEffect(() => {
@@ -54,12 +84,20 @@ export function Alerts({ role }) {
         return a;
     });
 
+    // Apply local filter overrides on live incoming events that might bypass query logic initially
+    const strictlyFiltered = finalAlerts.filter(a => {
+      if (filters.status && a.status !== filters.status) return false;
+      if (filters.severity && a.severity !== filters.severity) return false;
+      if (filters.building_id && a.building_id !== parseInt(filters.building_id)) return false;
+      return true;
+    });
+
     // Sort by triggered_at descending
-    finalAlerts.sort((a, b) => new Date(b.triggered_at) - new Date(a.triggered_at));
+    strictlyFiltered.sort((a, b) => new Date(b.triggered_at) - new Date(a.triggered_at));
 
-    setDisplayAlerts(finalAlerts);
+    setDisplayAlerts(strictlyFiltered);
 
-  }, [alerts, liveAlerts, alertUpdates]);
+  }, [alerts, liveAlerts, alertUpdates, filters]);
 
   const handleAcknowledge = async (id) => {
     try {
@@ -99,7 +137,7 @@ export function Alerts({ role }) {
     }
   };
 
-  if (loading) return (
+  if (loading && displayAlerts.length === 0) return (
     <div className="flex h-[50vh] items-center justify-center">
       <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
     </div>
@@ -147,10 +185,10 @@ export function Alerts({ role }) {
 
   const SeverityBadge = ({ severity }) => {
     const config = {
-      critical: { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' },
-      high: { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' },
-      medium: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
-      low: { bg: 'bg-sky-50', text: 'text-sky-700', border: 'border-sky-200' }
+      critical: { bg: 'bg-rose-50 dark:bg-rose-500/10', text: 'text-rose-700 dark:text-rose-400', border: 'border-rose-200 dark:border-rose-500/20' },
+      high: { bg: 'bg-orange-50 dark:bg-orange-500/10', text: 'text-orange-700 dark:text-orange-400', border: 'border-orange-200 dark:border-orange-500/20' },
+      medium: { bg: 'bg-amber-50 dark:bg-amber-500/10', text: 'text-amber-700 dark:text-amber-400', border: 'border-amber-200 dark:border-amber-500/20' },
+      low: { bg: 'bg-sky-50 dark:bg-sky-500/10', text: 'text-sky-700 dark:text-sky-400', border: 'border-sky-200 dark:border-sky-500/20' }
     };
     const style = config[severity] || config.medium;
     return (
@@ -162,9 +200,9 @@ export function Alerts({ role }) {
 
   const StatusBadge = ({ status }) => {
     const config = {
-      open: { bg: 'bg-rose-100', text: 'text-rose-800', dot: 'bg-rose-500' },
-      acknowledged: { bg: 'bg-indigo-100', text: 'text-indigo-800', dot: 'bg-indigo-500' },
-      resolved: { bg: 'bg-emerald-100', text: 'text-emerald-800', dot: 'bg-emerald-500' }
+      open: { bg: 'bg-rose-100 dark:bg-rose-500/20', text: 'text-rose-800 dark:text-rose-400', dot: 'bg-rose-500' },
+      acknowledged: { bg: 'bg-indigo-100 dark:bg-indigo-500/20', text: 'text-indigo-800 dark:text-indigo-400', dot: 'bg-indigo-500' },
+      resolved: { bg: 'bg-emerald-100 dark:bg-emerald-500/20', text: 'text-emerald-800 dark:text-emerald-400', dot: 'bg-emerald-500' }
     };
     const style = config[status] || config.open;
     return (
@@ -213,7 +251,7 @@ export function Alerts({ role }) {
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            <Button variant="secondary" onClick={downloadCSV} disabled={filteredAlerts.length === 0} className="w-full sm:w-auto justify-center rounded-xl">
+            <Button variant="primary" onClick={downloadCSV} disabled={filteredAlerts.length === 0} className="w-full sm:w-auto justify-center rounded-xl">
               <Download className="w-4 h-4 mr-2" />
               Export CSV
             </Button>
@@ -230,9 +268,88 @@ export function Alerts({ role }) {
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
+        className="p-6 bg-(--color-surface) rounded-2xl border border-(--color-border-main) shadow-sm space-y-4"
+      >
+        <div className="flex flex-col md:flex-row gap-4 flex-wrap items-end">
+          <div className="flex-1 min-w-[140px] space-y-1">
+            <label className="text-xs font-bold text-(--color-text-muted) uppercase">Status</label>
+            <select
+              name="status"
+              value={filters.status}
+              onChange={handleFilterChange}
+              className="w-full px-4 py-2.5 rounded-xl border border-(--color-border-main) bg-slate-50 dark:bg-(--color-surface-hover) text-(--color-text-main) font-medium focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all"
+            >
+              <option value="">All Statuses</option>
+              <option value="open">Open</option>
+              <option value="acknowledged">Acknowledged</option>
+              <option value="resolved">Resolved</option>
+            </select>
+          </div>
+          <div className="flex-1 min-w-[140px] space-y-1">
+            <label className="text-xs font-bold text-(--color-text-muted) uppercase">Severity</label>
+            <select
+              name="severity"
+              value={filters.severity}
+              onChange={handleFilterChange}
+              className="w-full px-4 py-2.5 rounded-xl border border-(--color-border-main) bg-slate-50 dark:bg-(--color-surface-hover) text-(--color-text-main) font-medium focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all"
+            >
+              <option value="">All Severities</option>
+              <option value="critical">Critical</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+          {role === 'admin' && (
+            <div className="flex-1 min-w-[140px] space-y-1">
+              <label className="text-xs font-bold text-(--color-text-muted) uppercase">Building</label>
+              <select
+                name="building_id"
+                value={filters.building_id}
+                onChange={handleFilterChange}
+                className="w-full px-4 py-2.5 rounded-xl border border-(--color-border-main) bg-slate-50 dark:bg-(--color-surface-hover) text-(--color-text-main) font-medium focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all"
+              >
+                <option value="">All Buildings</option>
+                {buildings.map(b => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          <div className="flex-1 min-w-[140px] space-y-1">
+            <label className="text-xs font-bold text-(--color-text-muted) uppercase">Start Date</label>
+            <input
+              type="datetime-local"
+              name="start_date"
+              value={filters.start_date}
+              onChange={handleFilterChange}
+              className="w-full px-4 py-2.5 rounded-xl border border-(--color-border-main) bg-slate-50 dark:bg-(--color-surface-hover) text-(--color-text-main) font-medium focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all [color-scheme:light] dark:[color-scheme:dark]"
+            />
+          </div>
+          <div className="flex-1 min-w-[140px] space-y-1">
+            <label className="text-xs font-bold text-(--color-text-muted) uppercase">End Date</label>
+            <input
+              type="datetime-local"
+              name="end_date"
+              value={filters.end_date}
+              onChange={handleFilterChange}
+              className="w-full px-4 py-2.5 rounded-xl border border-(--color-border-main) bg-slate-50 dark:bg-(--color-surface-hover) text-(--color-text-main) font-medium focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all [color-scheme:light] dark:[color-scheme:dark]"
+            />
+          </div>
+          <div className="flex-none pb-0.5">
+            <Button variant="secondary" onClick={clearFilters}>
+              Clear
+            </Button>
+          </div>
+        </div>
+      </motion.div>
+
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
         className="bg-(--color-surface) rounded-2xl border border-(--color-border-main) shadow-sm overflow-hidden"
       >
-        <div className="p-4 border-b border-(--color-border-main) bg-slate-50 dark:bg-(--color-surface)">
+        <div className="p-4 border-b border-(--color-border-main) bg-(--color-surface)">
           <div className="relative max-w-md">
             <svg className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             <input 
@@ -240,7 +357,7 @@ export function Alerts({ role }) {
               placeholder="Search alerts by type, message, device..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-11 pr-4 py-2.5 bg-white dark:bg-(--color-surface) border border-slate-200 dark:border-(--color-border-main) rounded-xl text-sm w-full font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+              className="pl-11 pr-4 py-2.5 bg-white dark:bg-(--color-surface-hover) border border-(--color-border-main) rounded-xl text-sm w-full font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-(--color-text-main)"
             />
           </div>
         </div>

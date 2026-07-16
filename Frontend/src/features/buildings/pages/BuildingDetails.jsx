@@ -35,6 +35,7 @@ export function BuildingDetails({ role }) {
   const [editingFloor, setEditingFloor] = useState(null);
   const [floorName, setFloorName] = useState('');
   const [floorLevel, setFloorLevel] = useState(1);
+  const [floorPlanURL, setFloorPlanURL] = useState('');
 
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState(null);
@@ -191,10 +192,10 @@ export function BuildingDetails({ role }) {
     e.preventDefault();
     try {
       if (editingFloor) {
-        await buildingService.updateFloor(editingFloor.id, { name: floorName, level: parseInt(floorLevel) });
+        await buildingService.updateFloor(editingFloor.id, { name: floorName, level: parseInt(floorLevel), floor_plan_url: floorPlanURL || null });
         toast.success('Floor updated');
       } else {
-        await buildingService.createFloor(id, { name: floorName, level: parseInt(floorLevel) });
+        await buildingService.createFloor(id, { name: floorName, level: parseInt(floorLevel), floor_plan_url: floorPlanURL || null });
         toast.success('Floor created');
       }
       setIsFloorModalOpen(false);
@@ -242,10 +243,12 @@ export function BuildingDetails({ role }) {
       setEditingFloor(floor);
       setFloorName(floor.name);
       setFloorLevel(floor.level);
+      setFloorPlanURL(floor.floor_plan_url || '');
     } else {
       setEditingFloor(null);
       setFloorName('');
       setFloorLevel(1);
+      setFloorPlanURL('');
     }
     setIsFloorModalOpen(true);
   };
@@ -348,7 +351,12 @@ export function BuildingDetails({ role }) {
                     <div className="flex justify-between items-center border-b border-(--color-border-main) pb-3 mb-3">
                       <p className="font-bold uppercase tracking-wide text-sm text-(--color-text-main)">{floor.name} <span className="text-gray-500 font-bold ml-2">(Lvl {floor.level})</span></p>
                       {role === 'admin' && (
-                        <div className="flex gap-3 opacity-0 group-hover/floor:opacity-100 transition-opacity">
+                        <div className="flex gap-3 opacity-0 group-hover/floor:opacity-100 transition-opacity items-center">
+                          {floor.floor_plan_url && (
+                            <Link to={`/${role}/floors/${floor.id}/map`}>
+                              <button className="text-[10px] uppercase font-bold text-(--color-primary) hover:text-(--color-primary-600) hover:underline">View Map</button>
+                            </Link>
+                          )}
                           <button onClick={() => openFloorModal(floor)} className="text-[10px] uppercase font-bold text-gray-500 hover:text-(--color-text-main) hover:underline">Edit</button>
                           <button onClick={() => handleDeleteFloor(floor.id)} className="text-[10px] uppercase font-bold text-gray-500 hover:text-red-600 hover:underline">Delete</button>
                         </div>
@@ -467,6 +475,7 @@ export function BuildingDetails({ role }) {
         <form onSubmit={handleSaveFloor} className="space-y-4">
           <Input label="Floor Name (e.g. Ground Floor)" value={floorName} onChange={e => setFloorName(e.target.value)} required />
           <Input type="number" label="Level Number (e.g. 1)" value={floorLevel} onChange={e => setFloorLevel(e.target.value)} required />
+          <Input label="Floor Plan URL (optional blueprint image link)" value={floorPlanURL} onChange={e => setFloorPlanURL(e.target.value)} placeholder="https://example.com/blueprint.png" />
           <div className="pt-4 flex justify-end gap-3">
             <Button variant="secondary" type="button" onClick={() => setIsFloorModalOpen(false)}>Cancel</Button>
             <Button type="submit">{editingFloor ? "Save Changes" : "Create"}</Button>

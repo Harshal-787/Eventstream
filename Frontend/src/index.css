@@ -103,22 +103,3 @@ h1, h2, h3, h4, h5, h6 {
   background: var(--text-muted); 
 }
 
-/* Base utility overrides for the transition phase */
-.border-2 {
-  border-width: 1px !important;
-}
-
-/* We will gradually remove these brutalist utility classes from components,
-   but we redefine them here so the app looks instantly better before the full rewrite */
-.shadow-\[4px_4px_0px_0px_var\(--color-brutal-shadow\)\] {
-  box-shadow: 0 10px 25px -5px var(--shadow-color), 0 8px 10px -6px var(--shadow-color) !important;
-}
-
-.shadow-\[8px_8px_0px_0px_var\(--color-brutal-shadow\)\] {
-  box-shadow: 0 20px 25px -5px var(--shadow-color), 0 8px 10px -6px var(--shadow-color) !important;
-}
-
-/* Override borders to be rounded */
-.rounded-none {
-  border-radius: 1rem !important; /* 16px */
-}
