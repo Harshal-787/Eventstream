@@ -84,24 +84,24 @@ export function AddressAutocomplete({
         />
         {isLoading && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2">
-            <div className="w-4 h-4 border-2 border-(--color-primary-500) border-t-transparent rounded-full animate-spin" />
+            <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
           </div>
         )}
       </div>
 
       {isOpen && suggestions.length > 0 && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-(--color-border-main) rounded-md shadow-lg max-h-60 overflow-auto">
+        <div className="absolute z-50 w-full mt-1 bg-white border border-border-main rounded-md shadow-lg max-h-60 overflow-auto">
           <ul className="py-1">
             {suggestions.map((item, index) => (
               <li 
                 key={index}
                 onClick={() => handleSelect(item)}
-                className="px-4 py-2 hover:bg-(--color-surface-hover) cursor-pointer flex items-start text-sm text-(--color-text-main) border-b border-(--color-border-main) last:border-0"
+                className="px-4 py-2 hover:bg-surface-hover cursor-pointer flex items-start text-sm text-text-main border-b border-border-main last:border-0"
               >
-                <MapPin className="w-4 h-4 text-(--color-text-muted) mr-2 mt-0.5 shrink-0" />
+                <MapPin className="w-4 h-4 text-text-muted mr-2 mt-0.5 shrink-0" />
                 <div>
                   <span className="font-medium block">{item.address_line1 || item.name}</span>
-                  <span className="text-xs text-(--color-text-muted)">{item.address_line2 || `${item.city}, ${item.state}`}</span>
+                  <span className="text-xs text-text-muted">{item.address_line2 || `${item.city}, ${item.state}`}</span>
                 </div>
               </li>
             ))}

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"eventstream/internal/models"
 	"eventstream/internal/repository"
@@ -53,6 +54,16 @@ func (e *AlertEngine) Evaluate(telemetry *models.Telemetry) {
 		// 1. Check if rule applies to this device based on TargetType
 		if !e.appliesToDevice(&rule, device) {
 			continue
+		}
+
+		// 1.5 Evaluate Time Windows
+		if len(rule.TimeWindows) > 0 {
+			var windows []map[string]interface{}
+			if err := json.Unmarshal(rule.TimeWindows, &windows); err == nil {
+				if !e.evaluateTimeWindows(windows, telemetry.Timestamp) {
+					continue
+				}
+			}
 		}
 
 		// 2. Evaluate conditions
@@ -109,6 +120,42 @@ func (e *AlertEngine) appliesToDevice(rule *models.AlertRule, device *models.Dev
 		}
 	case "device":
 		if rule.TargetID != nil && *rule.TargetID == device.ID {
+			return true
+		}
+	case "group":
+		if rule.TargetID != nil && device.DeviceGroupID != nil && *rule.TargetID == *device.DeviceGroupID {
+			return true
+		}
+	}
+	return false
+}
+
+func (e *AlertEngine) evaluateTimeWindows(windows []map[string]interface{}, ts time.Time) bool {
+	if len(windows) == 0 {
+		return true
+	}
+	weekday := int(ts.Weekday())
+	for _, w := range windows {
+		if days, ok := w["days"].([]interface{}); ok {
+			dayMatched := false
+			for _, d := range days {
+				if int(d.(float64)) == weekday {
+					dayMatched = true
+					break
+				}
+			}
+			if !dayMatched {
+				continue
+			}
+		}
+		startStr, okStart := w["start_time"].(string)
+		endStr, okEnd := w["end_time"].(string)
+		if okStart && okEnd {
+			currentHM := fmt.Sprintf("%02d:%02d", ts.Hour(), ts.Minute())
+			if currentHM >= startStr && currentHM <= endStr {
+				return true
+			}
+		} else {
 			return true
 		}
 	}
@@ -205,6 +252,27 @@ func (e *AlertEngine) triggerAlert(rule *models.AlertRule, telemetry *models.Tel
 	if err == nil && len(existing) > 0 {
 		// Alert already exists and is open, don't create a duplicate
 		return
+	}
+
+	// Check suppression window
+	if rule.SuppressionWin > 0 {
+		filtersAny := map[string]interface{}{
+			"device_id": fmt.Sprintf("%d", device.ID),
+			"rule_id":   fmt.Sprintf("%d", rule.ID),
+		}
+		latestAlerts, err := e.alertRepo.List(filtersAny)
+		if err == nil && len(latestAlerts) > 0 {
+			var latest time.Time
+			for _, a := range latestAlerts {
+				if a.TriggeredAt.After(latest) {
+					latest = a.TriggeredAt
+				}
+			}
+			if time.Since(latest) < time.Duration(rule.SuppressionWin)*time.Minute {
+				log.Printf("AlertEngine: Suppressing alert for rule %d due to %d min window", rule.ID, rule.SuppressionWin)
+				return
+			}
+		}
 	}
 
 	valRaw, _ := telemetry.Payload[rule.Metric]

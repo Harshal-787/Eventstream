@@ -30,9 +30,9 @@ export function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen w-full flex bg-(--color-background) font-sans">
+    <div className="min-h-screen w-full flex bg-background font-sans">
       {/* Left Panel - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-(--color-primary-900) flex-col justify-between overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 relative bg-primary-900 flex-col justify-between overflow-hidden">
         <div className="absolute inset-0 z-0">
           <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-(--color-accent-500) rounded-full blur-[120px] opacity-40 mix-blend-screen" />
           <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-500 rounded-full blur-[120px] opacity-40 mix-blend-screen" />
@@ -42,7 +42,7 @@ export function ForgotPassword() {
         <div className="relative z-10 p-12 flex items-center">
           <Logo className="w-10 h-10 text-white" hideText={false} />
           <span className="font-heading font-extrabold text-2xl tracking-tight text-white ml-3">
-            Event<span className="text-(--color-primary-400)">Stream</span>
+            Event<span className="text-primary-400">Stream</span>
           </span>
         </div>
 
@@ -55,7 +55,7 @@ export function ForgotPassword() {
             <h2 className="text-4xl lg:text-5xl font-heading font-extrabold text-white mb-6 leading-tight">
               Get back to managing your infrastructure.
             </h2>
-            <p className="text-indigo-200 text-lg font-medium leading-relaxed">
+            <p className="text-teal-200 text-lg font-medium leading-relaxed">
               We'll send you a secure 6-digit code to reset your password and restore access to your account.
             </p>
           </motion.div>
@@ -64,14 +64,14 @@ export function ForgotPassword() {
 
       {/* Right Panel - Form */}
       <div className="w-full lg:w-1/2 flex flex-col relative overflow-y-auto">
-        <div className="absolute top-6 left-6 z-10 lg:hidden flex items-center">
+        <div className="absolute top-6 left-6 z-10 lg:hidden">
           <Logo className="w-8 h-8" hideText={true} />
         </div>
         <div className="absolute top-6 right-6 z-10">
           <Link to="/login">
-            <Button variant="ghost" className="text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center gap-2 font-medium">
+            <Button variant="ghost" className="text-slate-500 hover:text-slate-900 dark:hover:text-white gap-2 font-medium">
               <ArrowLeft className="w-4 h-4" />
-              Back to Login
+              Back to login
             </Button>
           </Link>
         </div>
@@ -84,8 +84,8 @@ export function ForgotPassword() {
             className="w-full max-w-md"
           >
             <div className="text-left mb-8">
-              <h1 className="text-3xl font-heading font-extrabold text-(--color-text-main) tracking-tight mb-2">Forgot Password</h1>
-              <p className="text-base text-(--color-text-muted) font-medium">Request a secure password reset code.</p>
+              <h1 className="text-3xl font-heading font-extrabold text-text-main tracking-tight mb-2">Forgot Password</h1>
+              <p className="text-base text-text-muted font-medium">Request a secure password reset code.</p>
             </div>
 
             <AnimatePresence mode="wait">
@@ -97,7 +97,7 @@ export function ForgotPassword() {
                 exit={{ opacity: 0, x: 20 }}
               >
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-(--color-text-main)">Email address</label>
+                  <label className="text-sm font-semibold text-text-main">Email address</label>
                   <Input
                     type="email"
                     placeholder="name@company.com"

@@ -15,9 +15,11 @@ type MQTTWorker struct {
 	client        mqtt.Client
 	ingestService *services.TelemetryIngestService
 	deviceRepo    *repository.DeviceRepo
+	healthSvc     *services.HealthService
+	quit          chan struct{}
 }
 
-func NewMQTTWorker(brokerURI, clientID string, ingestService *services.TelemetryIngestService, deviceRepo *repository.DeviceRepo) *MQTTWorker {
+func NewMQTTWorker(brokerURI, clientID string, ingestService *services.TelemetryIngestService, deviceRepo *repository.DeviceRepo, healthSvc *services.HealthService) *MQTTWorker {
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(brokerURI)
 	opts.SetClientID(clientID)
@@ -28,6 +30,8 @@ func NewMQTTWorker(brokerURI, clientID string, ingestService *services.Telemetry
 		client:        client,
 		ingestService: ingestService,
 		deviceRepo:    deviceRepo,
+		healthSvc:     healthSvc,
+		quit:          make(chan struct{}),
 	}
 }
 
@@ -44,9 +48,25 @@ func (w *MQTTWorker) Start() {
 	}
 
 	log.Printf("MQTT Worker started and subscribed to %s", topic)
+
+	go func() {
+		ticker := time.NewTicker(1 * time.Minute)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				if w.healthSvc != nil {
+					w.healthSvc.PingWorker("MQTTWorker")
+				}
+			case <-w.quit:
+				return
+			}
+		}
+	}()
 }
 
 func (w *MQTTWorker) Stop() {
+	close(w.quit)
 	w.client.Disconnect(250)
 }
 

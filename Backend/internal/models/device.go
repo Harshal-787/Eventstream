@@ -59,6 +59,7 @@ type Device struct {
 	MapX                *float64   `json:"map_x,omitempty"`
 	MapY                *float64   `json:"map_y,omitempty"`
 	IsMaintenance       bool       `json:"is_maintenance"`
+	HealthScore         int        `json:"health_score"` // joined from device_twins
 	CreatedAt           time.Time  `json:"created_at"`
 
 	// Joined fields for easier UI rendering

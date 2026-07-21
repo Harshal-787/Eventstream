@@ -78,7 +78,7 @@ export function BuildingDetails({ role }) {
       case 'smoke':
         return (
           <div className="text-center w-full">
-            <p className="text-[10px] uppercase font-bold text-(--color-text-muted)">Status</p>
+            <p className="text-[10px] uppercase font-bold text-text-muted">Status</p>
             <p className={`text-xl font-bold ${payload.smoke_detected ? 'text-red-600 animate-pulse' : 'text-green-600'}`}>
               {payload.smoke_detected ? 'SMOKE DETECTED' : 'CLEAR'}
             </p>
@@ -87,7 +87,7 @@ export function BuildingDetails({ role }) {
       case 'water_leak':
         return (
           <div className="text-center w-full">
-            <p className="text-[10px] uppercase font-bold text-(--color-text-muted)">Status</p>
+            <p className="text-[10px] uppercase font-bold text-text-muted">Status</p>
             <p className={`text-xl font-bold ${payload.water_detected ? 'text-red-600 animate-pulse' : 'text-green-600'}`}>
               {payload.water_detected ? 'LEAK DETECTED' : 'DRY'}
             </p>
@@ -97,19 +97,19 @@ export function BuildingDetails({ role }) {
         return (
           <>
             <div className="text-center">
-              <p className="text-[10px] uppercase font-bold text-(--color-text-muted)">Power</p>
-              <p className="text-xl font-bold text-(--color-text-main)">{payload.power_usage?.toFixed(2) || '--'} kW</p>
+              <p className="text-[10px] uppercase font-bold text-text-muted">Power</p>
+              <p className="text-xl font-bold text-text-main">{payload.power_usage?.toFixed(2) || '--'} kW</p>
             </div>
             <div className="text-center">
-              <p className="text-[10px] uppercase font-bold text-(--color-text-muted)">Voltage</p>
-              <p className="text-xl font-bold text-(--color-text-main)">{payload.voltage?.toFixed(1) || '--'} V</p>
+              <p className="text-[10px] uppercase font-bold text-text-muted">Voltage</p>
+              <p className="text-xl font-bold text-text-main">{payload.voltage?.toFixed(1) || '--'} V</p>
             </div>
           </>
         );
       case 'door':
         return (
           <div className="text-center w-full">
-            <p className="text-[10px] uppercase font-bold text-(--color-text-muted)">Status</p>
+            <p className="text-[10px] uppercase font-bold text-text-muted">Status</p>
             <p className={`text-xl font-bold ${payload.door_open ? 'text-amber-600' : 'text-green-600'}`}>
               {payload.door_open ? 'OPEN' : 'CLOSED'}
             </p>
@@ -118,8 +118,8 @@ export function BuildingDetails({ role }) {
       case 'motion':
         return (
           <div className="text-center w-full">
-            <p className="text-[10px] uppercase font-bold text-(--color-text-muted)">Motion</p>
-            <p className={`text-xl font-bold ${payload.motion_detected ? 'text-amber-600' : 'text-(--color-text-main)'}`}>
+            <p className="text-[10px] uppercase font-bold text-text-muted">Motion</p>
+            <p className={`text-xl font-bold ${payload.motion_detected ? 'text-amber-600' : 'text-text-main'}`}>
               {payload.motion_detected ? 'DETECTED' : 'NONE'}
             </p>
           </div>
@@ -131,7 +131,7 @@ export function BuildingDetails({ role }) {
         else if (aqi > 50) aqiColor = 'text-amber-600';
         return (
           <div className="text-center w-full">
-            <p className="text-[10px] uppercase font-bold text-(--color-text-muted)">Air Quality (AQI)</p>
+            <p className="text-[10px] uppercase font-bold text-text-muted">Air Quality (AQI)</p>
             <p className={`text-xl font-bold ${aqiColor}`}>
               {aqi.toFixed(0)}
             </p>
@@ -144,14 +144,14 @@ export function BuildingDetails({ role }) {
         return (
           <>
             <div className="text-center">
-              <p className="text-[10px] uppercase font-bold text-(--color-text-muted)">Temp</p>
-              <p className={`text-xl font-bold ${temp && temp > 30 ? 'text-red-600 animate-pulse' : 'text-(--color-text-main)'}`}>
+              <p className="text-[10px] uppercase font-bold text-text-muted">Temp</p>
+              <p className={`text-xl font-bold ${temp && temp > 30 ? 'text-red-600 animate-pulse' : 'text-text-main'}`}>
                 {temp != null ? `${temp.toFixed(1)}°C` : '--'}
               </p>
             </div>
             <div className="text-center">
-              <p className="text-[10px] uppercase font-bold text-(--color-text-muted)">Humidity</p>
-              <p className="text-xl font-bold text-(--color-text-main)">
+              <p className="text-[10px] uppercase font-bold text-text-muted">Humidity</p>
+              <p className="text-xl font-bold text-text-main">
                 {hum != null ? `${hum.toFixed(1)}%` : '--'}
               </p>
             </div>
@@ -301,7 +301,7 @@ export function BuildingDetails({ role }) {
             <ArrowLeft className="w-4 h-4 mr-2" /> Back
           </Button>
         </Link>
-        <h1 className="text-3xl font-extrabold text-(--color-text-main) tracking-tight">{building.name}</h1>
+        <h1 className="text-3xl font-extrabold text-text-main tracking-tight">{building.name}</h1>
         <Badge variant={building.status === 'active' ? 'success' : building.status === 'rejected' ? 'danger' : 'warning'} className="ml-2 capitalize">
           {building.status}
         </Badge>
@@ -310,28 +310,28 @@ export function BuildingDetails({ role }) {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Info Box */}
         <div className="lg:col-span-5 space-y-6">
-          <div className="p-6 border border-(--color-border-main) rounded-2xl bg-(--color-surface) shadow-md">
-            <h3 className="text-xl font-bold uppercase tracking-tight text-(--color-text-main) mb-6 flex items-center border-b border-(--color-border-main) pb-4">
-              <Building2 className="w-6 h-6 mr-3 text-(--color-text-main)" />
+          <div className="p-6 border border-border-main rounded-2xl bg-surface shadow-md">
+            <h3 className="text-xl font-bold uppercase tracking-tight text-text-main mb-6 flex items-center border-b border-border-main pb-4">
+              <Building2 className="w-6 h-6 mr-3 text-text-main" />
               Property Details
             </h3>
             
             <div className="space-y-6">
               <div className="flex items-start">
-                <MapPin className="w-5 h-5 mr-4 text-(--color-text-muted) mt-0.5" />
+                <MapPin className="w-5 h-5 mr-4 text-text-muted mt-0.5" />
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-wider text-(--color-text-muted) mb-1">Address</p>
-                  <p className="text-sm font-semibold text-(--color-text-main)">{building.address}</p>
-                  <p className="text-sm font-semibold text-(--color-text-main)">{building.city}, {building.state} {building.zip_code}</p>
+                  <p className="text-xs font-bold uppercase tracking-wider text-text-muted mb-1">Address</p>
+                  <p className="text-sm font-semibold text-text-main">{building.address}</p>
+                  <p className="text-sm font-semibold text-text-main">{building.city}, {building.state} {building.zip_code}</p>
                 </div>
               </div>
             </div>
           </div>
           
-          <div className="p-6 border border-(--color-border-main) rounded-2xl bg-(--color-surface) shadow-md">
-            <div className="flex items-center justify-between mb-6 border-b border-(--color-border-main) pb-4">
-              <h3 className="text-xl font-bold uppercase tracking-tight text-(--color-text-main) flex items-center">
-                <Layers className="w-6 h-6 mr-3 text-(--color-text-main)" />
+          <div className="p-6 border border-border-main rounded-2xl bg-surface shadow-md">
+            <div className="flex items-center justify-between mb-6 border-b border-border-main pb-4">
+              <h3 className="text-xl font-bold uppercase tracking-tight text-text-main flex items-center">
+                <Layers className="w-6 h-6 mr-3 text-text-main" />
                 Floors & Rooms
               </h3>
               {role === 'admin' && (
@@ -344,36 +344,36 @@ export function BuildingDetails({ role }) {
             
             <div className="space-y-4">
               {floors.length === 0 ? (
-                <p className="text-sm text-(--color-text-muted)">No floors configured.</p>
+                <p className="text-sm text-text-muted">No floors configured.</p>
               ) : (
                 floors.map(floor => (
-                  <div key={floor.id} className="border border-(--color-border-main) rounded-xl p-4 bg-(--color-surface) shadow-md group/floor mb-4 last:mb-0 transition-transform  ">
-                    <div className="flex justify-between items-center border-b border-(--color-border-main) pb-3 mb-3">
-                      <p className="font-bold uppercase tracking-wide text-sm text-(--color-text-main)">{floor.name} <span className="text-gray-500 font-bold ml-2">(Lvl {floor.level})</span></p>
+                  <div key={floor.id} className="border border-border-main rounded-xl p-4 bg-surface shadow-md group/floor mb-4 last:mb-0 transition-transform  ">
+                    <div className="flex justify-between items-center border-b border-border-main pb-3 mb-3">
+                      <p className="font-bold uppercase tracking-wide text-sm text-text-main">{floor.name} <span className="text-gray-500 font-bold ml-2">(Lvl {floor.level})</span></p>
                       {role === 'admin' && (
                         <div className="flex gap-3 opacity-0 group-hover/floor:opacity-100 transition-opacity items-center">
                           {floor.floor_plan_url && (
                             <Link to={`/${role}/floors/${floor.id}/map`}>
-                              <button className="text-[10px] uppercase font-bold text-(--color-primary) hover:text-(--color-primary-600) hover:underline">View Map</button>
+                              <button className="text-[10px] uppercase font-bold text-primary-500 hover:text-primary-600 hover:underline">View Map</button>
                             </Link>
                           )}
-                          <button onClick={() => openFloorModal(floor)} className="text-[10px] uppercase font-bold text-gray-500 hover:text-(--color-text-main) hover:underline">Edit</button>
+                          <button onClick={() => openFloorModal(floor)} className="text-[10px] uppercase font-bold text-gray-500 hover:text-text-main hover:underline">Edit</button>
                           <button onClick={() => handleDeleteFloor(floor.id)} className="text-[10px] uppercase font-bold text-gray-500 hover:text-red-600 hover:underline">Delete</button>
                         </div>
                       )}
                     </div>
                     <div className="space-y-2">
                       {rooms.filter(r => r.floor_id === floor.id).map(room => (
-                        <div key={room.id} className="text-sm font-bold text-gray-700 flex justify-between items-center group/room bg-slate-50 dark:bg-(--color-surface-hover) border border-(--color-border-main) rounded-lg p-2 hover:border-(--color-primary-500) transition-colors">
+                        <div key={room.id} className="text-sm font-bold text-gray-700 flex justify-between items-center group/room bg-slate-50 dark:bg-surface-hover border border-border-main rounded-lg p-2 hover:border-primary-500 transition-colors">
                           <span className="uppercase tracking-wide">{room.name}</span>
                           <div className="flex items-center gap-3">
                             {role === 'admin' && (
                               <div className="flex gap-2 opacity-0 group-hover/room:opacity-100 transition-opacity mr-2">
-                                <button onClick={() => openRoomModal(room)} className="text-[10px] uppercase tracking-wider font-bold text-gray-500 hover:text-(--color-text-main) hover:underline">Edit</button>
+                                <button onClick={() => openRoomModal(room)} className="text-[10px] uppercase tracking-wider font-bold text-gray-500 hover:text-text-main hover:underline">Edit</button>
                                 <button onClick={() => handleDeleteRoom(room.id)} className="text-[10px] uppercase tracking-wider font-bold text-gray-500 hover:text-red-600 hover:underline">Delete</button>
                               </div>
                             )}
-                            <span className="text-[10px] font-bold uppercase tracking-wider bg-(--color-primary) text-white px-2 py-0.5">{room.type}</span>
+                            <span className="text-[10px] font-bold uppercase tracking-wider bg-primary-500 text-white px-2 py-0.5">{room.type}</span>
                           </div>
                         </div>
                       ))}
@@ -387,7 +387,7 @@ export function BuildingDetails({ role }) {
 
         {/* Map and Devices Box */}
         <div className="lg:col-span-7 space-y-8">
-          <div className="p-0 overflow-hidden relative z-0 w-full aspect-video border border-(--color-border-main) rounded-2xl bg-(--color-surface) shadow-md">
+          <div className="p-0 overflow-hidden relative z-0 w-full aspect-video border border-border-main rounded-2xl bg-surface shadow-md">
             {hasCoordinates ? (
               <MapContainer center={[lat, lng]} zoom={15} style={{ height: '100%', width: '100%' }}>
                 <TileLayer
@@ -399,16 +399,16 @@ export function BuildingDetails({ role }) {
                 </Marker>
               </MapContainer>
             ) : (
-              <div className="flex flex-col items-center justify-center h-full bg-(--color-surface-hover) text-(--color-text-muted) p-8">
+              <div className="flex flex-col items-center justify-center h-full bg-surface-hover text-text-muted p-8">
                 <p className="text-xl font-bold">No Location Data</p>
               </div>
             )}
           </div>
 
-          <div className="p-6 border border-(--color-border-main) rounded-2xl bg-(--color-surface) shadow-md">
-            <div className="flex items-center justify-between mb-6 border-b border-(--color-border-main) pb-4">
-              <h3 className="text-xl font-bold uppercase tracking-tight text-(--color-text-main) flex items-center">
-                <Cpu className="w-6 h-6 mr-3 text-(--color-text-main)" />
+          <div className="p-6 border border-border-main rounded-2xl bg-surface shadow-md">
+            <div className="flex items-center justify-between mb-6 border-b border-border-main pb-4">
+              <h3 className="text-xl font-bold uppercase tracking-tight text-text-main flex items-center">
+                <Cpu className="w-6 h-6 mr-3 text-text-main" />
                 Deployed Devices
                 {isConnected && (
                   <span className="ml-4 text-[10px] bg-green-400 text-black px-2 py-1 animate-pulse">LIVE CONNECTED</span>
@@ -420,16 +420,16 @@ export function BuildingDetails({ role }) {
             </div>
             
             {devices.length === 0 ? (
-              <div className="text-center p-6 bg-(--color-surface-hover) border border-(--color-border) rounded">
-                <AlertTriangle className="w-8 h-8 text-(--color-text-muted) mx-auto mb-2" />
-                <p className="text-sm text-(--color-text-muted)">No active devices deployed.</p>
+              <div className="text-center p-6 bg-surface-hover border border-border-main rounded">
+                <AlertTriangle className="w-8 h-8 text-text-muted mx-auto mb-2" />
+                <p className="text-sm text-text-muted">No active devices deployed.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {devices.map(dev => {
                   const liveData = telemetryMap[dev.id];
                   return (
-                  <div key={dev.id} className="p-5 border border-(--color-border-main) rounded-2xl bg-(--color-surface) shadow-md flex flex-col justify-between   transition-all relative overflow-hidden group">
+                  <div key={dev.id} className="p-5 border border-border-main rounded-2xl bg-surface shadow-md flex flex-col justify-between   transition-all relative overflow-hidden group">
                     {isConnected && (
                       <div className="absolute top-3 right-3 flex space-x-1">
                         <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
@@ -437,15 +437,15 @@ export function BuildingDetails({ role }) {
                     )}
                     <div>
                       <div className="flex justify-between items-start mb-2 pr-6">
-                        <span className="font-bold uppercase tracking-tight text-lg text-(--color-text-main) truncate">{dev.name}</span>
+                        <span className="font-bold uppercase tracking-tight text-lg text-text-main truncate">{dev.name}</span>
                       </div>
                       <p className="text-xs font-mono font-bold text-gray-600 mb-1">ID: {dev.hardware_id}</p>
-                      <p className="text-xs font-bold uppercase tracking-wide text-gray-500">{dev.floor_name} <span className="text-(--color-text-main) px-1">/</span> {dev.room_name}</p>
+                      <p className="text-xs font-bold uppercase tracking-wide text-gray-500">{dev.floor_name} <span className="text-text-main px-1">/</span> {dev.room_name}</p>
                     </div>
 
                     {/* Live Data Block */}
                     {liveData ? (
-                      <div className="mt-4 p-3 bg-(--color-surface-hover) border border-(--color-border-main) rounded-2xl flex justify-around">
+                      <div className="mt-4 p-3 bg-surface-hover border border-border-main rounded-2xl flex justify-around">
                         {renderLiveMetrics(dev, liveData)}
                       </div>
                     ) : (
@@ -454,13 +454,13 @@ export function BuildingDetails({ role }) {
                       </div>
                     )}
 
-                    <div className="mt-5 pt-4 border-t border-(--color-border-main) flex items-center justify-between">
-                      <span className="text-[10px] uppercase font-bold tracking-widest text-(--color-text-main) bg-(--color-surface) border border-(--color-border-main) px-2 py-1">{dev.type}</span>
+                    <div className="mt-5 pt-4 border-t border-border-main flex items-center justify-between">
+                      <span className="text-[10px] uppercase font-bold tracking-widest text-text-main bg-surface border border-border-main px-2 py-1">{dev.type}</span>
                       <div className="flex items-center gap-3">
-                        <div className="w-16 h-2 bg-(--color-surface) border border-(--color-border-main) rounded-md overflow-hidden relative">
-                          <div className="absolute top-0 left-0 h-full bg-(--color-primary)" style={{ width: `${dev.battery_pct || 100}%` }} />
+                        <div className="w-16 h-2 bg-surface border border-border-main rounded-md overflow-hidden relative">
+                          <div className={`absolute top-0 left-0 h-full ${(dev.battery_pct ?? 100) > 50 ? 'bg-green-500' : (dev.battery_pct ?? 100) > 20 ? 'bg-amber-500' : 'bg-red-500'}`} style={{ width: `${dev.battery_pct ?? 100}%` }} />
                         </div>
-                        <span className="text-[10px] font-bold font-mono text-(--color-text-main)">{dev.battery_pct || 100}%</span>
+                        <span className="text-[10px] font-bold font-mono text-text-main">{dev.battery_pct ?? 100}%</span>
                       </div>
                     </div>
                   </div>
@@ -501,7 +501,7 @@ export function BuildingDetails({ role }) {
         <form onSubmit={handleRequestSensor} className="space-y-4">
           <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
             <p className="text-sm text-blue-400 font-medium">Bring Your Own Hardware</p>
-            <p className="text-xs text-(--color-text-muted) mt-1">Submit the details of the physical sensor you installed in this room. An Admin will review and provision it.</p>
+            <p className="text-xs text-text-muted mt-1">Submit the details of the physical sensor you installed in this room. An Admin will review and provision it.</p>
           </div>
 
           <Select label="Sensor Type" value={requestData.sensor_type} onChange={e => setRequestData({...requestData, sensor_type: e.target.value})}

@@ -154,6 +154,9 @@ definitions:
         type: string
       hardware_id:
         type: string
+      health_score:
+        description: joined from device_twins
+        type: integer
       id:
         type: integer
       is_maintenance:
@@ -188,6 +191,72 @@ definitions:
         description: unassigned, active, offline, maintenance, retired
         type: string
       type:
+        type: string
+    type: object
+  models.ReportSchedule:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: integer
+      format:
+        type: string
+      frequency:
+        type: string
+      id:
+        type: integer
+      last_run_at:
+        type: string
+      organization_id:
+        type: integer
+      recipients:
+        items:
+          type: string
+        type: array
+      report_type:
+        type: string
+    type: object
+  services.HealthMetrics:
+    properties:
+      api:
+        properties:
+          avg_latency_1h:
+            type: number
+          total_requests_1h:
+            type: integer
+        type: object
+      database:
+        properties:
+          idle:
+            type: integer
+          in_use:
+            type: integer
+          max_open_connections:
+            type: integer
+          open_connections:
+            type: integer
+          wait_count:
+            type: integer
+        type: object
+      queue:
+        properties:
+          active_queue_events:
+            type: integer
+          dead_letter_queue_events:
+            type: integer
+        type: object
+      workers:
+        items:
+          $ref: '#/definitions/services.WorkerStatus'
+        type: array
+    type: object
+  services.WorkerStatus:
+    properties:
+      is_healthy:
+        type: boolean
+      last_ping:
+        type: string
+      name:
         type: string
     type: object
 host: localhost:8080
@@ -775,6 +844,58 @@ paths:
       summary: Export reports
       tags:
       - reports
+  /reports/schedules:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.ReportSchedule'
+            type: array
+      summary: List report schedules
+      tags:
+      - report-schedules
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Report Schedule Info
+        in: body
+        name: schedule
+        required: true
+        schema:
+          $ref: '#/definitions/models.ReportSchedule'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.ReportSchedule'
+      summary: Create report schedule
+      tags:
+      - report-schedules
+  /reports/schedules/{id}:
+    delete:
+      parameters:
+      - description: Schedule ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete report schedule
+      tags:
+      - report-schedules
   /stream:
     get:
       description: Establishes an SSE connection for real-time telemetry updates
@@ -790,7 +911,85 @@ paths:
       summary: Real-time telemetry stream
       tags:
       - Telemetry
+  /system/health:
+    get:
+      description: Fetches real-time database, API, queue, and worker health metrics
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/services.HealthMetrics'
+      summary: Get system health metrics
+      tags:
+      - system
+  /telemetry:
+    get:
+      description: Fetches paginated historical telemetry events with optional filters
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by building ID
+        in: query
+        name: building_id
+        type: string
+      - description: Filter by device ID
+        in: query
+        name: device_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List historical telemetry events
+      tags:
+      - telemetry
+  /telemetry/ingest:
+    post:
+      consumes:
+      - application/json
+      description: Accepts a JSON payload representing a device telemetry event (temperature,
+        humidity, etc.)
+      parameters:
+      - description: Telemetry Payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Ingest a single telemetry event
+      tags:
+      - telemetry
 securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: X-API-Key
+    type: apiKey
   BearerAuth:
     description: 'Enter: Bearer <your_token>'
     in: header

@@ -27,6 +27,9 @@ import { Users } from './features/users/pages/Users';
 import AuditLogs from './features/audit/pages/AuditLogs';
 import { IndoorMap } from './features/dashboard/pages/IndoorMap';
 import Reports from './features/reports/pages/Reports';
+import ApiManagement from './features/api/pages/ApiManagement';
+import SystemHealth from './features/operations/pages/SystemHealth';
+import AISettings from './features/settings/pages/AISettings';
 
 export default function App() {
   const { checkAuth, isCheckingAuth, isAuthenticated, user } = useAuthStore();
@@ -60,7 +63,7 @@ export default function App() {
 
   if (isCheckingAuth) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-(--color-background)">
+      <div className="h-screen w-screen flex items-center justify-center bg-background">
         <Spinner size="xl" />
       </div>
     );
@@ -92,6 +95,9 @@ export default function App() {
             <Route path="reports" element={<Reports />} />
             <Route path="users" element={<Users />} />
             <Route path="audit-logs" element={<AuditLogs />} />
+            <Route path="api-management" element={<ApiManagement />} />
+            <Route path="operations/health" element={<SystemHealth />} />
+            <Route path="ai-settings" element={<AISettings />} />
           </Route>
 
           {/* User Routes */}

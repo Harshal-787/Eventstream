@@ -1,8 +1,10 @@
 package services
 
 import (
+	"encoding/base64"
 	"fmt"
 	"log"
+	"path/filepath"
 
 	"eventstream/internal/config"
 	"github.com/sendgrid/sendgrid-go"
@@ -58,6 +60,55 @@ func (s *EmailService) SendPasswordResetEmail(toEmail string, resetLink string) 
 	if response.StatusCode >= 400 {
 		log.Printf("SendGrid API returned error for reset email: %d - %s", response.StatusCode, response.Body)
 		return fmt.Errorf("failed to send reset email via SendGrid: %d", response.StatusCode)
+	}
+
+	return nil
+}
+
+func (s *EmailService) SendReportEmailWithAttachment(toEmails []string, subject, plainTextContent, htmlContent, attachmentName string, attachmentBytes []byte) error {
+	from := mail.NewEmail("EventStream Reports", s.cfg.SendGridFrom)
+	message := mail.NewV3Mail()
+	message.SetFrom(from)
+	message.Subject = subject
+
+	p := mail.NewPersonalization()
+	for _, email := range toEmails {
+		p.AddTos(mail.NewEmail("User", email))
+	}
+	message.AddPersonalizations(p)
+
+	message.AddContent(mail.NewContent("text/plain", plainTextContent))
+	message.AddContent(mail.NewContent("text/html", htmlContent))
+
+	if len(attachmentBytes) > 0 {
+		encoded := base64.StdEncoding.EncodeToString(attachmentBytes)
+		
+		mimeType := "application/pdf"
+		ext := filepath.Ext(attachmentName)
+		if ext == ".csv" {
+			mimeType = "text/csv"
+		} else if ext == ".xlsx" {
+			mimeType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+		}
+
+		attachment := mail.NewAttachment()
+		attachment.SetContent(encoded)
+		attachment.SetType(mimeType)
+		attachment.SetFilename(attachmentName)
+		attachment.SetDisposition("attachment")
+		message.AddAttachment(attachment)
+	}
+	
+	client := sendgrid.NewSendClient(s.cfg.SendGridAPIKey)
+	response, err := client.Send(message)
+	if err != nil {
+		log.Printf("Failed to send report email: %v", err)
+		return err
+	}
+
+	if response.StatusCode >= 400 {
+		log.Printf("SendGrid API error for report email: %d - %s", response.StatusCode, response.Body)
+		return fmt.Errorf("failed to send report email: %d", response.StatusCode)
 	}
 
 	return nil

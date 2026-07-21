@@ -893,6 +893,87 @@
                 }
             }
         },
+        "/reports/schedules": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "report-schedules"
+                ],
+                "summary": "List report schedules",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.ReportSchedule"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "report-schedules"
+                ],
+                "summary": "Create report schedule",
+                "parameters": [
+                    {
+                        "description": "Report Schedule Info",
+                        "name": "schedule",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ReportSchedule"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.ReportSchedule"
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/schedules/{id}": {
+            "delete": {
+                "tags": [
+                    "report-schedules"
+                ],
+                "summary": "Delete report schedule",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Schedule ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/stream": {
             "get": {
                 "security": [
@@ -913,6 +994,116 @@
                         "description": "SSE Stream",
                         "schema": {
                             "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/system/health": {
+            "get": {
+                "description": "Fetches real-time database, API, queue, and worker health metrics",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "system"
+                ],
+                "summary": "Get system health metrics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/services.HealthMetrics"
+                        }
+                    }
+                }
+            }
+        },
+        "/telemetry": {
+            "get": {
+                "description": "Fetches paginated historical telemetry events with optional filters",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "telemetry"
+                ],
+                "summary": "List historical telemetry events",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by building ID",
+                        "name": "building_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by device ID",
+                        "name": "device_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/telemetry/ingest": {
+            "post": {
+                "description": "Accepts a JSON payload representing a device telemetry event (temperature, humidity, etc.)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "telemetry"
+                ],
+                "summary": "Ingest a single telemetry event",
+                "parameters": [
+                    {
+                        "description": "Telemetry Payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -1150,6 +1341,10 @@
                 "hardware_id": {
                     "type": "string"
                 },
+                "health_score": {
+                    "description": "joined from device_twins",
+                    "type": "integer"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -1202,9 +1397,116 @@
                     "type": "string"
                 }
             }
+        },
+        "models.ReportSchedule": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "integer"
+                },
+                "format": {
+                    "type": "string"
+                },
+                "frequency": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "last_run_at": {
+                    "type": "string"
+                },
+                "organization_id": {
+                    "type": "integer"
+                },
+                "recipients": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "report_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "services.HealthMetrics": {
+            "type": "object",
+            "properties": {
+                "api": {
+                    "type": "object",
+                    "properties": {
+                        "avg_latency_1h": {
+                            "type": "number"
+                        },
+                        "total_requests_1h": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "database": {
+                    "type": "object",
+                    "properties": {
+                        "idle": {
+                            "type": "integer"
+                        },
+                        "in_use": {
+                            "type": "integer"
+                        },
+                        "max_open_connections": {
+                            "type": "integer"
+                        },
+                        "open_connections": {
+                            "type": "integer"
+                        },
+                        "wait_count": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "queue": {
+                    "type": "object",
+                    "properties": {
+                        "active_queue_events": {
+                            "type": "integer"
+                        },
+                        "dead_letter_queue_events": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "workers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/services.WorkerStatus"
+                    }
+                }
+            }
+        },
+        "services.WorkerStatus": {
+            "type": "object",
+            "properties": {
+                "is_healthy": {
+                    "type": "boolean"
+                },
+                "last_ping": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
         }
     },
     "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "X-API-Key",
+            "in": "header"
+        },
         "BearerAuth": {
             "description": "Enter: Bearer \u003cyour_token\u003e",
             "type": "apiKey",

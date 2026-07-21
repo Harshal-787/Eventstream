@@ -20,7 +20,7 @@ export function ThemeToggle() {
       variant="ghost"
       size="sm"
       onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-      className="rounded-full w-9 h-9 p-0 flex items-center justify-center text-(--color-text-main) hover:bg-(--color-surface-hover) transition-colors"
+      className="rounded-full w-9 h-9 p-0 flex items-center justify-center text-text-main hover:bg-surface-hover transition-colors"
       title="Toggle theme"
     >
       {theme === 'dark' ? (
