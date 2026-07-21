@@ -15,14 +15,13 @@ import (
 )
 
 type TelemetryHandler struct {
+	ingestService   *services.TelemetryIngestService
 	telemetryRepo   *repository.TelemetryRepository
 	failedEventRepo *repository.FailedEventRepository
-	anomalyDetector *services.AnomalyDetector
-	alertEngine     *services.AlertEngine
 }
 
-func NewTelemetryHandler(telemetryRepo *repository.TelemetryRepository, failedEventRepo *repository.FailedEventRepository, anomalyDetector *services.AnomalyDetector, alertEngine *services.AlertEngine) *TelemetryHandler {
-	return &TelemetryHandler{telemetryRepo: telemetryRepo, failedEventRepo: failedEventRepo, anomalyDetector: anomalyDetector, alertEngine: alertEngine}
+func NewTelemetryHandler(ingestService *services.TelemetryIngestService, telemetryRepo *repository.TelemetryRepository, failedEventRepo *repository.FailedEventRepository) *TelemetryHandler {
+	return &TelemetryHandler{ingestService: ingestService, telemetryRepo: telemetryRepo, failedEventRepo: failedEventRepo}
 }
 
 func (h *TelemetryHandler) IngestEvent(c *gin.Context) {
@@ -55,7 +54,10 @@ func (h *TelemetryHandler) IngestEvent(c *gin.Context) {
 	if h, ok := payload["humidity"].(float64); ok { hum = &h }
 	status := "ok"
 
+	orgID, _ := c.Get("organization_id")
+	
 	t := &models.Telemetry{
+		OrganizationID: orgID.(int),
 		DeviceID:    deviceID,
 		Temperature: temp,
 		Humidity:    hum,
@@ -64,17 +66,11 @@ func (h *TelemetryHandler) IngestEvent(c *gin.Context) {
 		Timestamp:   time.Now(),
 	}
 
-	if err := h.telemetryRepo.Insert(t); err != nil {
-		h.failedEventRepo.LogFailedEvent(body, "Failed to save telemetry to DB", c.ClientIP())
+	if err := h.ingestService.Ingest(t); err != nil {
+		h.failedEventRepo.LogFailedEvent(body, "Failed to ingest telemetry", c.ClientIP())
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
-
-	// Run anomaly detection
-	go h.anomalyDetector.Process(t)
-
-	// Evaluate alert rules
-	go h.alertEngine.Evaluate(t)
 
 	c.JSON(http.StatusCreated, gin.H{"status": "Ingested successfully"})
 }

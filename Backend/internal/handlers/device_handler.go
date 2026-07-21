@@ -182,6 +182,16 @@ func (h *DeviceHandler) DeleteRoom(c *gin.Context) {
 }
 
 // --- Devices ---
+// ListDevices godoc
+// @Summary List devices
+// @Description Get a list of devices with optional building and status filters
+// @Tags devices
+// @Accept json
+// @Produce json
+// @Param building_id query int false "Building ID"
+// @Param status query string false "Device Status"
+// @Success 200 {array} models.Device
+// @Router /devices [get]
 func (h *DeviceHandler) ListDevices(c *gin.Context) {
 	status := c.Query("status")
 	bIdStr := c.Query("building_id")
@@ -293,6 +303,31 @@ func (h *DeviceHandler) UpdateDeviceStatus(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Device status updated successfully"})
+}
+
+func (h *DeviceHandler) ToggleMaintenance(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid device ID"})
+		return
+	}
+
+	var req struct {
+		IsMaintenance bool `json:"is_maintenance"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	_, err = h.Repo.DB.Exec(`UPDATE devices SET is_maintenance=$1 WHERE id=$2`, req.IsMaintenance, id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update maintenance mode: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Maintenance mode updated successfully", "is_maintenance": req.IsMaintenance})
 }
 
 func (h *DeviceHandler) CreateModel(c *gin.Context) {

@@ -1,6 +1,7 @@
 package services
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -37,6 +38,11 @@ func (e *AlertEngine) Evaluate(telemetry *models.Telemetry) {
 		return
 	}
 
+	if device.IsMaintenance {
+		// Do not process alerts for devices in maintenance mode
+		return
+	}
+
 	rules, err := e.alertRuleRepo.GetActiveRules()
 	if err != nil {
 		log.Printf("AlertEngine: could not fetch active rules: %v", err)
@@ -49,29 +55,34 @@ func (e *AlertEngine) Evaluate(telemetry *models.Telemetry) {
 			continue
 		}
 
-		// 2. Extract the metric value from telemetry payload
-		valRaw, exists := telemetry.Payload[rule.Metric]
-		if !exists {
-			continue
-		}
-
-		// 3. Evaluate the condition
+		// 2. Evaluate conditions
 		isTriggered := false
-		if rule.Threshold != nil {
-			// Numeric evaluation
-			if valNum, ok := valRaw.(float64); ok {
-				isTriggered = e.evaluateNumeric(valNum, rule.Operator, *rule.Threshold)
+
+		if len(rule.Conditions) > 0 {
+			var conditions []map[string]interface{}
+			if err := json.Unmarshal(rule.Conditions, &conditions); err == nil {
+				isTriggered = e.evaluateMultiCondition(conditions, telemetry)
+			} else {
+				log.Printf("AlertEngine: failed to parse conditions for rule %d", rule.ID)
 			}
-		} else if rule.BoolValue != nil {
-			// Boolean evaluation
-			if valBool, ok := valRaw.(bool); ok {
-				isTriggered = (valBool == *rule.BoolValue)
+		} else {
+			// Legacy single condition fallback
+			valRaw, exists := telemetry.Payload[rule.Metric]
+			if exists {
+				if rule.Threshold != nil {
+					// Numeric evaluation
+					if valNum, ok := valRaw.(float64); ok {
+						isTriggered = e.evaluateNumeric(valNum, rule.Operator, *rule.Threshold)
+					}
+				} else if rule.BoolValue != nil {
+					// Boolean evaluation
+					if valBool, ok := valRaw.(bool); ok {
+						isTriggered = (valBool == *rule.BoolValue)
+					}
+				} else if valStr, ok := valRaw.(string); ok {
+					isTriggered = e.evaluateString(valStr, rule.Operator)
+				}
 			}
-		} else if valStr, ok := valRaw.(string); ok {
-			// String evaluation (e.g. status == "offline")
-			isTriggered = e.evaluateString(valStr, rule.Operator)
-			// Wait, the rule model doesn't have a string value field. 
-			// In EventStream, usually bool or threshold is used. 
 		}
 
 		if isTriggered {
@@ -102,6 +113,52 @@ func (e *AlertEngine) appliesToDevice(rule *models.AlertRule, device *models.Dev
 		}
 	}
 	return false
+}
+
+func (e *AlertEngine) evaluateMultiCondition(conditions []map[string]interface{}, telemetry *models.Telemetry) bool {
+	if len(conditions) == 0 {
+		return false
+	}
+	// By default, treat as AND (all conditions must pass)
+	for _, cond := range conditions {
+		metricRaw, okMetric := cond["metric"].(string)
+		opRaw, okOp := cond["operator"].(string)
+		valRaw, okVal := cond["value"]
+		
+		if !okMetric || !okOp || !okVal {
+			continue
+		}
+
+		telemetryVal, exists := telemetry.Payload[metricRaw]
+		if !exists {
+			return false // Metric missing -> fails AND condition
+		}
+
+		// Type-based evaluation
+		passed := false
+		if numTarget, ok := valRaw.(float64); ok {
+			if numVal, ok := telemetryVal.(float64); ok {
+				passed = e.evaluateNumeric(numVal, opRaw, numTarget)
+			}
+		} else if boolTarget, ok := valRaw.(bool); ok {
+			if boolVal, ok := telemetryVal.(bool); ok {
+				passed = (boolVal == boolTarget)
+			}
+		} else if strTarget, ok := valRaw.(string); ok {
+			if strVal, ok := telemetryVal.(string); ok {
+				if opRaw == "==" {
+					passed = (strVal == strTarget)
+				} else if opRaw == "!=" {
+					passed = (strVal != strTarget)
+				}
+			}
+		}
+
+		if !passed {
+			return false
+		}
+	}
+	return true
 }
 
 func (e *AlertEngine) evaluateNumeric(val float64, operator string, threshold float64) bool {

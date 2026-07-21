@@ -17,6 +17,7 @@ type Building struct {
 	BIN            *string   `json:"bin"`
 	OwnerID        *int      `json:"owner_id"`
 	Status         string    `json:"status"` // 'pending_approval', 'active', 'suspended'
+	IsMaintenance  bool      `json:"is_maintenance"`
 	CreatedAt      time.Time `json:"created_at"`
 	
 	// Joined fields

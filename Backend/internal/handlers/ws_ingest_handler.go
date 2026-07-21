@@ -20,16 +20,14 @@ var upgrader = websocket.Upgrader{
 }
 
 type WSIngestHandler struct {
-	telemetryRepo   *repository.TelemetryRepository
-	deviceRepo      *repository.DeviceRepo
-	anomalyDetector *services.AnomalyDetector
+	ingestService *services.TelemetryIngestService
+	deviceRepo    *repository.DeviceRepo
 }
 
-func NewWSIngestHandler(telemetryRepo *repository.TelemetryRepository, deviceRepo *repository.DeviceRepo, anomalyDetector *services.AnomalyDetector) *WSIngestHandler {
+func NewWSIngestHandler(ingestService *services.TelemetryIngestService, deviceRepo *repository.DeviceRepo) *WSIngestHandler {
 	return &WSIngestHandler{
-		telemetryRepo:   telemetryRepo,
-		deviceRepo:      deviceRepo,
-		anomalyDetector: anomalyDetector,
+		ingestService: ingestService,
+		deviceRepo:    deviceRepo,
 	}
 }
 
@@ -81,12 +79,10 @@ func (h *WSIngestHandler) HandleIngest(c *gin.Context) {
 			Payload:        payload,
 		}
 
-		if err := h.telemetryRepo.Insert(tel); err != nil {
+		if err := h.ingestService.Ingest(tel); err != nil {
 			ws.WriteJSON(gin.H{"error": "failed to save telemetry"})
 			continue
 		}
-
-		go h.anomalyDetector.Process(tel)
 
 		// Acknowledge receipt
 		ws.WriteJSON(gin.H{"status": "received"})

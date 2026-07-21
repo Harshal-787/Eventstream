@@ -37,6 +37,14 @@ func NewAlertHandler(alertRepo *repository.AlertRepository, hub *events.Hub, log
 // @Success      200  {object}  map[string]interface{}
 // @Failure      500  {object}  map[string]string
 // @Router       /alerts [get]
+// List godoc
+// @Summary List alerts
+// @Description Get a list of alerts
+// @Tags alerts
+// @Accept json
+// @Produce json
+// @Success 200 {array} models.Alert
+// @Router /api/v1/alerts [get]
 func (h *AlertHandler) List(c *gin.Context) {
 	filters := map[string]interface{}{}
 	if status := c.Query("status"); status != "" { filters["status"] = status }

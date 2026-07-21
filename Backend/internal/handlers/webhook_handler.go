@@ -13,16 +13,14 @@ import (
 )
 
 type WebhookHandler struct {
-	telemetryRepo   *repository.TelemetryRepository
-	deviceRepo      *repository.DeviceRepo
-	anomalyDetector *services.AnomalyDetector
+	ingestService *services.TelemetryIngestService
+	deviceRepo    *repository.DeviceRepo
 }
 
-func NewWebhookHandler(telemetryRepo *repository.TelemetryRepository, deviceRepo *repository.DeviceRepo, anomalyDetector *services.AnomalyDetector) *WebhookHandler {
+func NewWebhookHandler(ingestService *services.TelemetryIngestService, deviceRepo *repository.DeviceRepo) *WebhookHandler {
 	return &WebhookHandler{
-		telemetryRepo:   telemetryRepo,
-		deviceRepo:      deviceRepo,
-		anomalyDetector: anomalyDetector,
+		ingestService: ingestService,
+		deviceRepo:    deviceRepo,
 	}
 }
 
@@ -72,12 +70,10 @@ func (h *WebhookHandler) HandleWebhook(c *gin.Context) {
 		Payload:        payload,
 	}
 
-	if err := h.telemetryRepo.Insert(tel); err != nil {
+	if err := h.ingestService.Ingest(tel); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save telemetry"})
 		return
 	}
-
-	go h.anomalyDetector.Process(tel)
 
 	c.JSON(http.StatusOK, gin.H{"status": "received"})
 }

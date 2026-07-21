@@ -48,6 +48,15 @@ func (s *NotificationService) sendNotification(channel models.NotificationChanne
 		payload, err = buildSlackPayload(alert)
 	case "teams":
 		payload, err = buildTeamsPayload(alert)
+	case "email":
+		s.sendEmail(channel, alert)
+		return
+	case "sms":
+		s.sendSMS(channel, alert)
+		return
+	case "push":
+		s.sendPush(channel, alert)
+		return
 	default:
 		// Generic webhook
 		payload, err = json.Marshal(alert)
@@ -134,4 +143,19 @@ func buildTeamsPayload(alert *models.Alert) ([]byte, error) {
 		},
 	}
 	return json.Marshal(msg)
+}
+
+func (s *NotificationService) sendEmail(channel models.NotificationChannel, alert *models.Alert) {
+	// Mock SMTP sending
+	log.Printf("[NOTIFICATION SERVICE - EMAIL] Sending to %s: %s", channel.WebhookURL, alert.Message)
+}
+
+func (s *NotificationService) sendSMS(channel models.NotificationChannel, alert *models.Alert) {
+	// Mock Twilio SMS sending
+	log.Printf("[NOTIFICATION SERVICE - SMS] Sending to %s: %s", channel.WebhookURL, alert.Message)
+}
+
+func (s *NotificationService) sendPush(channel models.NotificationChannel, alert *models.Alert) {
+	// Mock FCM Push Notification sending
+	log.Printf("[NOTIFICATION SERVICE - PUSH] Sending to %s: %s", channel.WebhookURL, alert.Message)
 }

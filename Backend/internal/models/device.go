@@ -58,6 +58,7 @@ type Device struct {
 	ProvisioningToken   *string    `json:"provisioning_token,omitempty"`
 	MapX                *float64   `json:"map_x,omitempty"`
 	MapY                *float64   `json:"map_y,omitempty"`
+	IsMaintenance       bool       `json:"is_maintenance"`
 	CreatedAt           time.Time  `json:"created_at"`
 
 	// Joined fields for easier UI rendering
