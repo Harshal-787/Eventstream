@@ -16,6 +16,14 @@ export const alertService = {
   resolveAlert: async (id) => {
     const response = await apiClient.post(`/alerts/${id}/resolve`);
     return response.data;
+  },
+  deleteAlert: async (id) => {
+    const response = await apiClient.delete(`/alerts/${id}`);
+    return response.data;
+  },
+  clearAllAlerts: async () => {
+    const response = await apiClient.delete('/alerts/clear');
+    return response.data;
   }
 };
 
