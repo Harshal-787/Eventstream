@@ -3,11 +3,12 @@ import { Box } from '../../components/ui/Box';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/Table';
 import { Badge } from '../../components/ui/Badge';
-import { Users as UsersIcon, CheckCircle, XCircle, Edit, Trash2 } from 'lucide-react';
+import { Users as UsersIcon, Edit, Trash2 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Spinner } from '../../components/ui/Spinner';
 import { userService } from '../../services/userService';
 import { EditUserModal } from './EditUserModal';
+import { StatusActionDropdown } from '../../components/ui/StatusActionDropdown';
 
 export function Users() {
   const [users, setUsers] = useState([]);
@@ -78,6 +79,8 @@ export function Users() {
               <TableRow hover={false}>
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Contact</TableHead>
+                <TableHead>License</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -88,11 +91,16 @@ export function Users() {
                 <TableRow key={user.id}>
                   <TableCell className="font-medium">{user.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.contact_number || '-'}</TableCell>
+                  <TableCell>{user.driving_license || '-'}</TableCell>
                   <TableCell className="capitalize">{user.role}</TableCell>
                   <TableCell>
-                    <Badge variant={user.status === 'active' ? 'success' : user.status === 'pending_approval' ? 'warning' : user.status === 'rejected' ? 'danger' : 'default'}>
-                      {user.status === 'pending_approval' ? 'Pending Approval' : user.status}
-                    </Badge>
+                    <StatusActionDropdown
+                      status={user.status}
+                      pendingLabel="Pending Approval"
+                      onApprove={() => handleApprove(user.id)}
+                      onReject={() => handleReject(user.id)}
+                    />
                   </TableCell>
                   <TableCell className="text-right space-x-2">
                     <Button size="sm" variant="secondary" onClick={() => setEditUser(user)} title="Edit User">
@@ -101,16 +109,6 @@ export function Users() {
                     <Button size="sm" variant="danger" onClick={() => handleDelete(user.id)} title="Delete User">
                       <Trash2 className="w-4 h-4" />
                     </Button>
-                    {user.status === 'pending_approval' && (
-                      <>
-                        <Button size="sm" variant="success" onClick={() => handleApprove(user.id)}>
-                          <CheckCircle className="w-4 h-4 mr-1" /> Approve
-                        </Button>
-                        <Button size="sm" variant="danger" onClick={() => handleReject(user.id)}>
-                          <XCircle className="w-4 h-4 mr-1" /> Reject
-                        </Button>
-                      </>
-                    )}
                   </TableCell>
                 </TableRow>
               ))}

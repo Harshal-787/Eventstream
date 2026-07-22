@@ -36,9 +36,9 @@ export function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-(--color-text-main)">Platform Overview</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="space-y-8">
+      <h1 className="text-3xl font-black uppercase tracking-tight text-(--color-brutal-text) border-b-4 border-(--color-brutal-border) pb-4 inline-block pr-12">Platform Overview</h1>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         <StatCard title="Total Buildings" value={data.totalBuildings || 0} icon={Building2} />
         <StatCard title="Total Devices" value={data.totalDevices || 0} icon={Cpu} />
         <StatCard title="Events Received" value={data.totalEvents || 0} icon={Activity} />
@@ -50,13 +50,15 @@ export function AdminDashboard() {
 
 function StatCard({ title, value, icon: Icon, className }) {
   return (
-    <Box className="p-6 flex items-center justify-between">
-      <div>
-        <p className="text-sm font-medium text-(--color-text-muted) mb-1">{title}</p>
-        <p className={`text-3xl font-bold ${className || 'text-(--color-text-main)'}`}>{value}</p>
+    <Box className="p-6 flex flex-col justify-between    transition-all">
+      <div className="flex justify-between items-start mb-6">
+        <p className="text-xs font-black uppercase tracking-widest text-(--color-text-muted) max-w-[100px]">{title}</p>
+        <div className="bg-(--color-brutal-bg) p-2 border-2 border-(--color-brutal-border) shadow-md">
+          <Icon className={`w-5 h-5 text-(--color-brutal-text) ${className || ''}`} />
+        </div>
       </div>
-      <div className="bg-(--color-background) p-3 rounded-none border border-(--color-border-main)">
-        <Icon className={`w-6 h-6 text-(--color-text-muted) ${className || ''}`} />
+      <div>
+        <p className={`text-4xl font-black ${className || 'text-(--color-brutal-text)'}`}>{value}</p>
       </div>
     </Box>
   );

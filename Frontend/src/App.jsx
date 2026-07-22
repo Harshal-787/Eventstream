@@ -7,11 +7,13 @@ import { Register } from './pages/Register';
 import { Reapply } from './pages/Reapply';
 import { LandingPage } from './pages/LandingPage';
 import { Spinner } from './components/ui/Spinner';
+import { Toaster } from 'react-hot-toast';
 
 // Placeholder Pages
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { UserDashboard } from './pages/user/UserDashboard';
 import { Buildings } from './pages/shared/Buildings';
+import { BuildingDetails } from './pages/shared/BuildingDetails';
 import { Devices } from './pages/shared/Devices';
 import { SensorEvents } from './pages/shared/SensorEvents';
 import { Alerts } from './pages/shared/Alerts';
@@ -46,6 +48,7 @@ export default function App() {
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="buildings" element={<Buildings role="admin" />} />
+          <Route path="buildings/:id" element={<BuildingDetails role="admin" />} />
           <Route path="devices" element={<Devices role="admin" />} />
           <Route path="events" element={<SensorEvents role="admin" />} />
           <Route path="alerts" element={<Alerts role="admin" />} />
@@ -59,6 +62,7 @@ export default function App() {
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<UserDashboard />} />
           <Route path="buildings" element={<Buildings role="user" />} />
+          <Route path="buildings/:id" element={<BuildingDetails role="user" />} />
           <Route path="devices" element={<Devices role="user" />} />
           <Route path="events" element={<SensorEvents role="user" />} />
           <Route path="alerts" element={<Alerts role="user" />} />
@@ -66,6 +70,7 @@ export default function App() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      <Toaster position="top-right" />
     </BrowserRouter>
   );
 }
