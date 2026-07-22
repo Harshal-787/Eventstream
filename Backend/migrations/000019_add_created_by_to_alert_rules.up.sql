@@ -1,0 +1,2 @@
+ALTER TABLE alert_rules
+ADD COLUMN created_by INT REFERENCES users(id) ON DELETE SET NULL;

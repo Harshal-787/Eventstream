@@ -7,14 +7,15 @@ import {
   Cpu, 
   Activity, 
   Bell, 
-  BarChart3, 
   Settings,
   Users,
   LogOut,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  ClipboardList
 } from 'lucide-react';
-import { useAuthStore } from '../../store/useAuthStore';
+import { useAuthStore } from '../../features/auth/store/useAuthStore';
+import { Logo } from '../ui/Logo';
 
 export function Sidebar({ role }) {
   const logout = useAuthStore(state => state.logout);
@@ -28,7 +29,7 @@ export function Sidebar({ role }) {
     { title: 'Alerts', icon: Bell, path: '/admin/alerts' },
     { title: 'Alert Rules', icon: Settings, path: '/admin/alert-rules' },
     { title: 'Users', icon: Users, path: '/admin/users' },
-    { title: 'Audit Logs', icon: BarChart3, path: '/admin/audit-logs' },
+    { title: 'Audit Logs', icon: ClipboardList, path: '/admin/audit-logs' },
   ];
 
   const userMenu = [
@@ -44,32 +45,27 @@ export function Sidebar({ role }) {
   return (
     <aside 
       className={cn(
-        "bg-(--color-brutal-bg) border-r-2 border-(--color-brutal-border) h-screen sticky top-0 flex flex-col z-20 transition-all duration-300 relative",
-        isCollapsed ? "w-16" : "w-64"
+        "bg-(--color-surface) border-r border-(--color-border-main) h-screen sticky top-0 flex flex-col z-40 transition-all duration-300 relative shadow-sm",
+        isCollapsed ? "w-20" : "w-64"
       )}
     >
       {/* Collapse Toggle */}
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className="absolute -right-3.5 top-5 bg-(--color-brutal-bg) border-2 border-(--color-brutal-border) text-(--color-brutal-text) hover:bg-(--color-brutal-hover) w-7 h-7 flex items-center justify-center z-50 cursor-pointer shadow-md transition-transform   "
+        className="absolute -right-3.5 top-[26px] bg-white dark:bg-(--color-surface-hover) border border-(--color-border-main) text-slate-600 dark:text-(--color-text-main) hover:text-indigo-600 w-7 h-7 rounded-full flex items-center justify-center z-50 cursor-pointer shadow-sm transition-transform hover:scale-110"
       >
-        {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+        {isCollapsed ? <ChevronRight className="w-4 h-4 ml-0.5" /> : <ChevronLeft className="w-4 h-4 mr-0.5" />}
       </button>
 
-      <div className="h-16 flex items-center px-4 border-b-2 border-(--color-brutal-border) overflow-hidden shrink-0">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 shrink-0 bg-(--color-brutal-inverse-bg) flex items-center justify-center text-(--color-brutal-text-inverse) font-black text-lg">
-            E
-          </div>
-          {!isCollapsed && (
-            <span className="font-black text-lg text-(--color-brutal-text) tracking-tight uppercase truncate">EventStream</span>
-          )}
+      <div className={cn("h-20 flex items-center shrink-0 border-b border-(--color-border-main)/50", isCollapsed ? "justify-center px-0" : "px-6")}>
+        <div className="flex items-center gap-3">
+          <Logo className={isCollapsed ? "w-8 h-8" : "w-8 h-8"} hideText={isCollapsed} />
         </div>
       </div>
       
-      <div className="flex-1 overflow-y-auto py-4 space-y-1 overflow-x-hidden">
+      <div className="flex-1 overflow-y-auto py-6 space-y-1 overflow-x-hidden px-3 scrollbar-hide">
         {!isCollapsed && (
-          <div className="text-[10px] font-black text-(--color-text-muted) uppercase tracking-widest mb-2 px-5">
+          <div className="text-[11px] font-bold text-(--color-text-muted) uppercase tracking-wider mb-4 px-3">
             {role === 'admin' ? 'Admin Panel' : 'Customer View'}
           </div>
         )}
@@ -79,29 +75,36 @@ export function Sidebar({ role }) {
             to={item.path}
             title={isCollapsed ? item.title : undefined}
             className={({ isActive }) => cn(
-              "flex items-center gap-3 py-3 text-sm font-bold uppercase tracking-wider transition-colors border-l-4",
-              isCollapsed ? "px-5 justify-center border-transparent" : "px-5",
+              "flex items-center gap-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group relative",
+              isCollapsed ? "px-0 justify-center" : "px-3",
               isActive 
-                ? "bg-(--color-brutal-hover) text-(--color-brutal-text) border-(--color-brutal-border)" 
-                : "text-(--color-text-muted) hover:bg-(--color-surface-hover) hover:text-(--color-brutal-text) border-transparent"
+                ? "bg-indigo-50 dark:bg-indigo-500/10 text-(--color-primary-600)" 
+                : "text-(--color-text-muted) hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-(--color-text-main)"
             )}
           >
-            <item.icon className="w-5 h-5 shrink-0" />
-            {!isCollapsed && <span className="truncate">{item.title}</span>}
+            {({ isActive }) => (
+              <>
+                {isActive && !isCollapsed && (
+                  <span className="absolute left-0 w-1 h-6 bg-(--color-primary-500) rounded-r-full" />
+                )}
+                <item.icon className={cn("w-5 h-5 shrink-0 transition-colors", isActive ? "text-(--color-primary-600)" : "text-(--color-text-muted) group-hover:text-(--color-text-main)")} strokeWidth={isActive ? 2.5 : 2} />
+                {!isCollapsed && <span className="truncate">{item.title}</span>}
+              </>
+            )}
           </NavLink>
         ))}
       </div>
 
-      <div className="p-4 border-t-2 border-(--color-brutal-border)">
+      <div className="p-4 border-t border-(--color-border-main)/50">
         <button
           onClick={logout}
           title={isCollapsed ? "Logout" : undefined}
           className={cn(
-            "flex items-center w-full text-sm font-bold uppercase tracking-wider text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors border-2 border-transparent hover:border-red-600",
-            isCollapsed ? "justify-center p-2" : "gap-3 px-3 py-2"
+            "flex items-center w-full text-sm font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors rounded-xl",
+            isCollapsed ? "justify-center p-2.5" : "gap-3 px-3 py-2.5"
           )}
         >
-          <LogOut className="w-5 h-5 shrink-0" />
+          <LogOut className="w-5 h-5 shrink-0" strokeWidth={2} />
           {!isCollapsed && <span>Logout</span>}
         </button>
       </div>

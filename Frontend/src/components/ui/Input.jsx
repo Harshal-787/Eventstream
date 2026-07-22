@@ -5,14 +5,14 @@ export const Input = forwardRef(({ className, label, type = "text", ...props }, 
   return (
     <div className="space-y-2">
       {label && (
-        <label className="block text-xs font-bold uppercase tracking-wider text-(--color-brutal-text)">
+        <label className="block text-xs font-bold uppercase tracking-wider text-(--color-text-main)">
           {label}
         </label>
       )}
       <input
         type={type}
         className={cn(
-          "flex h-11 w-full border-2 border-(--color-border-main) bg-(--color-background) px-4 py-2 text-sm text-(--color-brutal-text) transition-all placeholder:text-gray-400 focus:outline-none focus:border-(--color-brutal-border) focus:bg-(--color-brutal-bg) focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50 rounded-none",
+          "flex h-11 w-full border border-(--color-border-main) bg-(--color-surface) px-4 py-2 text-sm text-(--color-text-main) transition-all placeholder:text-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 rounded-xl shadow-sm",
           className
         )}
         ref={ref}
