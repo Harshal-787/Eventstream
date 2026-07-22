@@ -116,7 +116,7 @@ export function DeviceGroupsTab({ role, devices }) {
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-(--color-surface) rounded-2xl border border-(--color-border-main) shadow-sm overflow-hidden"
+        className="bg-surface rounded-2xl border border-border-main shadow-sm overflow-hidden"
       >
         {groups.length === 0 ? (
           <EmptyState 
@@ -128,22 +128,22 @@ export function DeviceGroupsTab({ role, devices }) {
         ) : (
           <Table>
             <TableHeader>
-              <TableRow className="bg-slate-50 dark:bg-(--color-surface) border-b border-(--color-border-main)">
-                <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Name</TableHead>
-                <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Description</TableHead>
-                <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider text-right">Actions</TableHead>
+              <TableRow className="bg-slate-50 dark:bg-surface border-b border-border-main">
+                <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Name</TableHead>
+                <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Description</TableHead>
+                <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody className="divide-y divide-(--color-border-main)">
+            <TableBody className="divide-y divide-border-main">
               {groups.map(g => (
                 <TableRow key={g.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                   <TableCell className="font-medium">
-                    <div className="flex items-center gap-2 text-(--color-text-main)">
-                      <Folder className="w-4 h-4 text-indigo-500" />
+                    <div className="flex items-center gap-2 text-text-main">
+                      <Folder className="w-4 h-4 text-teal-500" />
                       {g.name}
                     </div>
                   </TableCell>
-                  <TableCell className="text-(--color-text-muted)">{g.description || '--'}</TableCell>
+                  <TableCell className="text-text-muted">{g.description || '--'}</TableCell>
                   <TableCell className="text-right">
                     <Button size="sm" variant="secondary" className="mr-2" onClick={() => openMembers(g)}>
                       <Users className="w-4 h-4 mr-2" /> Members
@@ -187,7 +187,7 @@ export function DeviceGroupsTab({ role, devices }) {
       {/* Manage Members Modal */}
       <Modal isOpen={isMembersOpen} onClose={() => setIsMembersOpen(false)} title={`Manage Group: ${selectedGroup?.name}`}>
         <div className="space-y-6">
-          <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-(--color-border-main)">
+          <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-border-main">
             <h4 className="text-sm font-semibold mb-3">Add Members</h4>
             <form onSubmit={handleAddMembers} className="flex gap-2">
               <Input
@@ -204,12 +204,12 @@ export function DeviceGroupsTab({ role, devices }) {
           <div>
             <h4 className="text-sm font-semibold mb-3">Current Members</h4>
             {members.length === 0 ? (
-              <p className="text-sm text-(--color-text-muted)">No devices in this group.</p>
+              <p className="text-sm text-text-muted">No devices in this group.</p>
             ) : (
-              <div className="border border-(--color-border-main) rounded-xl overflow-hidden max-h-[300px] overflow-y-auto">
+              <div className="border border-border-main rounded-xl overflow-hidden max-h-[300px] overflow-y-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-slate-50 dark:bg-(--color-surface)">
+                    <TableRow className="bg-slate-50 dark:bg-surface">
                       <TableHead className="py-2 text-xs">Device ID</TableHead>
                       <TableHead className="py-2 text-xs">Name</TableHead>
                       <TableHead className="py-2 text-xs text-right">Remove</TableHead>

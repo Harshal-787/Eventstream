@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type AlertRule struct {
 	ID             int        `json:"id"`
@@ -14,11 +17,11 @@ type AlertRule struct {
 	Severity       string     `json:"severity"` // 'low', 'medium', 'high', 'critical'
 	IsActive       bool       `json:"is_active"`
 	TargetType     string     `json:"target_type"` // 'global', 'building', 'room', 'device'
-	TargetID       *int       `json:"target_id,omitempty"`
-	Conditions     []byte     `json:"conditions,omitempty"`
-	TimeWindows    []byte     `json:"time_windows,omitempty"`
-	SuppressionWin int        `json:"suppression_window_minutes,omitempty"`
-	EscalationPol  *int       `json:"escalation_policy_id,omitempty"`
+	TargetID       *int            `json:"target_id,omitempty"`
+	Conditions     json.RawMessage `json:"conditions,omitempty"`
+	TimeWindows    json.RawMessage `json:"time_windows,omitempty"`
+	SuppressionWin int             `json:"suppression_window_minutes,omitempty"`
+	EscalationPol  *int            `json:"escalation_policy_id,omitempty"`
 	CreatedBy      *int       `json:"created_by,omitempty"`
 	CreatedAt      *time.Time `json:"created_at,omitempty"`
 	

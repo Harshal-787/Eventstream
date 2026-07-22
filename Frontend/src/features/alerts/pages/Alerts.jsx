@@ -5,9 +5,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Button } from '../../../components/ui/Button';
 import { Spinner } from '../../../components/ui/Spinner';
 import { EmptyState } from '../../../components/ui/EmptyState';
-import { BellRing, AlertCircle, ShieldAlert, Download, Trash2, CheckCircle2, AlertOctagon } from 'lucide-react';
+import { BellRing, AlertCircle, ShieldAlert, Download, Trash2, CheckCircle2, AlertOctagon, Sparkles, X } from 'lucide-react';
 import { useLiveAlerts } from '../hooks/useLiveAlerts';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { aiService } from '../../../services/aiService';
+import ReactMarkdown from 'react-markdown';
 
 export function Alerts({ role }) {
   const [alerts, setAlerts] = useState([]);
@@ -25,6 +27,10 @@ export function Alerts({ role }) {
     end_date: ''
   });
   const [buildings, setBuildings] = useState([]);
+
+  const [rcaAlertId, setRcaAlertId] = useState(null);
+  const [rcaResult, setRcaResult] = useState('');
+  const [rcaLoading, setRcaLoading] = useState(false);
 
   useEffect(() => {
     fetchAlerts();
@@ -137,9 +143,24 @@ export function Alerts({ role }) {
     }
   };
 
+  const handleRCA = async (id) => {
+    setRcaAlertId(id);
+    setRcaResult('');
+    setRcaLoading(true);
+    try {
+      const data = await aiService.analyzeAlertRCA(id);
+      setRcaResult(data.summary || data.analysis || JSON.stringify(data));
+    } catch (err) {
+      console.error(err);
+      setRcaResult('**Error:** Failed to generate root cause analysis. Ensure AI Settings are configured.');
+    } finally {
+      setRcaLoading(false);
+    }
+  };
+
   if (loading && displayAlerts.length === 0) return (
     <div className="flex h-[50vh] items-center justify-center">
-      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
+      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-teal-600"></div>
     </div>
   );
 
@@ -201,7 +222,7 @@ export function Alerts({ role }) {
   const StatusBadge = ({ status }) => {
     const config = {
       open: { bg: 'bg-rose-100 dark:bg-rose-500/20', text: 'text-rose-800 dark:text-rose-400', dot: 'bg-rose-500' },
-      acknowledged: { bg: 'bg-indigo-100 dark:bg-indigo-500/20', text: 'text-indigo-800 dark:text-indigo-400', dot: 'bg-indigo-500' },
+      acknowledged: { bg: 'bg-teal-100 dark:bg-teal-500/20', text: 'text-teal-800 dark:text-teal-400', dot: 'bg-teal-500' },
       resolved: { bg: 'bg-emerald-100 dark:bg-emerald-500/20', text: 'text-emerald-800 dark:text-emerald-400', dot: 'bg-emerald-500' }
     };
     const style = config[status] || config.open;
@@ -215,7 +236,7 @@ export function Alerts({ role }) {
 
   return (
     <div className="space-y-6 lg:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12 font-sans">
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end border-b border-(--color-border-main) pb-6 gap-6">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end border-b border-border-main pb-6 gap-6">
         <div className="space-y-2">
           <div className="flex items-center gap-3">
             {role === 'admin' ? (
@@ -227,11 +248,11 @@ export function Alerts({ role }) {
                 <AlertCircle className="w-7 h-7" />
               </div>
             )}
-            <h1 className="text-3xl lg:text-4xl font-heading font-extrabold tracking-tight text-(--color-text-main)">
+            <h1 className="text-3xl lg:text-4xl font-heading font-extrabold tracking-tight text-text-main">
               {role === 'admin' ? 'System Alerts' : 'Notifications'}
             </h1>
           </div>
-          <p className="text-(--color-text-muted) font-medium ml-15">
+          <p className="text-text-muted font-medium ml-15">
             {role === 'admin' 
               ? 'Global oversight and resolution for all facility alerts.' 
               : 'Live updates and alerts for your managed locations.'}
@@ -241,13 +262,13 @@ export function Alerts({ role }) {
         {/* Quick Stats Badges & Clear All */}
         <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center w-full lg:w-auto">
           <div className="flex gap-4">
-            <div className="bg-(--color-surface) border border-(--color-border-main) rounded-2xl p-4 flex-1 sm:min-w-[120px] shadow-sm flex flex-col justify-center items-center">
-              <p className="text-xs uppercase font-bold text-(--color-text-muted) mb-1">Open Alerts</p>
-              <p className={`text-3xl font-black ${openAlertsCount > 0 ? 'text-rose-500' : 'text-(--color-text-main)'}`}>{openAlertsCount}</p>
+            <div className="bg-surface border border-border-main rounded-2xl p-4 flex-1 sm:min-w-[120px] shadow-sm flex flex-col justify-center items-center">
+              <p className="text-xs uppercase font-bold text-text-muted mb-1">Open Alerts</p>
+              <p className={`text-3xl font-black ${openAlertsCount > 0 ? 'text-rose-500' : 'text-text-main'}`}>{openAlertsCount}</p>
             </div>
-            <div className="bg-(--color-surface) border border-(--color-border-main) rounded-2xl p-4 flex-1 sm:min-w-[120px] shadow-sm flex flex-col justify-center items-center">
-              <p className="text-xs uppercase font-bold text-(--color-text-muted) mb-1">Critical</p>
-              <p className={`text-3xl font-black ${criticalCount > 0 ? 'text-orange-500' : 'text-(--color-text-main)'}`}>{criticalCount}</p>
+            <div className="bg-surface border border-border-main rounded-2xl p-4 flex-1 sm:min-w-[120px] shadow-sm flex flex-col justify-center items-center">
+              <p className="text-xs uppercase font-bold text-text-muted mb-1">Critical</p>
+              <p className={`text-3xl font-black ${criticalCount > 0 ? 'text-orange-500' : 'text-text-main'}`}>{criticalCount}</p>
             </div>
           </div>
           <div className="flex flex-col gap-2">
@@ -268,16 +289,16 @@ export function Alerts({ role }) {
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="p-6 bg-(--color-surface) rounded-2xl border border-(--color-border-main) shadow-sm space-y-4"
+        className="p-6 bg-surface rounded-2xl border border-border-main shadow-sm space-y-4"
       >
         <div className="flex flex-col md:flex-row gap-4 flex-wrap items-end">
           <div className="flex-1 min-w-[140px] space-y-1">
-            <label className="text-xs font-bold text-(--color-text-muted) uppercase">Status</label>
+            <label className="text-xs font-bold text-text-muted uppercase">Status</label>
             <select
               name="status"
               value={filters.status}
               onChange={handleFilterChange}
-              className="w-full px-4 py-2.5 rounded-xl border border-(--color-border-main) bg-slate-50 dark:bg-(--color-surface-hover) text-(--color-text-main) font-medium focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all"
+              className="w-full px-4 py-2.5 rounded-xl border border-border-main bg-slate-50 dark:bg-surface-hover text-text-main font-medium focus:ring-2 focus:ring-teal-500/50 outline-none transition-all"
             >
               <option value="">All Statuses</option>
               <option value="open">Open</option>
@@ -286,12 +307,12 @@ export function Alerts({ role }) {
             </select>
           </div>
           <div className="flex-1 min-w-[140px] space-y-1">
-            <label className="text-xs font-bold text-(--color-text-muted) uppercase">Severity</label>
+            <label className="text-xs font-bold text-text-muted uppercase">Severity</label>
             <select
               name="severity"
               value={filters.severity}
               onChange={handleFilterChange}
-              className="w-full px-4 py-2.5 rounded-xl border border-(--color-border-main) bg-slate-50 dark:bg-(--color-surface-hover) text-(--color-text-main) font-medium focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all"
+              className="w-full px-4 py-2.5 rounded-xl border border-border-main bg-slate-50 dark:bg-surface-hover text-text-main font-medium focus:ring-2 focus:ring-teal-500/50 outline-none transition-all"
             >
               <option value="">All Severities</option>
               <option value="critical">Critical</option>
@@ -302,12 +323,12 @@ export function Alerts({ role }) {
           </div>
           {role === 'admin' && (
             <div className="flex-1 min-w-[140px] space-y-1">
-              <label className="text-xs font-bold text-(--color-text-muted) uppercase">Building</label>
+              <label className="text-xs font-bold text-text-muted uppercase">Building</label>
               <select
                 name="building_id"
                 value={filters.building_id}
                 onChange={handleFilterChange}
-                className="w-full px-4 py-2.5 rounded-xl border border-(--color-border-main) bg-slate-50 dark:bg-(--color-surface-hover) text-(--color-text-main) font-medium focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all"
+                className="w-full px-4 py-2.5 rounded-xl border border-border-main bg-slate-50 dark:bg-surface-hover text-text-main font-medium focus:ring-2 focus:ring-teal-500/50 outline-none transition-all"
               >
                 <option value="">All Buildings</option>
                 {buildings.map(b => (
@@ -317,23 +338,23 @@ export function Alerts({ role }) {
             </div>
           )}
           <div className="flex-1 min-w-[140px] space-y-1">
-            <label className="text-xs font-bold text-(--color-text-muted) uppercase">Start Date</label>
+            <label className="text-xs font-bold text-text-muted uppercase">Start Date</label>
             <input
               type="datetime-local"
               name="start_date"
               value={filters.start_date}
               onChange={handleFilterChange}
-              className="w-full px-4 py-2.5 rounded-xl border border-(--color-border-main) bg-slate-50 dark:bg-(--color-surface-hover) text-(--color-text-main) font-medium focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all [color-scheme:light] dark:[color-scheme:dark]"
+              className="w-full px-4 py-2.5 rounded-xl border border-border-main bg-slate-50 dark:bg-surface-hover text-text-main font-medium focus:ring-2 focus:ring-teal-500/50 outline-none transition-all [color-scheme:light] dark:[color-scheme:dark]"
             />
           </div>
           <div className="flex-1 min-w-[140px] space-y-1">
-            <label className="text-xs font-bold text-(--color-text-muted) uppercase">End Date</label>
+            <label className="text-xs font-bold text-text-muted uppercase">End Date</label>
             <input
               type="datetime-local"
               name="end_date"
               value={filters.end_date}
               onChange={handleFilterChange}
-              className="w-full px-4 py-2.5 rounded-xl border border-(--color-border-main) bg-slate-50 dark:bg-(--color-surface-hover) text-(--color-text-main) font-medium focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all [color-scheme:light] dark:[color-scheme:dark]"
+              className="w-full px-4 py-2.5 rounded-xl border border-border-main bg-slate-50 dark:bg-surface-hover text-text-main font-medium focus:ring-2 focus:ring-teal-500/50 outline-none transition-all [color-scheme:light] dark:[color-scheme:dark]"
             />
           </div>
           <div className="flex-none pb-0.5">
@@ -347,9 +368,9 @@ export function Alerts({ role }) {
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-(--color-surface) rounded-2xl border border-(--color-border-main) shadow-sm overflow-hidden"
+        className="bg-surface rounded-2xl border border-border-main shadow-sm overflow-hidden"
       >
-        <div className="p-4 border-b border-(--color-border-main) bg-(--color-surface)">
+        <div className="p-4 border-b border-border-main bg-surface">
           <div className="relative max-w-md">
             <svg className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             <input 
@@ -357,7 +378,7 @@ export function Alerts({ role }) {
               placeholder="Search alerts by type, message, device..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-11 pr-4 py-2.5 bg-white dark:bg-(--color-surface-hover) border border-(--color-border-main) rounded-xl text-sm w-full font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-(--color-text-main)"
+              className="pl-11 pr-4 py-2.5 bg-white dark:bg-surface-hover border border-border-main rounded-xl text-sm w-full font-medium focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all text-text-main"
             />
           </div>
         </div>
@@ -373,17 +394,17 @@ export function Alerts({ role }) {
           <div className="overflow-x-auto custom-scrollbar">
             <Table>
               <TableHeader>
-                <TableRow className="bg-slate-50 dark:bg-(--color-surface) border-b border-(--color-border-main)">
-                  <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Type & Details</TableHead>
-                  <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Device</TableHead>
-                  <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Location</TableHead>
-                  <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Severity</TableHead>
-                  <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Status</TableHead>
-                  <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Time</TableHead>
-                  <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider text-right">Actions</TableHead>
+                <TableRow className="bg-slate-50 dark:bg-surface border-b border-border-main">
+                  <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Type & Details</TableHead>
+                  <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Device</TableHead>
+                  <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Location</TableHead>
+                  <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Severity</TableHead>
+                  <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Status</TableHead>
+                  <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Time</TableHead>
+                  <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody className="divide-y divide-(--color-border-main)">
+              <TableBody className="divide-y divide-border-main">
                 {filteredAlerts.map((alert) => (
                   <TableRow 
                       key={alert.id} 
@@ -399,21 +420,21 @@ export function Alerts({ role }) {
                           <div className="mt-0.5"><AlertCircle className="w-5 h-5 text-amber-500" /></div>
                         )}
                         <div className="flex flex-col">
-                          <span className="font-bold text-(--color-text-main)">{alert.type || alert.alert_type}</span>
-                          <span className="text-sm text-(--color-text-muted) mt-0.5 max-w-xs md:max-w-md line-clamp-2" title={alert.message}>{alert.message}</span>
+                          <span className="font-bold text-text-main">{alert.type || alert.alert_type}</span>
+                          <span className="text-sm text-text-muted mt-0.5 max-w-xs md:max-w-md line-clamp-2" title={alert.message}>{alert.message}</span>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell className="py-4 align-top">
                       <div className="flex flex-col">
-                        <span className="font-semibold text-sm text-(--color-text-main)">{alert.model_name || alert.device_name || 'Unknown Device'}</span>
-                        <span className="text-xs text-(--color-text-muted) font-mono mt-0.5">ID: {alert.hardware_id || alert.device_id || 'N/A'}</span>
+                        <span className="font-semibold text-sm text-text-main">{alert.model_name || alert.device_name || 'Unknown Device'}</span>
+                        <span className="text-xs text-text-muted font-mono mt-0.5">ID: {alert.hardware_id || alert.device_id || 'N/A'}</span>
                       </div>
                     </TableCell>
                     <TableCell className="py-4 align-top">
                       <div className="flex flex-col text-sm">
-                        <span className="font-semibold text-(--color-text-main)">{alert.building_name || 'Unassigned'}</span>
-                        <span className="text-xs text-(--color-text-muted) mt-0.5">
+                        <span className="font-semibold text-text-main">{alert.building_name || 'Unassigned'}</span>
+                        <span className="text-xs text-text-muted mt-0.5">
                           {[alert.floor_name, alert.room_name].filter(Boolean).join(' - ') || 'No location set'}
                         </span>
                       </div>
@@ -424,20 +445,29 @@ export function Alerts({ role }) {
                     <TableCell className="py-4 align-top">
                       <StatusBadge status={alert.status} />
                     </TableCell>
-                    <TableCell className="py-4 align-top text-sm font-medium text-(--color-text-muted) whitespace-nowrap">
+                    <TableCell className="py-4 align-top text-sm font-medium text-text-muted whitespace-nowrap">
                       {new Date(alert.triggered_at).toLocaleString([], {
                         month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
                       })}
                     </TableCell>
                     <TableCell className="py-4 align-top text-right">
-                      <div className="flex justify-end gap-2 flex-wrap min-w-[140px]">
+                      <div className="flex justify-end gap-2 flex-wrap min-w-[200px]">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="rounded-lg text-xs font-semibold py-1.5 h-auto text-teal-600 border-teal-200 hover:bg-teal-50 flex items-center gap-1" 
+                          onClick={() => handleRCA(alert.id)}
+                        >
+                          <Sparkles className="w-3 h-3" />
+                          RCA
+                        </Button>
                         {alert.status === 'open' && (
                           <Button size="sm" variant="secondary" className="rounded-lg text-xs font-semibold py-1.5 h-auto" onClick={() => handleAcknowledge(alert.id)}>
                             Acknowledge
                           </Button>
                         )}
                         {alert.status === 'acknowledged' && (
-                          <Button size="sm" variant="outline" className="rounded-lg text-xs font-semibold py-1.5 h-auto text-indigo-600 border-indigo-200 hover:bg-indigo-50" onClick={() => handleResolve(alert.id)}>
+                          <Button size="sm" variant="outline" className="rounded-lg text-xs font-semibold py-1.5 h-auto text-teal-600 border-teal-200 hover:bg-teal-50" onClick={() => handleResolve(alert.id)}>
                             Resolve
                           </Button>
                         )}
@@ -458,6 +488,47 @@ export function Alerts({ role }) {
           </div>
         )}
       </motion.div>
+
+      {/* RCA Modal */}
+      <AnimatePresence>
+        {rcaAlertId && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-2xl border border-gray-200 dark:border-gray-800 flex flex-col max-h-[85vh]"
+            >
+              <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-800 shrink-0">
+                <h3 className="text-lg font-bold flex items-center gap-2 text-teal-600 dark:text-teal-400">
+                  <Sparkles className="w-5 h-5" />
+                  AI Root Cause Analysis
+                </h3>
+                <button onClick={() => setRcaAlertId(null)} className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-500">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="p-6 overflow-y-auto flex-1">
+                {rcaLoading ? (
+                  <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                    <div className="flex gap-1">
+                      <div className="w-3 h-3 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <div className="w-3 h-3 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <div className="w-3 h-3 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                    <p className="text-sm font-medium text-gray-500 animate-pulse">Analyzing telemetry data and alert history...</p>
+                  </div>
+                ) : (
+                  <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none">
+                    <ReactMarkdown>{rcaResult}</ReactMarkdown>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

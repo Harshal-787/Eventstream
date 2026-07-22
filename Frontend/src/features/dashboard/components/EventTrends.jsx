@@ -7,7 +7,7 @@ const DATA = {
 
 const SERIES = [
   { key: 'temperature', label: 'Temperature', bar: 'bg-orange-400', dot: 'bg-orange-400' },
-  { key: 'motion',      label: 'Motion',      bar: 'bg-violet-400', dot: 'bg-violet-400' },
+  { key: 'motion',      label: 'Motion',      bar: 'bg-emerald-400', dot: 'bg-emerald-400' },
   { key: 'smoke',       label: 'Smoke',       bar: 'bg-red-400',    dot: 'bg-red-400' },
 ];
 
@@ -17,15 +17,15 @@ export default function EventTrends() {
   const maxVal = Math.max(...Object.values(DATA).flat(), 1);
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-200">
-      <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+    <div className="bg-surface border border-border-main rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-200">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-border-main">
         <div>
-          <h3 className="text-sm font-semibold text-gray-900">Event Trends</h3>
-          <p className="text-xs text-gray-400 mt-0.5">Today — hourly breakdown</p>
+          <h3 className="text-sm font-semibold text-text-main">Event Trends</h3>
+          <p className="text-xs text-text-muted mt-0.5">Today — hourly breakdown</p>
         </div>
         <div className="flex items-center gap-4">
           {SERIES.map((s) => (
-            <span key={s.key} className="flex items-center gap-1.5 text-xs text-gray-500">
+            <span key={s.key} className="flex items-center gap-1.5 text-xs text-text-muted">
               <span className={`w-2.5 h-2.5 rounded-sm ${s.dot} inline-block`} />
               {s.label}
             </span>
@@ -39,7 +39,7 @@ export default function EventTrends() {
           {/* Y labels */}
           <div className="flex flex-col justify-between text-right pr-2" style={{ height: CHART_HEIGHT }}>
             {[maxVal, Math.round(maxVal / 2), 0].map((v) => (
-              <span key={v} className="text-[10px] text-gray-300 leading-none">{v}</span>
+              <span key={v} className="text-[10px] text-text-muted leading-none opacity-70">{v}</span>
             ))}
           </div>
 
@@ -65,10 +65,10 @@ export default function EventTrends() {
         </div>
 
         {/* X-axis labels */}
-        <div className="flex gap-1 mt-1 pl-8">
+        <div className="flex gap-1 mt-2 pl-8">
           {HOURS.map((h) => (
             <div key={h} className="flex-1 text-center">
-              <span className="text-[10px] text-gray-300">{h}</span>
+              <span className="text-[10px] text-text-muted opacity-70">{h}</span>
             </div>
           ))}
         </div>

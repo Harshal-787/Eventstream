@@ -11,10 +11,10 @@ export function Button({
   ...props 
 }) {
   const variants = {
-    primary: "bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-600/20 hover:shadow-lg hover:shadow-indigo-600/30 active:scale-[0.98] active:shadow-sm transition-colors font-semibold rounded-xl border border-indigo-700/50",
-    secondary: "bg-white dark:bg-(--color-surface-hover) text-slate-900 dark:text-white border border-slate-300 dark:border-zinc-600 hover:bg-slate-50 dark:hover:bg-zinc-700 shadow-sm hover:shadow-md active:scale-[0.98] transition-colors font-semibold rounded-xl",
+    primary: "bg-teal-600 text-white hover:bg-teal-700 shadow-md shadow-teal-600/20 hover:shadow-lg hover:shadow-teal-600/30 active:scale-[0.98] active:shadow-sm transition-colors font-semibold rounded-xl border border-teal-700/50",
+    secondary: "bg-white dark:bg-surface-hover text-slate-900 dark:text-white border border-slate-300 dark:border-zinc-600 hover:bg-slate-50 dark:hover:bg-zinc-700 shadow-sm hover:shadow-md active:scale-[0.98] transition-colors font-semibold rounded-xl",
     danger: "bg-rose-600 text-white hover:bg-rose-700 shadow-md shadow-rose-600/20 hover:shadow-lg hover:shadow-rose-600/30 active:scale-[0.98] active:shadow-sm transition-colors font-semibold rounded-xl border border-rose-700/50",
-    ghost: "bg-transparent text-slate-800 dark:text-(--color-text-main) hover:bg-slate-100 dark:hover:bg-(--color-surface-hover) active:scale-[0.98] transition-colors font-semibold rounded-xl",
+    ghost: "bg-transparent text-slate-800 dark:text-text-main hover:bg-slate-100 dark:hover:bg-surface-hover active:scale-[0.98] transition-colors font-semibold rounded-xl",
   };
 
   const sizes = {

@@ -169,12 +169,13 @@ func (r *DeviceRepo) CreateModel(model *models.DeviceModel) error {
 func (r *DeviceRepo) GetDevices(buildingID *int, status string, ownerID *int) ([]models.Device, error) {
 	query := `
 		SELECT d.id, d.hardware_id, d.name, d.type, d.model_id, d.building_id, d.floor_id, d.room_id, d.status, d.metadata, d.battery_pct, d.signal_strength, d.is_maintenance, d.created_at,
-		       COALESCE(dm.model_name, ''), COALESCE(dm.brand, ''), COALESCE(b.name, ''), COALESCE(f.name, ''), COALESCE(r.name, '')
+		       COALESCE(dm.model_name, ''), COALESCE(dm.brand, ''), COALESCE(b.name, ''), COALESCE(f.name, ''), COALESCE(r.name, ''), COALESCE(dt.health_score, 100)
 		FROM devices d
 		LEFT JOIN device_models dm ON d.model_id = dm.id
 		LEFT JOIN buildings b ON d.building_id = b.id
 		LEFT JOIN floors f ON d.floor_id = f.id
 		LEFT JOIN rooms r ON d.room_id = r.id
+		LEFT JOIN device_twins dt ON d.id = dt.device_id
 		WHERE ($1::int IS NULL OR d.building_id = $1)
 		  AND ($2::text = '' OR d.status = $2)
 		  AND ($3::int IS NULL OR b.owner_id = $3)
@@ -190,7 +191,7 @@ func (r *DeviceRepo) GetDevices(buildingID *int, status string, ownerID *int) ([
 	for rows.Next() {
 		var d models.Device
 		err := rows.Scan(&d.ID, &d.HardwareID, &d.Name, &d.Type, &d.ModelID, &d.BuildingID, &d.FloorID, &d.RoomID, &d.Status, &d.Metadata, &d.BatteryPct, &d.SignalStrength, &d.IsMaintenance, &d.CreatedAt,
-			&d.ModelName, &d.Brand, &d.BuildingName, &d.FloorName, &d.RoomName)
+			&d.ModelName, &d.Brand, &d.BuildingName, &d.FloorName, &d.RoomName, &d.HealthScore)
 		if err != nil {
 			return nil, err
 		}

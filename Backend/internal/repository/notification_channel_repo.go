@@ -15,16 +15,16 @@ func NewNotificationChannelRepo(db *sql.DB) *NotificationChannelRepo {
 
 func (r *NotificationChannelRepo) Create(nc *models.NotificationChannel) error {
 	query := `
-		INSERT INTO notification_channels (organization_id, name, type, webhook_url, is_active)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO notification_channels (organization_id, name, type, webhook_url, config, is_active)
+		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id, created_at, updated_at
 	`
-	return r.DB.QueryRow(query, nc.OrganizationID, nc.Name, nc.Type, nc.WebhookURL, nc.IsActive).Scan(&nc.ID, &nc.CreatedAt, &nc.UpdatedAt)
+	return r.DB.QueryRow(query, nc.OrganizationID, nc.Name, nc.Type, nc.WebhookURL, nc.Config, nc.IsActive).Scan(&nc.ID, &nc.CreatedAt, &nc.UpdatedAt)
 }
 
 func (r *NotificationChannelRepo) ListByOrg(orgID int) ([]models.NotificationChannel, error) {
 	query := `
-		SELECT id, organization_id, name, type, webhook_url, is_active, created_at, updated_at
+		SELECT id, organization_id, name, type, webhook_url, config, is_active, created_at, updated_at
 		FROM notification_channels
 		WHERE organization_id = $1
 		ORDER BY created_at DESC
@@ -38,7 +38,7 @@ func (r *NotificationChannelRepo) ListByOrg(orgID int) ([]models.NotificationCha
 	var channels []models.NotificationChannel
 	for rows.Next() {
 		var nc models.NotificationChannel
-		if err := rows.Scan(&nc.ID, &nc.OrganizationID, &nc.Name, &nc.Type, &nc.WebhookURL, &nc.IsActive, &nc.CreatedAt, &nc.UpdatedAt); err != nil {
+		if err := rows.Scan(&nc.ID, &nc.OrganizationID, &nc.Name, &nc.Type, &nc.WebhookURL, &nc.Config, &nc.IsActive, &nc.CreatedAt, &nc.UpdatedAt); err != nil {
 			return nil, err
 		}
 		channels = append(channels, nc)
@@ -49,10 +49,10 @@ func (r *NotificationChannelRepo) ListByOrg(orgID int) ([]models.NotificationCha
 func (r *NotificationChannelRepo) Update(nc *models.NotificationChannel) error {
 	query := `
 		UPDATE notification_channels
-		SET name = $1, type = $2, webhook_url = $3, is_active = $4, updated_at = CURRENT_TIMESTAMP
-		WHERE id = $5 AND organization_id = $6
+		SET name = $1, type = $2, webhook_url = $3, config = $4, is_active = $5, updated_at = CURRENT_TIMESTAMP
+		WHERE id = $6 AND organization_id = $7
 	`
-	_, err := r.DB.Exec(query, nc.Name, nc.Type, nc.WebhookURL, nc.IsActive, nc.ID, nc.OrganizationID)
+	_, err := r.DB.Exec(query, nc.Name, nc.Type, nc.WebhookURL, nc.Config, nc.IsActive, nc.ID, nc.OrganizationID)
 	return err
 }
 
@@ -64,7 +64,7 @@ func (r *NotificationChannelRepo) Delete(id int, orgID int) error {
 
 func (r *NotificationChannelRepo) GetActiveByOrg(orgID int) ([]models.NotificationChannel, error) {
 	query := `
-		SELECT id, organization_id, name, type, webhook_url, is_active, created_at, updated_at
+		SELECT id, organization_id, name, type, webhook_url, config, is_active, created_at, updated_at
 		FROM notification_channels
 		WHERE organization_id = $1 AND is_active = true
 	`
@@ -77,7 +77,7 @@ func (r *NotificationChannelRepo) GetActiveByOrg(orgID int) ([]models.Notificati
 	var channels []models.NotificationChannel
 	for rows.Next() {
 		var nc models.NotificationChannel
-		if err := rows.Scan(&nc.ID, &nc.OrganizationID, &nc.Name, &nc.Type, &nc.WebhookURL, &nc.IsActive, &nc.CreatedAt, &nc.UpdatedAt); err != nil {
+		if err := rows.Scan(&nc.ID, &nc.OrganizationID, &nc.Name, &nc.Type, &nc.WebhookURL, &nc.Config, &nc.IsActive, &nc.CreatedAt, &nc.UpdatedAt); err != nil {
 			return nil, err
 		}
 		channels = append(channels, nc)

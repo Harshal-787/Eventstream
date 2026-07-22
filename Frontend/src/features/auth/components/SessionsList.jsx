@@ -75,12 +75,12 @@ export const SessionsList = () => {
   return (
     <Box className="p-6 max-w-3xl">
       <div className="flex items-center gap-3 mb-6">
-        <div className="h-10 w-10 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-500/20">
+        <div className="h-10 w-10 rounded-xl bg-teal-500/10 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400 flex items-center justify-center border border-teal-500/20">
           <ShieldOff size={24} />
         </div>
         <div>
-          <h2 className="text-xl font-bold text-(--color-text-main) tracking-tight">Active Sessions</h2>
-          <p className="text-sm text-(--color-text-muted) font-medium">Manage devices currently logged into your account</p>
+          <h2 className="text-xl font-bold text-text-main tracking-tight">Active Sessions</h2>
+          <p className="text-sm text-text-muted font-medium">Manage devices currently logged into your account</p>
         </div>
       </div>
 
@@ -97,19 +97,19 @@ export const SessionsList = () => {
               <div 
                 key={session.id} 
                 className={`flex items-center justify-between p-4 rounded-xl border transition-colors ${
-                  isCurrent ? 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-200 dark:border-indigo-500/20' : 'bg-slate-50 dark:bg-(--color-surface-hover) border-slate-200 dark:border-(--color-border-main) hover:border-slate-300 dark:hover:border-zinc-600'
+                  isCurrent ? 'bg-teal-50 dark:bg-teal-500/10 border-teal-200 dark:border-teal-500/20' : 'bg-slate-50 dark:bg-surface-hover border-slate-200 dark:border-border-main hover:border-slate-300 dark:hover:border-zinc-600'
                 }`}
               >
                 <div className="flex items-center gap-4">
-                  <div className={`p-3 rounded-xl flex-shrink-0 ${isCurrent ? 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400' : 'bg-slate-200 dark:bg-(--color-surface-hover) text-slate-600 dark:text-(--color-text-muted)'}`}>
+                  <div className={`p-3 rounded-xl flex-shrink-0 ${isCurrent ? 'bg-teal-100 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400' : 'bg-slate-200 dark:bg-surface-hover text-slate-600 dark:text-text-muted'}`}>
                     {getDeviceIcon(session.device_info)}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-bold text-(--color-text-main) truncate max-w-[200px] md:max-w-[400px]" title={session.device_info || 'Unknown Device'}>
+                    <p className="text-sm font-bold text-text-main truncate max-w-[200px] md:max-w-[400px]" title={session.device_info || 'Unknown Device'}>
                       {session.device_info || 'Unknown Device'}
-                      {isCurrent && <span className="ml-2 text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider bg-indigo-100 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 px-2 py-0.5 rounded-md">Current</span>}
+                      {isCurrent && <span className="ml-2 text-xs font-bold text-teal-600 dark:text-teal-400 uppercase tracking-wider bg-teal-100 dark:bg-teal-500/10 border border-teal-200 dark:border-teal-500/20 px-2 py-0.5 rounded-md">Current</span>}
                     </p>
-                    <div className="flex items-center gap-2 mt-1 text-xs text-(--color-text-muted) font-medium">
+                    <div className="flex items-center gap-2 mt-1 text-xs text-text-muted font-medium">
                       <span>IP: {session.ip_address || 'Unknown'}</span>
                       <span>•</span>
                       <span>Last active: {formatTime(session.last_active_at)}</span>

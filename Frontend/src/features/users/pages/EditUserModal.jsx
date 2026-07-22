@@ -37,7 +37,7 @@ export function EditUserModal({ isOpen, onClose, user, onUserUpdated }) {
     <Modal isOpen={isOpen} onClose={onClose} title="Edit User Details">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1">
-          <label className="text-sm font-medium text-(--color-text-main)">Name</label>
+          <label className="text-sm font-medium text-text-main">Name</label>
           <Input 
             placeholder="Full Name" 
             required 
@@ -46,7 +46,7 @@ export function EditUserModal({ isOpen, onClose, user, onUserUpdated }) {
           />
         </div>
         
-        <div className="flex justify-between pt-4 border-t border-(--color-border)">
+        <div className="flex justify-between pt-4 border-t border-border-main">
           <Button variant="ghost" type="button" onClick={onClose}>Cancel</Button>
           <Button type="submit" disabled={loading}>
             {loading ? 'Saving...' : 'Save Changes'}

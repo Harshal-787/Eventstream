@@ -80,8 +80,8 @@ export function IndoorMap({ role = 'admin' }) {
   if (!floor || !floor.floor_plan_url) {
     return (
       <Box className="p-8 max-w-2xl mx-auto text-center space-y-4 mt-8">
-        <h2 className="text-xl font-bold text-(--color-text-main)">No Floor Plan Found</h2>
-        <p className="text-(--color-text-muted)">
+        <h2 className="text-xl font-bold text-text-main">No Floor Plan Found</h2>
+        <p className="text-text-muted">
           This floor does not have a blueprint image uploaded. Please edit the floor and add a Floor Plan URL.
         </p>
         <Button onClick={() => navigate(`/${role}/dashboard`)}>Go Back</Button>
@@ -93,16 +93,16 @@ export function IndoorMap({ role = 'admin' }) {
   const bounds = [[0, 0], [1000, 1000]]; // We map the image to a 1000x1000 coordinate system
 
   return (
-    <div className="h-[calc(100vh-64px)] w-full flex flex-col bg-(--color-background)">
-      <div className="p-4 border-b border-(--color-border-main) bg-(--color-surface) flex items-center justify-between">
+    <div className="h-[calc(100vh-64px)] w-full flex flex-col bg-background">
+      <div className="p-4 border-b border-border-main bg-surface flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" onClick={() => navigate(`/${role}/dashboard`)}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Dashboard
           </Button>
-          <h2 className="text-xl font-bold text-(--color-text-main)">Floor Map: {floor.name}</h2>
+          <h2 className="text-xl font-bold text-text-main">Floor Map: {floor.name}</h2>
         </div>
-        <div className="text-sm text-(--color-text-muted)">
+        <div className="text-sm text-text-muted">
           Drag devices to set their real-world location.
         </div>
       </div>

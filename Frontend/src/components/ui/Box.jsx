@@ -5,7 +5,7 @@ export function Box({ children, className, ...props }) {
   return (
     <div
       className={cn(
-        "bg-(--color-surface) border border-(--color-border-main) rounded-2xl shadow-sm overflow-hidden",
+        "bg-surface border border-border-main rounded-2xl shadow-sm overflow-hidden",
         className
       )}
       {...props}

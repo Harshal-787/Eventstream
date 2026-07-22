@@ -46,19 +46,19 @@ export function ResetPassword() {
 
   if (!emailParam) {
     return (
-      <div className="min-h-screen w-full flex bg-(--color-background) font-sans items-center justify-center">
+      <div className="min-h-screen w-full flex bg-background font-sans items-center justify-center">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md p-8 bg-(--color-surface) border border-(--color-border-main) rounded-2xl shadow-xl text-center space-y-6"
+          className="w-full max-w-md p-8 bg-surface border border-border-main rounded-2xl shadow-xl text-center space-y-6"
         >
           <div className="mx-auto w-16 h-16 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mb-6">
             <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-(--color-text-main)">Missing Information</h2>
-          <p className="text-(--color-text-muted) font-medium">We could not find the email address associated with your reset request.</p>
+          <h2 className="text-2xl font-bold text-text-main">Missing Information</h2>
+          <p className="text-text-muted font-medium">We could not find the email address associated with your reset request.</p>
           <Link to="/forgot-password" className="block pt-4">
             <Button className="w-full rounded-xl shadow-md">Start Over</Button>
           </Link>
@@ -68,9 +68,9 @@ export function ResetPassword() {
   }
 
   return (
-    <div className="min-h-screen w-full flex bg-(--color-background) font-sans">
+    <div className="min-h-screen w-full flex bg-background font-sans">
       {/* Left Panel - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-(--color-primary-900) flex-col justify-between overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 relative bg-primary-900 flex-col justify-between overflow-hidden">
         <div className="absolute inset-0 z-0">
           <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-(--color-accent-500) rounded-full blur-[120px] opacity-40 mix-blend-screen" />
           <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-500 rounded-full blur-[120px] opacity-40 mix-blend-screen" />
@@ -80,7 +80,7 @@ export function ResetPassword() {
         <div className="relative z-10 p-12 flex items-center">
           <Logo className="w-10 h-10 text-white" hideText={false} />
           <span className="font-heading font-extrabold text-2xl tracking-tight text-white ml-3">
-            Event<span className="text-(--color-primary-400)">Stream</span>
+            Event<span className="text-primary-400">Stream</span>
           </span>
         </div>
 
@@ -93,7 +93,7 @@ export function ResetPassword() {
             <h2 className="text-4xl lg:text-5xl font-heading font-extrabold text-white mb-6 leading-tight">
               Secure your account.
             </h2>
-            <p className="text-indigo-200 text-lg font-medium leading-relaxed">
+            <p className="text-teal-200 text-lg font-medium leading-relaxed">
               Create a new, strong password to protect your building data and analytics.
             </p>
           </motion.div>
@@ -107,9 +107,9 @@ export function ResetPassword() {
         </div>
         <div className="absolute top-6 right-6 z-10">
           <Link to="/login">
-            <Button variant="ghost" className="text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center gap-2 font-medium">
+            <Button variant="ghost" className="text-slate-500 hover:text-slate-900 dark:hover:text-white gap-2 font-medium">
               <ArrowLeft className="w-4 h-4" />
-              Back to Login
+              Back to login
             </Button>
           </Link>
         </div>
@@ -122,14 +122,14 @@ export function ResetPassword() {
             className="w-full max-w-md"
           >
             <div className="text-left mb-8">
-              <h1 className="text-3xl font-heading font-extrabold text-(--color-text-main) tracking-tight mb-2">Reset Password</h1>
-              <p className="text-base text-(--color-text-muted) font-medium">Create a new secure password</p>
+              <h1 className="text-3xl font-heading font-extrabold text-text-main tracking-tight mb-2">Reset Password</h1>
+              <p className="text-base text-text-muted font-medium">Create a new secure password</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-5">
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-(--color-text-main)">Reset Code</label>
+                  <label className="text-sm font-semibold text-text-main">Reset Code</label>
                   <Input
                     type="text"
                     placeholder="Enter 6-digit code"
@@ -142,7 +142,7 @@ export function ResetPassword() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-(--color-text-main)">New Password</label>
+                  <label className="text-sm font-semibold text-text-main">New Password</label>
                   <Input
                     type="password"
                     placeholder="Enter new password"
@@ -154,7 +154,7 @@ export function ResetPassword() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-(--color-text-main)">Confirm Password</label>
+                  <label className="text-sm font-semibold text-text-main">Confirm Password</label>
                   <Input
                     type="password"
                     placeholder="Confirm new password"

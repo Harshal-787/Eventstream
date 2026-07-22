@@ -66,7 +66,7 @@ export function EditBuildingModal({ isOpen, onClose, building, onBuildingUpdated
     <Modal isOpen={isOpen} onClose={onClose} title="Edit Building Details">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1">
-          <label className="text-sm font-medium text-(--color-text-main)">Name</label>
+          <label className="text-sm font-medium text-text-main">Name</label>
           <Input 
             placeholder="Building or Wing Name" 
             required 
@@ -75,7 +75,7 @@ export function EditBuildingModal({ isOpen, onClose, building, onBuildingUpdated
           />
         </div>
         <div className="space-y-1">
-          <label className="text-sm font-medium text-(--color-text-main)">Address</label>
+          <label className="text-sm font-medium text-text-main">Address</label>
           <Input 
             placeholder="Address" 
             required 
@@ -85,7 +85,7 @@ export function EditBuildingModal({ isOpen, onClose, building, onBuildingUpdated
         </div>
         <div className="grid grid-cols-3 gap-3">
           <div className="space-y-1">
-            <label className="text-sm font-medium text-(--color-text-main)">City</label>
+            <label className="text-sm font-medium text-text-main">City</label>
             <Input 
               placeholder="City" 
               required 
@@ -94,7 +94,7 @@ export function EditBuildingModal({ isOpen, onClose, building, onBuildingUpdated
             />
           </div>
           <div className="space-y-1">
-            <label className="text-sm font-medium text-(--color-text-main)">State</label>
+            <label className="text-sm font-medium text-text-main">State</label>
             <Input 
               placeholder="State" 
               required 
@@ -103,7 +103,7 @@ export function EditBuildingModal({ isOpen, onClose, building, onBuildingUpdated
             />
           </div>
           <div className="space-y-1">
-            <label className="text-sm font-medium text-(--color-text-main)">Zip Code</label>
+            <label className="text-sm font-medium text-text-main">Zip Code</label>
             <Input 
               placeholder="Zip Code" 
               required 
@@ -115,7 +115,7 @@ export function EditBuildingModal({ isOpen, onClose, building, onBuildingUpdated
 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
-            <label className="text-sm font-medium text-(--color-text-main)">Latitude (Optional)</label>
+            <label className="text-sm font-medium text-text-main">Latitude (Optional)</label>
             <Input 
               placeholder="e.g. 37.7749" 
               type="number"
@@ -125,7 +125,7 @@ export function EditBuildingModal({ isOpen, onClose, building, onBuildingUpdated
             />
           </div>
           <div className="space-y-1">
-            <label className="text-sm font-medium text-(--color-text-main)">Longitude (Optional)</label>
+            <label className="text-sm font-medium text-text-main">Longitude (Optional)</label>
             <Input 
               placeholder="e.g. -122.4194" 
               type="number"
@@ -136,25 +136,25 @@ export function EditBuildingModal({ isOpen, onClose, building, onBuildingUpdated
           </div>
         </div>
 
-        <div className="pt-2 border-t border-(--color-border-main)">
-          <h5 className="text-sm font-semibold text-(--color-text-main) mb-3">Additional Identifiers (Optional)</h5>
+        <div className="pt-2 border-t border-border-main">
+          <h5 className="text-sm font-semibold text-text-main mb-3">Additional Identifiers (Optional)</h5>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="space-y-1">
-              <label className="text-xs font-medium text-(--color-text-main)">UBID</label>
+              <label className="text-xs font-medium text-text-main">UBID</label>
               <Input placeholder="UBID" value={ubid} onChange={(e) => setUbid(e.target.value)} />
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-medium text-(--color-text-main)">Parcel No.</label>
+              <label className="text-xs font-medium text-text-main">Parcel No.</label>
               <Input placeholder="APN" value={parcelNumber} onChange={(e) => setParcelNumber(e.target.value)} />
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-medium text-(--color-text-main)">BIN</label>
+              <label className="text-xs font-medium text-text-main">BIN</label>
               <Input placeholder="BIN" value={bin} onChange={(e) => setBin(e.target.value)} />
             </div>
           </div>
         </div>
         
-        <div className="flex justify-between pt-4 border-t border-(--color-border)">
+        <div className="flex justify-between pt-4 border-t border-border-main">
           <Button variant="ghost" type="button" onClick={onClose}>Cancel</Button>
           <Button type="submit" disabled={loading}>
             {loading ? 'Saving...' : 'Save Changes'}

@@ -116,15 +116,15 @@ export function AddBuildingModal({ isOpen, onClose, onBuildingAdded }) {
             <div className="mx-auto w-12 h-12 bg-blue-500/10 text-blue-500 rounded flex items-center justify-center">
               <Building className="w-6 h-6" />
             </div>
-            <h2 className="text-lg font-bold text-(--color-text-main)">Single Building</h2>
-            <p className="text-(--color-text-muted) text-sm">Standalone commercial or residential building.</p>
+            <h2 className="text-lg font-bold text-text-main">Single Building</h2>
+            <p className="text-text-muted text-sm">Standalone commercial or residential building.</p>
           </Box>
           <Box className="p-6 cursor-pointer hover:border-blue-500 transition-colors text-center space-y-3" onClick={() => { setType('society'); setStep(2); }}>
-            <div className="mx-auto w-12 h-12 bg-purple-500/10 text-purple-500 rounded flex items-center justify-center">
+            <div className="mx-auto w-12 h-12 bg-teal-500/10 text-teal-500 rounded flex items-center justify-center">
               <Building2 className="w-6 h-6" />
             </div>
-            <h2 className="text-lg font-bold text-(--color-text-main)">Society / Multi-Wing</h2>
-            <p className="text-(--color-text-muted) text-sm">Complex with multiple wings or towers.</p>
+            <h2 className="text-lg font-bold text-text-main">Society / Multi-Wing</h2>
+            <p className="text-text-muted text-sm">Complex with multiple wings or towers.</p>
           </Box>
         </div>
       </Modal>
@@ -135,9 +135,9 @@ export function AddBuildingModal({ isOpen, onClose, onBuildingAdded }) {
     <Modal isOpen={isOpen} onClose={onClose} title={type === 'single' ? "Add Single Building" : "Add Society"}>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
-          <label className="text-sm font-medium text-(--color-text-main)">Assign Customer / Owner (Mandatory)</label>
+          <label className="text-sm font-medium text-text-main">Assign Customer / Owner (Mandatory)</label>
           <select 
-            className="appearance-none flex h-11 w-full border border-(--color-border-main) bg-(--color-surface) px-4 py-2 pr-10 text-sm text-(--color-text-main) transition-all focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl shadow-sm cursor-pointer"
+            className="appearance-none flex h-11 w-full border border-border-main bg-surface px-4 py-2 pr-10 text-sm text-text-main transition-all focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 rounded-xl shadow-sm cursor-pointer"
             required
             value={ownerId}
             onChange={(e) => setOwnerId(e.target.value)}
@@ -152,11 +152,11 @@ export function AddBuildingModal({ isOpen, onClose, onBuildingAdded }) {
         {type === 'single' ? (
           <div className="space-y-4">
             <div className="space-y-1">
-              <label className="text-sm font-medium text-(--color-text-main)">Building Name</label>
+              <label className="text-sm font-medium text-text-main">Building Name</label>
               <Input placeholder="e.g. Apex Tower" required value={singleBuilding.name} onChange={e => setSingleBuilding({...singleBuilding, name: e.target.value})} />
             </div>
             <div className="space-y-1">
-              <label className="text-sm font-medium text-(--color-text-main)">Full Address</label>
+              <label className="text-sm font-medium text-text-main">Full Address</label>
               <AddressAutocomplete
                 value={singleBuilding.address}
                 onChange={e => setSingleBuilding({...singleBuilding, address: e.target.value})}
@@ -174,32 +174,32 @@ export function AddBuildingModal({ isOpen, onClose, onBuildingAdded }) {
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1">
-                <label className="text-sm font-medium text-(--color-text-main)">City</label>
+                <label className="text-sm font-medium text-text-main">City</label>
                 <Input placeholder="City" required value={singleBuilding.city} onChange={e => setSingleBuilding({...singleBuilding, city: e.target.value})} />
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-medium text-(--color-text-main)">State</label>
+                <label className="text-sm font-medium text-text-main">State</label>
                 <Input placeholder="State" required value={singleBuilding.state} onChange={e => setSingleBuilding({...singleBuilding, state: e.target.value})} />
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-medium text-(--color-text-main)">Zip Code</label>
+                <label className="text-sm font-medium text-text-main">Zip Code</label>
                 <Input placeholder="Zip" required value={singleBuilding.zip_code} onChange={e => setSingleBuilding({...singleBuilding, zip_code: e.target.value})} />
               </div>
             </div>
 
-            <div className="pt-4 border-t border-(--color-border-main)">
-              <h3 className="text-sm font-semibold text-(--color-text-main) mb-3">Additional Identifiers (Optional)</h3>
+            <div className="pt-4 border-t border-border-main">
+              <h3 className="text-sm font-semibold text-text-main mb-3">Additional Identifiers (Optional)</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-(--color-text-main)">UBID</label>
+                  <label className="text-xs font-medium text-text-main">UBID</label>
                   <Input placeholder="UBID" value={singleBuilding.ubid} onChange={e => setSingleBuilding({...singleBuilding, ubid: e.target.value})} />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-(--color-text-main)">Parcel Number (APN)</label>
+                  <label className="text-xs font-medium text-text-main">Parcel Number (APN)</label>
                   <Input placeholder="APN" value={singleBuilding.parcel_number} onChange={e => setSingleBuilding({...singleBuilding, parcel_number: e.target.value})} />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-(--color-text-main)">BIN</label>
+                  <label className="text-xs font-medium text-text-main">BIN</label>
                   <Input placeholder="BIN" value={singleBuilding.bin} onChange={e => setSingleBuilding({...singleBuilding, bin: e.target.value})} />
                 </div>
               </div>
@@ -208,29 +208,29 @@ export function AddBuildingModal({ isOpen, onClose, onBuildingAdded }) {
         ) : (
           <div className="space-y-6">
             <div className="space-y-1">
-              <label className="text-sm font-medium text-(--color-text-main)">Society Name</label>
+              <label className="text-sm font-medium text-text-main">Society Name</label>
               <Input placeholder="e.g. Grand View Society" required value={societyName} onChange={e => setSocietyName(e.target.value)} />
             </div>
             
             <div className="space-y-4">
-              <div className="flex items-center justify-between border-b border-(--color-border) pb-2">
-                <h3 className="text-md font-semibold text-(--color-text-main)">Wings</h3>
+              <div className="flex items-center justify-between border-b border-border-main pb-2">
+                <h3 className="text-md font-semibold text-text-main">Wings</h3>
                 <Button type="button" size="sm" variant="secondary" onClick={handleAddWing}><Plus className="w-4 h-4 mr-1"/> Add Wing</Button>
               </div>
               
               {wings.map((wing, index) => (
-                <div key={index} className="p-3 border border-(--color-border-main) bg-(--color-background) rounded-md space-y-3 relative">
+                <div key={index} className="p-3 border border-border-main bg-background rounded-md space-y-3 relative">
                   {wings.length > 1 && (
                     <button type="button" onClick={() => handleRemoveWing(index)} className="absolute top-3 right-3 text-red-500 hover:text-red-400">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   )}
                   <div className="space-y-1">
-                    <label className="text-xs font-medium text-(--color-text-main)">Wing #{index + 1} Name</label>
+                    <label className="text-xs font-medium text-text-main">Wing #{index + 1} Name</label>
                     <Input placeholder="e.g. A-Wing" required value={wing.name} onChange={e => handleWingChange(index, 'name', e.target.value)} />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-medium text-(--color-text-main)">Address</label>
+                    <label className="text-xs font-medium text-text-main">Address</label>
                     <AddressAutocomplete
                       value={wing.address}
                       onChange={e => handleWingChange(index, 'address', e.target.value)}
@@ -253,8 +253,8 @@ export function AddBuildingModal({ isOpen, onClose, onBuildingAdded }) {
                     <Input placeholder="Zip" required value={wing.zip_code} onChange={e => handleWingChange(index, 'zip_code', e.target.value)} />
                   </div>
 
-                  <div className="pt-3 mt-2 border-t border-(--color-border-main)">
-                    <h5 className="text-xs font-semibold text-(--color-text-main) mb-2">Additional Identifiers (Optional)</h5>
+                  <div className="pt-3 mt-2 border-t border-border-main">
+                    <h5 className="text-xs font-semibold text-text-main mb-2">Additional Identifiers (Optional)</h5>
                     <div className="grid grid-cols-3 gap-2">
                       <Input placeholder="UBID" value={wing.ubid} onChange={e => handleWingChange(index, 'ubid', e.target.value)} />
                       <Input placeholder="APN" value={wing.parcel_number} onChange={e => handleWingChange(index, 'parcel_number', e.target.value)} />
@@ -267,7 +267,7 @@ export function AddBuildingModal({ isOpen, onClose, onBuildingAdded }) {
           </div>
         )}
 
-        <div className="flex justify-between pt-4 border-t border-(--color-border)">
+        <div className="flex justify-between pt-4 border-t border-border-main">
           <Button variant="ghost" type="button" onClick={() => setStep(1)}>Back</Button>
           <Button type="submit" disabled={loading}>
             {loading ? 'Adding...' : 'Add Building'}

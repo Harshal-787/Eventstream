@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const Logo = ({ className = "w-8 h-8", hideText = false }) => {
+export const Logo = ({ className = "w-8 h-8", hideText = false, textClassName = "text-text-main" }) => {
   return (
     <div className={`flex items-center gap-3 ${className}`}>
       {/* Dynamic SVG Logo */}
@@ -8,7 +8,7 @@ export const Logo = ({ className = "w-8 h-8", hideText = false }) => {
         viewBox="0 0 100 100"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="w-full h-full text-(--color-primary-600) shrink-0"
+        className="w-full h-full text-primary-600 shrink-0"
         style={{ maxWidth: '40px', maxHeight: '40px' }}
       >
         <defs>
@@ -39,8 +39,8 @@ export const Logo = ({ className = "w-8 h-8", hideText = false }) => {
       </svg>
       
       {!hideText && (
-        <span className="font-heading font-extrabold text-2xl tracking-tight text-(--color-text-main)">
-          Event<span className="text-(--color-primary-600)">Stream</span>
+        <span className={`font-heading font-extrabold text-2xl tracking-tight ${textClassName}`}>
+          Event<span className="text-primary-600">Stream</span>
         </span>
       )}
     </div>

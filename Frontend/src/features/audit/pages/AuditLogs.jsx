@@ -67,10 +67,10 @@ export default function AuditLogs() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-(--color-text-main)">
+          <h1 className="text-2xl font-bold text-text-main">
             Audit Logs
           </h1>
-          <p className="text-(--color-text-muted) mt-1 text-sm">
+          <p className="text-text-muted mt-1 text-sm">
             System activity and security events
           </p>
         </div>
@@ -82,26 +82,26 @@ export default function AuditLogs() {
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-(--color-surface) rounded-2xl border border-(--color-border-main) shadow-sm overflow-hidden"
+        className="bg-surface rounded-2xl border border-border-main shadow-sm overflow-hidden"
       >
         {loading ? (
-          <div className="p-8 text-center text-(--color-text-muted)">Loading logs...</div>
+          <div className="p-8 text-center text-text-muted">Loading logs...</div>
         ) : logs.length === 0 ? (
-          <div className="p-8 text-center text-(--color-text-muted)">No activity logged yet.</div>
+          <div className="p-8 text-center text-text-muted">No activity logged yet.</div>
         ) : (
           <div className="overflow-x-auto custom-scrollbar">
             <Table>
               <TableHeader>
-                <TableRow className="bg-slate-50 dark:bg-(--color-surface) border-b border-(--color-border-main)">
-                  <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Timestamp</TableHead>
-                  <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">User</TableHead>
-                  <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Action</TableHead>
-                  <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Entity</TableHead>
-                  <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Details</TableHead>
-                  <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">IP Address</TableHead>
+                <TableRow className="bg-slate-50 dark:bg-surface border-b border-border-main">
+                  <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Timestamp</TableHead>
+                  <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">User</TableHead>
+                  <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Action</TableHead>
+                  <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Entity</TableHead>
+                  <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Details</TableHead>
+                  <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">IP Address</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody className="divide-y divide-(--color-border-main)">
+              <TableBody className="divide-y divide-border-main">
                 {logs.map((log, index) => (
                   <TableRow
                     key={log.id}
@@ -111,26 +111,26 @@ export default function AuditLogs() {
                     transition={{ delay: index * 0.05 }}
                     className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
                   >
-                    <TableCell className="py-4 whitespace-nowrap text-sm font-medium text-(--color-text-muted)">
+                    <TableCell className="py-4 whitespace-nowrap text-sm font-medium text-text-muted">
                       {new Date(log.created_at).toLocaleString("en-US", { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}
                     </TableCell>
                     <TableCell className="py-4">
-                      <div className="font-bold text-sm text-(--color-text-main)">
+                      <div className="font-bold text-sm text-text-main">
                         {log.user_name || "System"} 
                       </div>
-                      {log.user_role && <div className="text-xs text-(--color-text-muted) font-semibold capitalize">{log.user_role}</div>}
+                      {log.user_role && <div className="text-xs text-text-muted font-semibold capitalize">{log.user_role}</div>}
                     </TableCell>
                     <TableCell className="py-4">
-                      <span className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 px-2.5 py-1 rounded-md font-bold text-[11px] uppercase tracking-wider">
+                      <span className="bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-800 px-2.5 py-1 rounded-md font-bold text-[11px] uppercase tracking-wider">
                         {log.action}
                       </span>
                     </TableCell>
                     <TableCell className="py-4">
-                      <span className="font-bold text-sm text-(--color-text-main)">{log.entity_type}</span> {log.entity_id && <span className="text-xs font-medium text-(--color-text-muted)">#{log.entity_id}</span>}
+                      <span className="font-bold text-sm text-text-main">{log.entity_type}</span> {log.entity_id && <span className="text-xs font-medium text-text-muted">#{log.entity_id}</span>}
                     </TableCell>
                     <TableCell className="py-4 align-top min-w-[300px]">
                       {(!log.details || Object.keys(log.details).length === 0) ? (
-                          <span className="text-(--color-text-muted) italic text-sm">No additional details</span>
+                          <span className="text-text-muted italic text-sm">No additional details</span>
                       ) : (
                           <div className="flex flex-col gap-2">
                               {Object.entries(log.details).map(([key, value]) => {
@@ -144,16 +144,16 @@ export default function AuditLogs() {
                                   }
                                   
                                   return (
-                                      <div key={key} className="flex flex-col bg-slate-50 dark:bg-(--color-surface) p-2.5 border border-slate-200 dark:border-(--color-border-main) rounded-xl text-xs">
+                                      <div key={key} className="flex flex-col bg-slate-50 dark:bg-surface p-2.5 border border-slate-200 dark:border-border-main rounded-xl text-xs">
                                           <span className="font-bold uppercase tracking-wider text-slate-500 mb-1 text-[10px]">{key.replace(/_/g, ' ')}</span>
-                                          <span className="font-mono text-indigo-600 dark:text-indigo-400 break-all">{displayValue}</span>
+                                          <span className="font-mono text-teal-600 dark:text-teal-400 break-all">{displayValue}</span>
                                       </div>
                                   );
                               })}
                           </div>
                       )}
                     </TableCell>
-                    <TableCell className="py-4 text-sm font-medium text-(--color-text-muted)">
+                    <TableCell className="py-4 text-sm font-medium text-text-muted">
                       {log.ip_address || "N/A"}
                     </TableCell>
                   </TableRow>
@@ -164,9 +164,9 @@ export default function AuditLogs() {
         )}
         
         {/* Pagination Controls */}
-        <div className="p-4 border-t border-(--color-border-main) bg-slate-50 dark:bg-(--color-surface) flex flex-col sm:flex-row justify-between items-center gap-4 text-sm">
-          <span className="text-(--color-text-muted) font-medium">
-            Showing <span className="font-bold text-(--color-text-main)">{(page - 1) * limit + 1}</span> to <span className="font-bold text-(--color-text-main)">{Math.min(page * limit, total)}</span> of <span className="font-bold text-(--color-text-main)">{total}</span> entries
+        <div className="p-4 border-t border-border-main bg-slate-50 dark:bg-surface flex flex-col sm:flex-row justify-between items-center gap-4 text-sm">
+          <span className="text-text-muted font-medium">
+            Showing <span className="font-bold text-text-main">{(page - 1) * limit + 1}</span> to <span className="font-bold text-text-main">{Math.min(page * limit, total)}</span> of <span className="font-bold text-text-main">{total}</span> entries
           </span>
           <div className="flex gap-2">
             <Button

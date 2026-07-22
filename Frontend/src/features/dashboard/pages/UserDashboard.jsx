@@ -158,13 +158,13 @@ export function UserDashboard() {
     <div className="space-y-6 lg:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12 font-sans relative">
       
       {/* Header */}
-      <div className="flex flex-col md:flex-row items-start md:items-end justify-between border-b border-(--color-border-main) pb-6">
+      <div className="flex flex-col md:flex-row items-start md:items-end justify-between border-b border-border-main pb-6">
         <div className="space-y-2">
-            <h1 className="text-3xl lg:text-4xl font-heading font-extrabold tracking-tight text-(--color-text-main)">
+            <h1 className="text-3xl lg:text-4xl font-heading font-extrabold tracking-tight text-text-main">
               Facility Operations
             </h1>
-            <p className="text-(--color-text-muted) font-medium flex items-center gap-2">
-                Operator: <span className="font-bold text-(--color-text-main)">{user?.name}</span>
+            <p className="text-text-muted font-medium flex items-center gap-2">
+                Operator: <span className="font-bold text-text-main">{user?.name}</span>
             </p>
         </div>
       </div>
@@ -183,9 +183,9 @@ export function UserDashboard() {
         {/* Sensor Fleet Distribution */}
         <motion.div 
           whileHover={{ y: -4 }}
-          className="p-6 bg-(--color-surface) rounded-2xl border border-(--color-border-main) shadow-sm"
+          className="min-w-0 p-4 sm:p-6 bg-gradient-to-br from-white to-slate-50 dark:from-surface dark:to-surface/50 rounded-2xl border border-border-main shadow-md"
         >
-          <h3 className="text-lg font-bold text-(--color-text-main) mb-6">Fleet Distribution</h3>
+          <h3 className="text-lg font-bold text-text-main mb-6">Fleet Distribution</h3>
           <div className="h-[250px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -204,16 +204,16 @@ export function UserDashboard() {
         {/* Incident Severity Timeline */}
         <motion.div 
           whileHover={{ y: -4 }}
-          className="p-6 bg-(--color-surface) rounded-2xl border border-(--color-border-main) shadow-sm"
+          className="min-w-0 p-4 sm:p-6 bg-gradient-to-br from-white to-slate-50 dark:from-surface dark:to-surface/50 rounded-2xl border border-border-main shadow-md"
         >
-          <h3 className="text-lg font-bold text-(--color-text-main) mb-6">Incident Timeline</h3>
+          <h3 className="text-lg font-bold text-text-main mb-6">Incident Timeline</h3>
           <div className="h-[250px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={severityTimeline} margin={{ top: 10, right: 10, left: -20, bottom: 0 }} barSize={24}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-main)" vertical={false} opacity={0.5} />
                 <XAxis dataKey="time" tick={{fontSize: 12, fill: 'var(--color-text-muted)', fontWeight: 500}} axisLine={{stroke: 'var(--color-border-main)'}} tickLine={false} />
                 <YAxis tick={{fontSize: 12, fill: 'var(--color-text-muted)', fontWeight: 500}} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={sleekTooltip} cursor={{fill: 'var(--color-surface-hover)'}} />
+                <Tooltip contentStyle={sleekTooltip} cursor={{fill: 'var(--color-surface-hover)', opacity: 0.5}} />
                 <Legend wrapperStyle={{ fontSize: '12px', fontWeight: 600 }} iconType="circle" />
                 <Bar dataKey="Critical" stackId="a" fill="#ef4444" radius={[0, 0, 4, 4]} />
                 <Bar dataKey="Warning" stackId="a" fill="#f59e0b" radius={[4, 4, 0, 0]} />
@@ -225,9 +225,9 @@ export function UserDashboard() {
         {/* Fleet Connectivity */}
         <motion.div 
           whileHover={{ y: -4 }}
-          className="p-6 bg-(--color-surface) rounded-2xl border border-(--color-border-main) shadow-sm"
+          className="min-w-0 p-4 sm:p-6 bg-gradient-to-br from-white to-slate-50 dark:from-surface dark:to-surface/50 rounded-2xl border border-border-main shadow-md"
         >
-          <h3 className="text-lg font-bold text-(--color-text-main) mb-6">Fleet Connectivity</h3>
+          <h3 className="text-lg font-bold text-text-main mb-6">Fleet Connectivity</h3>
           <div className="h-[250px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -251,19 +251,19 @@ export function UserDashboard() {
         {/* Dual Axis Environmental Matrix */}
         <motion.div 
           whileHover={{ y: -4 }}
-          className="lg:col-span-2 p-6 bg-(--color-surface) rounded-2xl border border-(--color-border-main) shadow-sm"
+          className="min-w-0 lg:col-span-2 p-4 sm:p-6 bg-gradient-to-br from-white to-slate-50 dark:from-surface dark:to-surface/50 rounded-2xl border border-border-main shadow-md"
         >
-          <h3 className="text-lg font-bold text-(--color-text-main) mb-6 flex items-center gap-2">
+          <h3 className="text-lg font-bold text-text-main mb-6 flex items-center gap-2">
             Environmental Matrix <span className="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-semibold ml-2">Live</span>
           </h3>
-          <div className="h-[350px]">
+          <div className="h-[250px] lg:h-[350px]">
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={liveEvents} margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-main)" strokeOpacity={0.5} vertical={false} />
                 <XAxis dataKey="time" tick={{fontSize: 12, fill: 'var(--color-text-muted)'}} axisLine={{stroke: 'var(--color-border-main)'}} tickLine={false} minTickGap={30} dy={10} />
                 <YAxis yAxisId="left" tick={{fontSize: 12, fill: 'var(--color-text-muted)'}} axisLine={false} tickLine={false} orientation="left" stroke="#6366f1" />
                 <YAxis yAxisId="right" tick={{fontSize: 12, fill: 'var(--color-text-muted)'}} axisLine={false} tickLine={false} orientation="right" stroke="#10b981" />
-                <Tooltip contentStyle={sleekTooltip} />
+                <Tooltip contentStyle={sleekTooltip} cursor={{fill: 'var(--color-surface-hover)', opacity: 0.5}} />
                 <Legend wrapperStyle={{ fontSize: '12px', fontWeight: 600, paddingTop: '20px' }} iconType="circle" />
                 <Bar yAxisId="left" dataKey="temp" name="Temperature (°C)" barSize={16} fill="#6366f1" radius={[4, 4, 0, 0]} />
                 <Line yAxisId="right" type="monotone" dataKey="hum" name="Humidity (%)" stroke="#10b981" strokeWidth={3} dot={{ strokeWidth: 2, r: 4, fill: '#fff' }} />
@@ -275,14 +275,14 @@ export function UserDashboard() {
         {/* Maintenance Priority Queue */}
         <motion.div 
           whileHover={{ y: -4 }}
-          className="p-6 bg-(--color-surface) rounded-2xl border border-(--color-border-main) shadow-sm flex flex-col"
+          className="min-w-0 p-4 sm:p-6 bg-gradient-to-br from-white to-slate-50 dark:from-surface dark:to-surface/50 rounded-2xl border border-border-main shadow-md flex flex-col"
         >
-          <h3 className="text-lg font-bold text-(--color-text-main) mb-6 flex items-center gap-2">
-            <Wrench className="w-5 h-5 text-(--color-text-muted)" /> Maintenance Queue
+          <h3 className="text-lg font-bold text-text-main mb-6 flex items-center gap-2">
+            <Wrench className="w-5 h-5 text-text-muted" /> Maintenance Queue
           </h3>
           <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
             {maintenanceQueue.length === 0 ? (
-                <div className="h-40 flex flex-col items-center justify-center text-(--color-text-muted) border-2 border-dashed border-(--color-border-main) rounded-xl p-4 text-center">
+                <div className="h-40 flex flex-col items-center justify-center text-text-muted border-2 border-dashed border-border-main rounded-xl p-4 text-center">
                     <CheckCircle className="w-8 h-8 text-emerald-500 mb-2" />
                     <span className="font-semibold text-sm">All clear</span>
                     <span className="text-xs">No active issues detected</span>
@@ -291,9 +291,9 @@ export function UserDashboard() {
                 maintenanceQueue.map(issue => {
                     const isAcked = acknowledgedIssues.has(issue.id);
                     return (
-                    <div key={issue.id} className={`group relative p-4 rounded-xl border ${isAcked ? 'bg-slate-50 border-slate-200' : 'bg-white border-(--color-border-main) shadow-sm hover:border-indigo-200'} transition-all`}>
+                    <div key={issue.id} className={`group relative p-4 rounded-xl border ${isAcked ? 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700' : 'bg-white dark:bg-surface-hover border-border-main shadow-sm hover:shadow-md hover:border-teal-200 dark:hover:border-teal-800/50'} transition-all`}>
                         <div className="flex justify-between items-start mb-2">
-                            <h4 className={`font-semibold text-sm flex items-center gap-2 ${isAcked ? 'text-slate-500' : 'text-(--color-text-main)'}`}>
+                            <h4 className={`font-semibold text-sm flex items-center gap-2 ${isAcked ? 'text-text-muted' : 'text-text-main'}`}>
                                 {isAcked && <CheckCircle className="w-4 h-4 text-emerald-500" />}
                                 {issue.title}
                             </h4>
@@ -301,13 +301,13 @@ export function UserDashboard() {
                                 {issue.priority}
                             </span>
                         </div>
-                        <p className="text-xs text-(--color-text-muted) font-medium">{issue.loc}</p>
+                        <p className="text-xs text-text-muted font-medium">{issue.loc}</p>
                         
                         {!isAcked && (
-                          <div className="mt-4 pt-3 border-t border-(--color-border-main) flex items-center gap-2">
+                          <div className="mt-4 pt-3 border-t border-border-main flex items-center gap-2">
                             <button 
                                 onClick={() => handleAcknowledgeIssue(issue.id)}
-                                className="flex-1 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+                                className="flex-1 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-surface-hover text-slate-700 dark:text-text-main hover:bg-slate-200 dark:hover:bg-zinc-700 transition-colors"
                             >
                                 Acknowledge
                             </button>
@@ -339,17 +339,17 @@ function StatCard({ title, value, icon: Icon, isAlert = false }) {
   return (
     <motion.div 
       whileHover={{ y: -4 }}
-      className={`p-6 rounded-2xl border flex flex-col justify-between shadow-sm relative overflow-hidden ${isAlert ? 'bg-rose-50 border-rose-200' : 'bg-(--color-surface) border-(--color-border-main)'}`}
+      className={`p-6 rounded-2xl border flex flex-col justify-between shadow-sm relative overflow-hidden ${isAlert ? 'bg-rose-50 border-rose-200' : 'bg-surface border-border-main'}`}
     >
       {isAlert && <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500 rounded-full blur-3xl opacity-10 -translate-y-1/2 translate-x-1/2 pointer-events-none" />}
       <div className="flex justify-between items-start mb-4 relative z-10">
-        <p className={`text-sm font-semibold ${isAlert ? 'text-rose-800' : 'text-(--color-text-muted)'}`}>{title}</p>
-        <div className={`p-2.5 rounded-xl ${isAlert ? 'bg-rose-100 text-rose-600' : 'bg-indigo-50 text-indigo-600'}`}>
+        <p className={`text-sm font-semibold ${isAlert ? 'text-rose-800' : 'text-text-muted'}`}>{title}</p>
+        <div className={`p-2.5 rounded-xl ${isAlert ? 'bg-rose-100 text-rose-600' : 'bg-teal-50 text-teal-600'}`}>
           <Icon className="w-5 h-5" strokeWidth={2.5} />
         </div>
       </div>
       <div className="relative z-10">
-        <p className={`text-3xl font-heading font-extrabold ${isAlert ? 'text-rose-900' : 'text-(--color-text-main)'}`}>{value}</p>
+        <p className={`text-3xl font-heading font-extrabold ${isAlert ? 'text-rose-900' : 'text-text-main'}`}>{value}</p>
       </div>
     </motion.div>
   );
