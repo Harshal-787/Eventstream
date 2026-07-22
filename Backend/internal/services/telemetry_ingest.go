@@ -15,12 +15,54 @@ type lastEventInfo struct {
 	Timestamp time.Time
 }
 
+type TTLCache struct {
+	mu    sync.RWMutex
+	items map[int]lastEventInfo
+}
+
+func NewTTLCache(cleanupInterval, ttl time.Duration) *TTLCache {
+	cache := &TTLCache{
+		items: make(map[int]lastEventInfo),
+	}
+	go func() {
+		for {
+			time.Sleep(cleanupInterval)
+			cache.cleanup(ttl)
+		}
+	}()
+	return cache
+}
+
+func (c *TTLCache) cleanup(ttl time.Duration) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	now := time.Now()
+	for k, v := range c.items {
+		if now.Sub(v.Timestamp) > ttl {
+			delete(c.items, k)
+		}
+	}
+}
+
+func (c *TTLCache) Load(key int) (lastEventInfo, bool) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	item, found := c.items[key]
+	return item, found
+}
+
+func (c *TTLCache) Store(key int, info lastEventInfo) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.items[key] = info
+}
+
 type TelemetryIngestService struct {
 	telemetryRepo   *repository.TelemetryRepository
 	deviceRepo      *repository.DeviceRepo
 	anomalyDetector *AnomalyDetector
 	alertEngine     *AlertEngine
-	lastEventCache  sync.Map
+	lastEventCache  *TTLCache
 }
 
 func NewTelemetryIngestService(telemetryRepo *repository.TelemetryRepository, deviceRepo *repository.DeviceRepo, anomalyDetector *AnomalyDetector, alertEngine *AlertEngine) *TelemetryIngestService {
@@ -29,6 +71,7 @@ func NewTelemetryIngestService(telemetryRepo *repository.TelemetryRepository, de
 		deviceRepo:      deviceRepo,
 		anomalyDetector: anomalyDetector,
 		alertEngine:     alertEngine,
+		lastEventCache:  NewTTLCache(5*time.Minute, 10*time.Minute), // Keep records for 10 minutes, cleanup every 5 min
 	}
 }
 
@@ -38,8 +81,7 @@ func (s *TelemetryIngestService) Ingest(tel *models.Telemetry) error {
 	hash := fmt.Sprintf("%x", sha256.Sum256(payloadBytes))
 	
 	if val, ok := s.lastEventCache.Load(tel.DeviceID); ok {
-		info := val.(lastEventInfo)
-		if info.Hash == hash && time.Since(info.Timestamp) < 2*time.Second {
+		if val.Hash == hash && time.Since(val.Timestamp) < 2*time.Second {
 			// Duplicate event detected, dropping
 			return nil
 		}

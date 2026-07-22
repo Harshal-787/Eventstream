@@ -22,10 +22,10 @@ class ErrorBoundary extends React.Component {
     if (this.state.hasError) {
       // You can render any custom fallback UI
       return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-(--color-background) p-8 text-center">
+        <div className="flex flex-col items-center justify-center min-h-screen bg-background p-8 text-center">
           <div className="border-4 border-black p-8 bg-(--color-brutal-bg) shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-2xl w-full">
             <h1 className="text-4xl font-black uppercase tracking-tighter mb-4 text-red-600">Something went critically wrong.</h1>
-            <p className="text-lg font-bold mb-8 text-(--color-text-muted)">
+            <p className="text-lg font-bold mb-8 text-text-muted">
               The application encountered an unexpected error. Please refresh the page or contact support if the issue persists.
             </p>
             

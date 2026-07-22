@@ -128,5 +128,8 @@ func (h *ReportHandler) ExportReport(c *gin.Context) {
 
 	filename := fmt.Sprintf("%s.%s", reportType, extension)
 	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+	c.Header("Cache-Control", "no-cache, no-store, must-revalidate")
+	c.Header("Pragma", "no-cache")
+	c.Header("Expires", "0")
 	c.Data(http.StatusOK, contentType, fileBytes)
 }

@@ -65,8 +65,8 @@ export function BuildingMap() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-[500px] w-full bg-(--color-surface) rounded-2xl border border-(--color-border) shadow-sm">
-        <Spinner size="lg" className="text-(--color-primary)" />
+      <div className="flex justify-center items-center h-full min-h-[400px] w-full bg-surface rounded-2xl border border-border-main shadow-sm">
+        <Spinner size="lg" className="text-primary-600" />
       </div>
     );
   }
@@ -77,13 +77,13 @@ export function BuildingMap() {
     : [40.7128, -74.0060];
 
   return (
-    <div className="bg-(--color-surface) rounded-2xl border border-(--color-border-main) shadow-sm overflow-hidden h-[600px] flex flex-col relative z-0">
-      <div className="p-4 border-b border-(--color-border-main) flex justify-between items-center bg-(--color-surface)">
+    <div className="bg-surface rounded-2xl border border-border-main shadow-sm overflow-hidden h-full min-h-[400px] flex flex-col relative z-0">
+      <div className="p-4 border-b border-border-main flex justify-between items-center bg-surface">
         <div className="flex items-center gap-2">
-          <MapPin className="w-5 h-5 text-(--color-primary)" />
-          <h2 className="text-sm font-semibold text-(--color-text-main)">Global Building Overview</h2>
+          <MapPin className="w-5 h-5 text-primary-600" />
+          <h2 className="text-sm font-semibold text-text-main">Global Building Overview</h2>
         </div>
-        <div className="text-xs text-(--color-text-muted)">
+        <div className="text-xs text-text-muted">
           {buildings.length} Mapped {buildings.length === 1 ? 'Building' : 'Buildings'}
         </div>
       </div>
@@ -101,20 +101,20 @@ export function BuildingMap() {
               <Marker key={building.id} position={[building.latitude, building.longitude]}>
                 <Popup className="custom-popup">
                   <div className="p-1 min-w-[200px]">
-                    <div className="flex items-center gap-2 border-b border-gray-100 pb-2 mb-2">
-                      <Building2 className="w-4 h-4 text-indigo-600" />
-                      <h3 className="font-semibold text-gray-900">{building.name}</h3>
+                    <div className="flex items-center gap-2 border-b border-border-main pb-2 mb-2">
+                      <Building2 className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                      <h3 className="font-semibold text-text-main">{building.name}</h3>
                     </div>
-                    <p className="text-xs text-gray-500 mb-3">{building.address}, {building.city}</p>
+                    <p className="text-xs text-text-muted mb-3">{building.address}, {building.city}</p>
                     
                     <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-slate-50 p-2 rounded-lg text-center">
-                        <p className="text-xs text-gray-500 font-medium">Total Devices</p>
-                        <p className="text-lg font-bold text-slate-700">{stats.total}</p>
+                      <div className="bg-slate-50 dark:bg-slate-800 p-2 rounded-lg text-center">
+                        <p className="text-xs text-text-muted font-medium">Total Devices</p>
+                        <p className="text-lg font-bold text-slate-700 dark:text-slate-200">{stats.total}</p>
                       </div>
-                      <div className="bg-red-50 p-2 rounded-lg text-center">
-                        <p className="text-xs text-red-600 font-medium">Offline</p>
-                        <p className="text-lg font-bold text-red-600">{stats.offline}</p>
+                      <div className="bg-red-50 dark:bg-red-900/40 p-2 rounded-lg text-center">
+                        <p className="text-xs text-red-600 dark:text-red-400 font-medium">Offline</p>
+                        <p className="text-lg font-bold text-red-600 dark:text-red-400">{stats.offline}</p>
                       </div>
                     </div>
                     

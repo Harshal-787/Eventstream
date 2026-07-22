@@ -58,9 +58,9 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen w-full flex bg-(--color-background) font-sans">
+    <div className="min-h-screen w-full flex bg-background font-sans">
       {/* Left Panel - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-(--color-primary-900) flex-col justify-between overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 relative bg-primary-900 flex-col justify-between overflow-hidden">
         {/* Dynamic Background */}
         <div className="absolute inset-0 z-0">
           <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-(--color-accent-500) rounded-full blur-[120px] opacity-40 mix-blend-screen" />
@@ -71,7 +71,7 @@ export function Login() {
         <div className="relative z-10 p-12 flex items-center">
           <Logo className="w-10 h-10 text-white" hideText={false} />
           <span className="font-heading font-extrabold text-2xl tracking-tight text-white ml-3">
-            Event<span className="text-(--color-primary-400)">Stream</span>
+            Event<span className="text-primary-400">Stream</span>
           </span>
         </div>
 
@@ -84,7 +84,7 @@ export function Login() {
             <h2 className="text-4xl lg:text-5xl font-heading font-extrabold text-white mb-6 leading-tight">
               Welcome back to your command center.
             </h2>
-            <p className="text-indigo-200 text-lg font-medium leading-relaxed">
+            <p className="text-teal-200 text-lg font-medium leading-relaxed">
               Sign in to monitor real-time sensor streams, manage building alerts, and access powerful analytics across your entire portfolio.
             </p>
           </motion.div>
@@ -98,7 +98,7 @@ export function Login() {
         </div>
         <div className="absolute top-6 right-6 z-10">
           <Link to="/">
-            <Button variant="ghost" className="text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center gap-2 font-medium">
+            <Button variant="ghost" className="text-slate-500 hover:text-slate-900 dark:hover:text-white gap-2 font-medium">
               <ArrowLeft className="w-4 h-4" />
               Back to site
             </Button>
@@ -113,8 +113,8 @@ export function Login() {
             className="w-full max-w-md"
           >
             <div className="text-left mb-8">
-              <h1 className="text-3xl font-heading font-extrabold text-(--color-text-main) tracking-tight mb-2">Sign in to your account</h1>
-              <p className="text-base text-(--color-text-muted) font-medium">Please enter your credentials to access the dashboard</p>
+              <h1 className="text-3xl font-heading font-extrabold text-text-main tracking-tight mb-2">Sign in to your account</h1>
+              <p className="text-base text-text-muted font-medium">Please enter your credentials to access the dashboard</p>
             </div>
 
             <AnimatePresence mode="wait">
@@ -140,7 +140,7 @@ export function Login() {
                   className="space-y-5"
                 >
                   <div className="space-y-2">
-                    <label className="text-sm font-semibold text-(--color-text-main)">Email address</label>
+                    <label className="text-sm font-semibold text-text-main">Email address</label>
                     <Input
                       type="email"
                       placeholder="name@company.com"
@@ -152,8 +152,8 @@ export function Login() {
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <label className="text-sm font-semibold text-(--color-text-main)">Password</label>
-                      <Link to="/forgot-password" className="text-sm text-(--color-primary-600) hover:text-(--color-primary-700) font-semibold transition-colors">Forgot password?</Link>
+                      <label className="text-sm font-semibold text-text-main">Password</label>
+                      <Link to="/forgot-password" className="text-sm text-primary-600 hover:text-primary-700 font-semibold transition-colors">Forgot password?</Link>
                     </div>
                     <Input
                       type="password"
@@ -174,8 +174,8 @@ export function Login() {
                   className="space-y-5"
                 >
                   <div className="space-y-2">
-                    <label className="text-sm font-semibold text-(--color-text-main)">Two-Factor Authentication</label>
-                    <div className="text-sm text-(--color-text-muted) mb-4">We've sent a 6-digit code to your email.</div>
+                    <label className="text-sm font-semibold text-text-main">Two-Factor Authentication</label>
+                    <div className="text-sm text-text-muted mb-4">We've sent a 6-digit code to your email.</div>
                     <Input
                       type="text"
                       required
@@ -197,9 +197,9 @@ export function Login() {
                 {isLoading ? (step === 1 ? "Authenticating..." : "Verifying...") : (step === 1 ? "Sign In" : "Verify & Login")}
               </Button>
 
-              <div className="text-center text-sm font-medium text-(--color-text-muted) pt-6">
+              <div className="text-center text-sm font-medium text-text-muted pt-6">
                 Don't have an account?{' '}
-                <Link to="/register" className="text-(--color-primary-600) font-bold hover:text-(--color-primary-700) transition-colors">Create one</Link>
+                <Link to="/register" className="text-primary-600 font-bold hover:text-primary-700 transition-colors">Create one</Link>
               </div>
             </form>
           </motion.div>

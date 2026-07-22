@@ -24,6 +24,16 @@ func NewTelemetryHandler(ingestService *services.TelemetryIngestService, telemet
 	return &TelemetryHandler{ingestService: ingestService, telemetryRepo: telemetryRepo, failedEventRepo: failedEventRepo}
 }
 
+// IngestEvent godoc
+// @Summary Ingest a single telemetry event
+// @Description Accepts a JSON payload representing a device telemetry event (temperature, humidity, etc.)
+// @Tags telemetry
+// @Accept json
+// @Produce json
+// @Param payload body map[string]interface{} true "Telemetry Payload"
+// @Success 201 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Router /telemetry/ingest [post]
 func (h *TelemetryHandler) IngestEvent(c *gin.Context) {
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
@@ -75,6 +85,17 @@ func (h *TelemetryHandler) IngestEvent(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"status": "Ingested successfully"})
 }
 
+// GetEvents godoc
+// @Summary List historical telemetry events
+// @Description Fetches paginated historical telemetry events with optional filters
+// @Tags telemetry
+// @Produce json
+// @Param page query int false "Page number"
+// @Param limit query int false "Items per page"
+// @Param building_id query string false "Filter by building ID"
+// @Param device_id query string false "Filter by device ID"
+// @Success 200 {object} map[string]interface{}
+// @Router /telemetry [get]
 func (h *TelemetryHandler) GetEvents(c *gin.Context) {
 	pageStr := c.DefaultQuery("page", "1")
 	limitStr := c.DefaultQuery("limit", "50")

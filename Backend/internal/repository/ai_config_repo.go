@@ -14,13 +14,13 @@ func NewAIConfigRepo(db *sql.DB) *AIConfigRepo {
 }
 
 func (r *AIConfigRepo) GetActiveConfig(organizationID int) (*models.AIConfiguration, error) {
-	query := `SELECT id, organization_id, provider_type, api_key, model_name, is_active, created_at, updated_at
+	query := `SELECT id, organization_id, provider_type, api_key, base_url, model_name, is_active, created_at, updated_at
 	          FROM ai_configurations
 			  WHERE organization_id = $1 AND is_active = true
 			  ORDER BY updated_at DESC LIMIT 1`
 	var cfg models.AIConfiguration
 	err := r.DB.QueryRow(query, organizationID).Scan(
-		&cfg.ID, &cfg.OrganizationID, &cfg.ProviderType, &cfg.APIKey,
+		&cfg.ID, &cfg.OrganizationID, &cfg.ProviderType, &cfg.APIKey, &cfg.BaseURL,
 		&cfg.ModelName, &cfg.IsActive, &cfg.CreatedAt, &cfg.UpdatedAt,
 	)
 	if err != nil {
@@ -39,7 +39,7 @@ func (r *AIConfigRepo) SetConfig(cfg *models.AIConfiguration) error {
 		return err
 	}
 
-	query := `INSERT INTO ai_configurations (organization_id, provider_type, api_key, model_name, is_active)
-	          VALUES ($1, $2, $3, $4, true) RETURNING id, created_at, updated_at`
-	return r.DB.QueryRow(query, cfg.OrganizationID, cfg.ProviderType, cfg.APIKey, cfg.ModelName).Scan(&cfg.ID, &cfg.CreatedAt, &cfg.UpdatedAt)
+	query := `INSERT INTO ai_configurations (organization_id, provider_type, api_key, base_url, model_name, is_active)
+	          VALUES ($1, $2, $3, $4, $5, true) RETURNING id, created_at, updated_at`
+	return r.DB.QueryRow(query, cfg.OrganizationID, cfg.ProviderType, cfg.APIKey, cfg.BaseURL, cfg.ModelName).Scan(&cfg.ID, &cfg.CreatedAt, &cfg.UpdatedAt)
 }

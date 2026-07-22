@@ -155,10 +155,10 @@ export function UserFloorsRoomsTab({ buildings }) {
       </div>
 
       {selectedBuildingId && (
-        <Box className="p-6 border-2 border-(--color-border-main) shadow-md max-w-3xl">
-          <div className="flex items-center justify-between mb-6 border-b border-(--color-border-main) pb-4">
-            <h3 className="text-lg font-bold text-(--color-text-main) flex items-center">
-              <Layers className="w-5 h-5 mr-2 text-(--color-primary-600)" />
+        <Box className="p-6 border-2 border-border-main shadow-md max-w-3xl">
+          <div className="flex items-center justify-between mb-6 border-b border-border-main pb-4">
+            <h3 className="text-lg font-bold text-text-main flex items-center">
+              <Layers className="w-5 h-5 mr-2 text-primary-600" />
               Floors & Rooms
             </h3>
             <div className="flex gap-2">
@@ -169,30 +169,30 @@ export function UserFloorsRoomsTab({ buildings }) {
           
           <div className="space-y-4">
             {floors.length === 0 ? (
-              <p className="text-sm text-(--color-text-muted)">No floors configured.</p>
+              <p className="text-sm text-text-muted">No floors configured.</p>
             ) : (
               floors.map(floor => (
-                <div key={floor.id} className="border border-(--color-border) p-3 bg-(--color-surface-hover) group/floor">
+                <div key={floor.id} className="border border-border p-3 bg-surface-hover group/floor">
                   <div className="flex justify-between items-center">
-                    <p className="font-bold text-sm text-(--color-text-main)">{floor.name} (Lvl {floor.level})</p>
+                    <p className="font-bold text-sm text-text-main">{floor.name} (Lvl {floor.level})</p>
                     <div className="flex gap-2 opacity-0 group-hover/floor:opacity-100 transition-opacity">
                       {floor.floor_plan_url && (
-                        <button onClick={() => navigate(`/${role}/floors/${floor.id}/map`)} className="text-xs text-(--color-primary) hover:text-(--color-primary-600) font-bold">View Map</button>
+                        <button onClick={() => navigate(`/${role}/floors/${floor.id}/map`)} className="text-xs text-primary hover:text-primary-600 font-bold">View Map</button>
                       )}
-                      <button onClick={() => openFloorModal(floor)} className="text-xs text-(--color-text-muted) hover:text-(--color-primary)">Edit</button>
-                      <button onClick={() => handleDeleteFloor(floor.id)} className="text-xs text-(--color-text-muted) hover:text-(--color-danger)">Delete</button>
+                      <button onClick={() => openFloorModal(floor)} className="text-xs text-text-muted hover:text-primary">Edit</button>
+                      <button onClick={() => handleDeleteFloor(floor.id)} className="text-xs text-text-muted hover:text-danger">Delete</button>
                     </div>
                   </div>
-                  <div className="mt-2 pl-4 border-l-2 border-(--color-primary) space-y-1">
+                  <div className="mt-2 pl-4 border-l-2 border-primary space-y-1">
                     {rooms.filter(r => r.floor_id === floor.id).map(room => (
-                      <div key={room.id} className="text-sm text-(--color-text-muted) flex justify-between items-center group/room">
+                      <div key={room.id} className="text-sm text-text-muted flex justify-between items-center group/room">
                         <span>{room.name}</span>
                         <div className="flex items-center gap-2">
                           <div className="flex gap-2 opacity-0 group-hover/room:opacity-100 transition-opacity mr-2">
-                            <button onClick={() => openRoomModal(room)} className="text-[10px] uppercase tracking-wider font-bold text-(--color-text-muted) hover:text-(--color-primary)">Edit</button>
-                            <button onClick={() => handleDeleteRoom(room.id)} className="text-[10px] uppercase tracking-wider font-bold text-(--color-text-muted) hover:text-(--color-danger)">Delete</button>
+                            <button onClick={() => openRoomModal(room)} className="text-[10px] uppercase tracking-wider font-bold text-text-muted hover:text-primary">Edit</button>
+                            <button onClick={() => handleDeleteRoom(room.id)} className="text-[10px] uppercase tracking-wider font-bold text-text-muted hover:text-danger">Delete</button>
                           </div>
-                          <span className="text-[10px] font-bold uppercase tracking-wider bg-(--color-background) px-1.5 py-0.5 rounded border border-(--color-border)">{room.type}</span>
+                          <span className="text-[10px] font-bold uppercase tracking-wider bg-background px-1.5 py-0.5 rounded border border-border">{room.type}</span>
                         </div>
                       </div>
                     ))}

@@ -89,7 +89,7 @@ export function Buildings({ role }) {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-2">
         <div>
-          <h1 className="text-2xl font-bold text-(--color-text-main)">Buildings</h1>
+          <h1 className="text-2xl font-bold text-text-main">Buildings</h1>
         </div>
         <div className="flex gap-2">
           {role === 'admin' && (
@@ -107,9 +107,9 @@ export function Buildings({ role }) {
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-(--color-surface) rounded-2xl border border-(--color-border-main) shadow-sm overflow-hidden"
+          className="bg-surface rounded-2xl border border-border-main shadow-sm overflow-hidden"
         >
-          <div className="p-4 border-b border-(--color-border-main) bg-slate-50 dark:bg-(--color-surface)">
+          <div className="p-4 border-b border-border-main bg-slate-50 dark:bg-surface">
             <div className="relative max-w-md">
               <Search className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
               <input 
@@ -117,7 +117,7 @@ export function Buildings({ role }) {
                 placeholder="Search buildings..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-11 pr-4 py-2.5 bg-white dark:bg-(--color-surface) border border-slate-200 dark:border-(--color-border-main) rounded-xl text-sm w-full font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                className="pl-11 pr-4 py-2.5 bg-white dark:bg-surface border border-slate-200 dark:border-border-main rounded-xl text-sm w-full font-medium focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
               />
             </div>
           </div>
@@ -134,17 +134,17 @@ export function Buildings({ role }) {
           <div className="overflow-x-auto custom-scrollbar">
             <Table>
               <TableHeader>
-                <TableRow className="bg-slate-50 dark:bg-(--color-surface) border-b border-(--color-border-main)">
-                  <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Name</TableHead>
-                  <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Address</TableHead>
-                  <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Location</TableHead>
-                  <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Assigned User</TableHead>
-                  <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Status</TableHead>
-                  {role === 'admin' && <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Details</TableHead>}
-                  <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider text-right">Actions</TableHead>
+                <TableRow className="bg-slate-50 dark:bg-surface border-b border-border-main">
+                  <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Name</TableHead>
+                  <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Address</TableHead>
+                  <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Location</TableHead>
+                  <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Assigned User</TableHead>
+                  <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Status</TableHead>
+                  {role === 'admin' && <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Details</TableHead>}
+                  <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody className="divide-y divide-(--color-border-main)">
+              <TableBody className="divide-y divide-border-main">
                 {filteredBuildings.map((bldg, index) => (
                   <TableRow 
                     key={bldg.id}
@@ -154,10 +154,10 @@ export function Buildings({ role }) {
                     transition={{ delay: index * 0.05 }}
                     className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
                   >
-                    <TableCell className="py-4 font-bold text-(--color-text-main)">{bldg.name}</TableCell>
-                    <TableCell className="py-4 text-sm text-(--color-text-muted) font-medium">{bldg.address}</TableCell>
-                    <TableCell className="py-4 text-sm text-(--color-text-muted) font-medium">{bldg.city}, {bldg.state} {bldg.zip_code}</TableCell>
-                    <TableCell className="py-4 text-sm font-semibold text-(--color-text-main)">{bldg.owner_name || '-'}</TableCell>
+                    <TableCell className="py-4 font-bold text-text-main">{bldg.name}</TableCell>
+                    <TableCell className="py-4 text-sm text-text-muted font-medium">{bldg.address}</TableCell>
+                    <TableCell className="py-4 text-sm text-text-muted font-medium">{bldg.city}, {bldg.state} {bldg.zip_code}</TableCell>
+                    <TableCell className="py-4 text-sm font-semibold text-text-main">{bldg.owner_name || '-'}</TableCell>
                     <TableCell className="py-4">
                       <StatusActionDropdown
                         status={bldg.status}
@@ -174,7 +174,7 @@ export function Buildings({ role }) {
                       </TableCell>
                     )}
                     <TableCell className="py-4 text-right space-x-2">
-                      <Button size="icon" variant="ghost" className="h-8 w-8 rounded-md text-indigo-600 hover:bg-indigo-50 transition-colors" onClick={() => setEditBuilding(bldg)} title="Edit Details">
+                      <Button size="icon" variant="ghost" className="h-8 w-8 rounded-md text-teal-600 hover:bg-teal-50 transition-colors" onClick={() => setEditBuilding(bldg)} title="Edit Details">
                         <Edit className="w-4 h-4" />
                       </Button>
                       {role === 'admin' && (

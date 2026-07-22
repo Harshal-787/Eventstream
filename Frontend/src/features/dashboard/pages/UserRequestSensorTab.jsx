@@ -99,9 +99,9 @@ export function UserRequestSensorTab({ buildings }) {
 
       {selectedBuildingId && (
         <Box className="p-6 max-w-3xl">
-          <div className="flex items-center mb-6 border-b border-(--color-border-main) pb-4">
-            <Cpu className="w-5 h-5 mr-2 text-(--color-primary-600)" />
-            <h3 className="text-lg font-bold text-(--color-text-main)">
+          <div className="flex items-center mb-6 border-b border-border-main pb-4">
+            <Cpu className="w-5 h-5 mr-2 text-primary-600" />
+            <h3 className="text-lg font-bold text-text-main">
               Register Physical Sensor
             </h3>
           </div>
@@ -111,14 +111,14 @@ export function UserRequestSensorTab({ buildings }) {
               <button 
                 type="button"
                 onClick={() => setRequestData({...requestData, is_byod: true})}
-                className={`flex-1 py-2 px-4 rounded-xl border text-sm font-bold transition-colors ${requestData.is_byod ? 'bg-(--color-primary-600) text-white border-(--color-primary-600)' : 'bg-transparent text-(--color-text-muted) border-(--color-border-main) hover:bg-slate-100 dark:hover:bg-(--color-surface-hover)'}`}
+                className={`flex-1 py-2 px-4 rounded-xl border text-sm font-bold transition-colors ${requestData.is_byod ? 'bg-primary-600 text-white border-primary-600' : 'bg-transparent text-text-muted border-border-main hover:bg-slate-100 dark:hover:bg-surface-hover'}`}
               >
                 I have my own hardware
               </button>
               <button 
                 type="button"
                 onClick={() => setRequestData({...requestData, is_byod: false})}
-                className={`flex-1 py-2 px-4 rounded-xl border text-sm font-bold transition-colors ${!requestData.is_byod ? 'bg-(--color-primary-600) text-white border-(--color-primary-600)' : 'bg-transparent text-(--color-text-muted) border-(--color-border-main) hover:bg-slate-100 dark:hover:bg-(--color-surface-hover)'}`}
+                className={`flex-1 py-2 px-4 rounded-xl border text-sm font-bold transition-colors ${!requestData.is_byod ? 'bg-primary-600 text-white border-primary-600' : 'bg-transparent text-text-muted border-border-main hover:bg-slate-100 dark:hover:bg-surface-hover'}`}
               >
                 Request from IT
               </button>
@@ -127,12 +127,12 @@ export function UserRequestSensorTab({ buildings }) {
             {requestData.is_byod ? (
               <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
                 <p className="text-sm text-blue-600 dark:text-blue-400 font-bold">Bring Your Own Hardware</p>
-                <p className="text-xs text-(--color-text-muted) mt-1">Submit the details of the physical sensor you installed. An Admin will review and provision it.</p>
+                <p className="text-xs text-text-muted mt-1">Submit the details of the physical sensor you installed. An Admin will review and provision it.</p>
               </div>
             ) : (
               <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-xl">
                 <p className="text-sm text-purple-600 dark:text-purple-400 font-bold">Request from IT</p>
-                <p className="text-xs text-(--color-text-muted) mt-1">Tell us what type of sensor you need for your room. An Admin will assign one from the warehouse inventory.</p>
+                <p className="text-xs text-text-muted mt-1">Tell us what type of sensor you need for your room. An Admin will assign one from the warehouse inventory.</p>
               </div>
             )}
 

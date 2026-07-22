@@ -39,14 +39,14 @@ export function StatusActionDropdown({ status, pendingLabel, onApprove, onReject
       </button>
 
       {isOpen && (
-        <div className="origin-top-left absolute left-0 mt-1 w-36 rounded-xl shadow-lg bg-(--color-surface) z-50 border border-(--color-border-main) overflow-hidden">
+        <div className="origin-top-left absolute left-0 mt-1 w-36 rounded-xl shadow-lg bg-surface z-50 border border-border-main overflow-hidden">
           <div className="py-1 flex flex-col" role="menu" aria-orientation="vertical">
             <button
               onClick={() => {
                 onApprove();
                 setIsOpen(false);
               }}
-              className="flex items-center px-4 py-2 text-sm font-medium text-(--color-text-main) hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-400 text-left w-full transition-colors"
+              className="flex items-center px-4 py-2 text-sm font-medium text-text-main hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-400 text-left w-full transition-colors"
               role="menuitem"
             >
               <CheckCircle className="w-4 h-4 mr-2 text-emerald-500" />
@@ -57,7 +57,7 @@ export function StatusActionDropdown({ status, pendingLabel, onApprove, onReject
                 onReject();
                 setIsOpen(false);
               }}
-              className="flex items-center px-4 py-2 text-sm font-medium text-(--color-text-main) hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/30 dark:hover:text-red-400 text-left w-full transition-colors"
+              className="flex items-center px-4 py-2 text-sm font-medium text-text-main hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/30 dark:hover:text-red-400 text-left w-full transition-colors"
               role="menuitem"
             >
               <XCircle className="w-4 h-4 mr-2 text-red-500" />

@@ -1,3 +1,12 @@
+// @title EventStream Enterprise API
+// @version 1.0
+// @description Enterprise Event Stream Processing API
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name X-API-Key
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 package main
 
 import (
@@ -61,6 +70,11 @@ func main() {
 	notificationChannelRepo := repository.NewNotificationChannelRepo(db)
 	deviceGroupRepo := repository.NewDeviceGroupRepository(db)
 	aiConfigRepo := repository.NewAIConfigRepo(db)
+	apiKeyRepo := repository.NewAPIKeyRepository(db)
+	apiUsageRepo := repository.NewAPIUsageRepository(db)
+	searchRepo := repository.NewSearchRepository(db)
+	reportScheduleRepo := repository.NewReportScheduleRepo(db)
+	escalationPolicyRepo := repository.NewEscalationPolicyRepo(db)
 
 	emailService := services.NewEmailService(cfg)
 	auditLogger := services.NewAuditLogger(auditRepo)
@@ -70,6 +84,7 @@ func main() {
 	anomalyDetector := services.NewAnomalyDetector(alertRepo, notificationService)
 	telemetryIngestService := services.NewTelemetryIngestService(telemetryRepo, deviceRepo, anomalyDetector, alertEngine)
 	aiService := services.NewAIService(aiConfigRepo)
+	healthService := services.NewHealthService(db)
 
 	// Initialize Event Hub for SSE
 	hub := events.NewHub()
@@ -93,14 +108,25 @@ func main() {
 	reportHandler := handlers.NewReportHandler(reportingService)
 	deviceGroupHandler := handlers.NewDeviceGroupHandler(deviceGroupRepo)
 	aiHandler := handlers.NewAIHandler(aiConfigRepo, aiService, alertRepo, telemetryRepo, deviceRepo)
+	apiKeyHandler := handlers.NewAPIKeyHandler(apiKeyRepo)
+	apiLogHandler := handlers.NewAPILogHandler(apiUsageRepo)
+	searchHandler := handlers.NewSearchHandler(searchRepo)
+	reportScheduleHandler := handlers.NewReportScheduleHandler(reportScheduleRepo)
+	healthHandler := handlers.NewHealthHandler(healthService)
+	escalationPolicyHandler := handlers.NewEscalationPolicyHandler(escalationPolicyRepo)
 
 	// Start Background Workers
-	heartbeatMonitor := workers.NewHeartbeatMonitor(db, 1*time.Minute)
-	heartbeatMonitor.Start()
+	brokerURL := "tls://f381fbc095e04364ab626a5789f2a057.s1.eu.hivemq.cloud:8883" // Replace with cfg.MQTTBroker if it was in config
+	clientID := "eventstream_backend"
+	mqttWorker := workers.NewMQTTWorker(brokerURL, clientID, telemetryIngestService, deviceRepo, healthService)
+	heartbeatMonitor := workers.NewHeartbeatMonitor(db, 1*time.Minute, healthService)
+	reportScheduler := workers.NewReportScheduler(reportScheduleRepo, reportingService, emailService, healthService)
+	escalationWorker := workers.NewEscalationWorker(db, notificationService, healthService)
 
-	// In a real app, MQTT broker URI and client ID would be in config
-	mqttWorker := workers.NewMQTTWorker("tcp://localhost:1883", "eventstream-backend", telemetryIngestService, deviceRepo)
 	mqttWorker.Start()
+	heartbeatMonitor.Start()
+	reportScheduler.Start()
+	escalationWorker.Start(1 * time.Minute)
 
 	// Start Virtual Sensor Simulator
 	sim := simulator.NewSimulator(db, hub, ruleRepo, anomalyDetector, notificationService)
@@ -276,6 +302,9 @@ func main() {
 		reportRoutes := v1.Group("/reports", middleware.AuthMiddleware(cfg, sessionRepo))
 		{
 			reportRoutes.GET("/export", reportHandler.ExportReport)
+			reportRoutes.GET("/schedules", reportScheduleHandler.GetSchedules)
+			reportRoutes.POST("/schedules", reportScheduleHandler.CreateSchedule)
+			reportRoutes.DELETE("/schedules/:id", reportScheduleHandler.DeleteSchedule)
 		}
 
 		aiRoutes := v1.Group("/ai", middleware.AuthMiddleware(cfg, sessionRepo))
@@ -285,6 +314,11 @@ func main() {
 			aiRoutes.GET("/summary", aiHandler.GenerateEventSummary)
 			aiRoutes.GET("/alerts/:id/rca", aiHandler.AnalyzeAlertRCA)
 			aiRoutes.GET("/devices/:id/predictive-maintenance", aiHandler.PredictMaintenance)
+			aiRoutes.GET("/devices/:id/health-summary", aiHandler.GenerateDeviceHealthSummary)
+			aiRoutes.GET("/executive-report", aiHandler.GenerateExecutiveReport)
+			aiRoutes.GET("/incidents/:id/summary", aiHandler.GenerateIncidentSummary)
+			aiRoutes.POST("/chat", aiHandler.Chat)
+			aiRoutes.POST("/models", aiHandler.GetModels)
 		}
 
 		ruleRoutes := v1.Group("/alert-rules", middleware.AuthMiddleware(cfg, sessionRepo))
@@ -293,6 +327,41 @@ func main() {
 			ruleRoutes.POST("", middleware.RequireRole("admin"), ruleHandler.Create)
 			ruleRoutes.PUT("/:id", middleware.RequireRole("admin"), ruleHandler.Update)
 			ruleRoutes.DELETE("/:id", middleware.RequireRole("admin"), ruleHandler.Delete)
+		}
+
+		v1.GET("/search", middleware.AuthMiddleware(cfg, sessionRepo), searchHandler.GlobalSearch)
+
+		system := v1.Group("/system", middleware.AuthMiddleware(cfg, sessionRepo))
+		{
+			system.GET("/health", healthHandler.GetSystemHealth)
+		}
+
+		escalationPolicies := v1.Group("/escalation-policies", middleware.AuthMiddleware(cfg, sessionRepo))
+		{
+			escalationPolicies.GET("", escalationPolicyHandler.List)
+		}
+
+		apiKeyRoutes := v1.Group("/api-keys", middleware.AuthMiddleware(cfg, sessionRepo))
+		{
+			apiKeyRoutes.GET("", apiKeyHandler.List)
+			apiKeyRoutes.POST("", apiKeyHandler.Create)
+			apiKeyRoutes.DELETE("/:id", apiKeyHandler.Revoke)
+		}
+
+		apiLogRoutes := v1.Group("/api-logs", middleware.AuthMiddleware(cfg, sessionRepo))
+		{
+			apiLogRoutes.GET("", apiLogHandler.GetLogs)
+		}
+
+		// External API (Requires API Key)
+		externalRoutes := v1.Group("/external")
+		externalRoutes.Use(middleware.APIKeyAuthMiddleware(apiKeyRepo))
+		externalRoutes.Use(middleware.APILoggerMiddleware(apiUsageRepo))
+		externalRoutes.Use(middleware.RateLimit(rate.Limit(10), 20)) // 10 req/s, burst 20
+		{
+			externalRoutes.GET("/devices", deviceHandler.ListDevices)
+			externalRoutes.GET("/alerts", alertHandler.List)
+			externalRoutes.POST("/events", telemetryHandler.IngestEvent)
 		}
 	}
 

@@ -15,7 +15,7 @@ func NewAlertRuleRepository(db *sql.DB) *AlertRuleRepository {
 
 func (r *AlertRuleRepository) List() ([]models.AlertRule, error) {
 	query := `
-		SELECT ar.id, ar.name, ar.device_type, ar.metric, ar.operator, ar.threshold, ar.bool_value, ar.severity, ar.is_active, ar.target_type, ar.target_id, ar.created_by, ar.created_at,
+		SELECT ar.id, ar.name, ar.device_type, ar.metric, ar.operator, ar.threshold, ar.bool_value, ar.severity, ar.is_active, ar.target_type, ar.target_id, ar.conditions, ar.escalation_policy_id, ar.created_by, ar.created_at,
 		       CASE 
 		           WHEN ar.target_type = 'device' THEN (SELECT name FROM devices WHERE id = ar.target_id)
 		           WHEN ar.target_type = 'room' THEN (SELECT name FROM rooms WHERE id = ar.target_id)
@@ -55,7 +55,7 @@ func (r *AlertRuleRepository) List() ([]models.AlertRule, error) {
 		var rule models.AlertRule
 		err := rows.Scan(
 			&rule.ID, &rule.Name, &rule.DeviceType, &rule.Metric, &rule.Operator,
-			&rule.Threshold, &rule.BoolValue, &rule.Severity, &rule.IsActive, &rule.TargetType, &rule.TargetID, &rule.CreatedBy, &rule.CreatedAt,
+			&rule.Threshold, &rule.BoolValue, &rule.Severity, &rule.IsActive, &rule.TargetType, &rule.TargetID, &rule.Conditions, &rule.EscalationPol, &rule.CreatedBy, &rule.CreatedAt,
 			&rule.TargetName, &rule.CreatedByName, &rule.HardwareID, &rule.BuildingName, &rule.FloorName, &rule.RoomName,
 		)
 		if err != nil {
@@ -68,7 +68,7 @@ func (r *AlertRuleRepository) List() ([]models.AlertRule, error) {
 
 func (r *AlertRuleRepository) GetActiveRules() ([]models.AlertRule, error) {
 	query := `
-		SELECT id, name, device_type, metric, operator, threshold, bool_value, severity, is_active, target_type, target_id, conditions
+		SELECT id, name, device_type, metric, operator, threshold, bool_value, severity, is_active, target_type, target_id, conditions, escalation_policy_id
 		FROM alert_rules
 		WHERE is_active = true
 	`
@@ -82,7 +82,7 @@ func (r *AlertRuleRepository) GetActiveRules() ([]models.AlertRule, error) {
 	for rows.Next() {
 		var r models.AlertRule
 		if err := rows.Scan(
-			&r.ID, &r.Name, &r.DeviceType, &r.Metric, &r.Operator, &r.Threshold, &r.BoolValue, &r.Severity, &r.IsActive, &r.TargetType, &r.TargetID, &r.Conditions,
+			&r.ID, &r.Name, &r.DeviceType, &r.Metric, &r.Operator, &r.Threshold, &r.BoolValue, &r.Severity, &r.IsActive, &r.TargetType, &r.TargetID, &r.Conditions, &r.EscalationPol,
 		); err != nil {
 			return nil, err
 		}
@@ -93,25 +93,25 @@ func (r *AlertRuleRepository) GetActiveRules() ([]models.AlertRule, error) {
 
 func (r *AlertRuleRepository) Create(rule *models.AlertRule) error {
 	query := `
-		INSERT INTO alert_rules (name, device_type, metric, operator, threshold, bool_value, severity, is_active, target_type, target_id, created_by)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		INSERT INTO alert_rules (name, device_type, metric, operator, threshold, bool_value, severity, is_active, target_type, target_id, conditions, escalation_policy_id, created_by)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
 		RETURNING id, created_at
 	`
 	return r.db.QueryRow(
 		query, rule.Name, rule.DeviceType, rule.Metric, rule.Operator,
-		rule.Threshold, rule.BoolValue, rule.Severity, rule.IsActive, rule.TargetType, rule.TargetID, rule.CreatedBy,
+		rule.Threshold, rule.BoolValue, rule.Severity, rule.IsActive, rule.TargetType, rule.TargetID, rule.Conditions, rule.EscalationPol, rule.CreatedBy,
 	).Scan(&rule.ID, &rule.CreatedAt)
 }
 
 func (r *AlertRuleRepository) Update(id int, rule *models.AlertRule) error {
 	query := `
 		UPDATE alert_rules
-		SET name = $1, device_type = $2, metric = $3, operator = $4, threshold = $5, bool_value = $6, severity = $7, is_active = $8, target_type = $9, target_id = $10
-		WHERE id = $11
+		SET name = $1, device_type = $2, metric = $3, operator = $4, threshold = $5, bool_value = $6, severity = $7, is_active = $8, target_type = $9, target_id = $10, conditions = $11, escalation_policy_id = $12
+		WHERE id = $13
 	`
 	_, err := r.db.Exec(
 		query, rule.Name, rule.DeviceType, rule.Metric, rule.Operator,
-		rule.Threshold, rule.BoolValue, rule.Severity, rule.IsActive, rule.TargetType, rule.TargetID, id,
+		rule.Threshold, rule.BoolValue, rule.Severity, rule.IsActive, rule.TargetType, rule.TargetID, rule.Conditions, rule.EscalationPol, id,
 	)
 	return err
 }

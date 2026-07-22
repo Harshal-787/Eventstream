@@ -15,6 +15,10 @@ type DeviceStats struct {
 	Count    int
 	Mean     float64
 	Variance float64 // M2 for Welford's algorithm
+
+	// For drift detection
+	ShortTermEWMA float64
+	LongTermEWMA  float64
 }
 
 type AnomalyDetector struct {
@@ -55,6 +59,17 @@ func (ad *AnomalyDetector) checkAndObserve(deviceID, orgID int, metricName strin
 		statsMap[deviceID] = stats
 	}
 
+	if stats.Count == 0 {
+		stats.ShortTermEWMA = value
+		stats.LongTermEWMA = value
+	} else {
+		// Update EWMA
+		alphaShort := 0.1
+		alphaLong := 0.01
+		stats.ShortTermEWMA = alphaShort*value + (1-alphaShort)*stats.ShortTermEWMA
+		stats.LongTermEWMA = alphaLong*value + (1-alphaLong)*stats.LongTermEWMA
+	}
+
 	// If we have enough data points (e.g. > 5), check for anomaly
 	if stats.Count > 5 {
 		stdDev := math.Sqrt(stats.Variance / float64(stats.Count))
@@ -63,9 +78,20 @@ func (ad *AnomalyDetector) checkAndObserve(deviceID, orgID int, metricName strin
 			// Threshold of 3 standard deviations
 			if zScore > 3.0 {
 				log.Printf("[ANOMALY DETECTED] Device %d, %s: value=%.2f, mean=%.2f, stddev=%.2f, z=%.2f", deviceID, metricName, value, stats.Mean, stdDev, zScore)
-				ad.createAnomalyAlert(deviceID, orgID, metricName, value, stats.Mean, zScore)
+				ad.createAnomalyAlert(deviceID, orgID, metricName, value, stats.Mean, zScore, "anomaly", "high", fmt.Sprintf("Sudden spike detected in %s (Value: %.2f, Expected Mean: %.2f, Z-Score: %.1f)", metricName, value, stats.Mean, zScore))
 				// Do not include the anomalous point in the stats to avoid poisoning the baseline
 				return
+			}
+			
+			// Check for drift (short-term vs long-term baseline divergence)
+			// A divergence of more than 1.5 standard deviations indicates potential sensor drift
+			driftDiff := math.Abs(stats.ShortTermEWMA - stats.LongTermEWMA)
+			if driftDiff > (1.5 * stdDev) && stats.Count > 50 { // Need sufficient history for drift
+				log.Printf("[SENSOR DRIFT DETECTED] Device %d, %s: shortEWMA=%.2f, longEWMA=%.2f", deviceID, metricName, stats.ShortTermEWMA, stats.LongTermEWMA)
+				ad.createAnomalyAlert(deviceID, orgID, metricName, value, stats.LongTermEWMA, driftDiff/stdDev, "sensor_drift", "medium", fmt.Sprintf("Sensor drift detected in %s (Short-term avg: %.2f, Baseline avg: %.2f)", metricName, stats.ShortTermEWMA, stats.LongTermEWMA))
+				
+				// Reset baseline slightly to avoid spamming drift alerts
+				stats.LongTermEWMA = (stats.LongTermEWMA + stats.ShortTermEWMA) / 2
 			}
 		}
 	}
@@ -78,13 +104,13 @@ func (ad *AnomalyDetector) checkAndObserve(deviceID, orgID int, metricName strin
 	stats.Variance += delta * delta2
 }
 
-func (ad *AnomalyDetector) createAnomalyAlert(deviceID, orgID int, metricName string, value float64, mean float64, zScore float64) {
+func (ad *AnomalyDetector) createAnomalyAlert(deviceID, orgID int, metricName string, value float64, mean float64, score float64, alertType string, severity string, message string) {
 	alert := &models.Alert{
 		OrganizationID: orgID,
-		Type:           "anomaly",
-		Severity:       "high",
+		Type:           alertType,
+		Severity:       severity,
 		Status:         "active",
-		Message:        fmt.Sprintf("Sudden spike detected in %s (Value: %.2f, Expected Mean: %.2f, Z-Score: %.1f)", metricName, value, mean, zScore),
+		Message:        message,
 		TriggeredAt:    time.Now(),
 	}
 

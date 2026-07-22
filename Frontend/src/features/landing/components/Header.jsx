@@ -24,35 +24,33 @@ export function Header() {
   }, []);
 
   return (
-    <header 
-      className={cn(
-        'fixed top-0 left-0 right-0 z-50 h-20 transition-all duration-300 flex items-center border-b',
-        scrolled 
-          ? 'bg-(--color-surface) border-(--color-border-main) shadow-sm' 
-          : 'bg-transparent border-transparent'
-      )}
-    >
+    <header className={cn("fixed top-0 left-0 w-full z-50 h-28 flex items-center transition-colors duration-300", scrolled ? "bg-white/90 dark:bg-surface/90 backdrop-blur-lg shadow-sm border-b border-border-main" : "bg-transparent")}>
       <div className="w-full max-w-7xl mx-auto flex justify-between items-center px-6">
         
-        {/* Logo */}
-        <Link to="/" className="flex items-center">
-          <Logo className="w-8 h-8" />
-        </Link>
+        {/* Logo (Flex-1 ensures it takes equal space as right side) */}
+        <div className="flex-1 flex justify-start">
+          <Link to="/" className="flex items-center gap-2 group">
+            <Logo className="w-10 h-10 transition-transform group-hover:scale-105" />
+          </Link>
+        </div>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-8">
-          <a href="#features" className="text-sm font-semibold text-(--color-text-muted) hover:text-(--color-primary-600) transition-colors">Platform Features</a>
-          <a href="#use-cases" className="text-sm font-semibold text-(--color-text-muted) hover:text-(--color-primary-600) transition-colors">Sensor Integrations</a>
+        {/* Desktop Navigation & Theme Toggle (Exactly Centered) */}
+        <nav className="hidden md:flex items-center space-x-10 shrink-0">
+          <a href="#" className="text-sm font-bold text-text-main hover:text-primary-600 transition-colors">Home</a>
+          <a href="#product" className="text-sm font-bold text-text-main hover:text-primary-600 transition-colors">Product</a>
+          <a href="#integrations" className="text-sm font-bold text-text-main hover:text-primary-600 transition-colors">Integrations</a>
+          <a href="#pricing" className="text-sm font-bold text-text-main hover:text-primary-600 transition-colors">Pricing</a>
+          <div className="pl-2 border-l border-border-main">
+            <ThemeToggle />
+          </div>
         </nav>
 
-        {/* Auth Buttons */}
-        <div className="hidden md:flex items-center space-x-4">
-          <ThemeToggle />
-          <Link to="/login">
-            <Button variant="ghost" className="font-semibold text-(--color-text-muted) hover:text-(--color-primary-600)">Sign In</Button>
-          </Link>
+        {/* Auth Buttons (Flex-1 ensures it balances the left side) */}
+        <div className="hidden md:flex flex-1 justify-end items-center">
           <Link to="/register">
-            <Button className="font-bold rounded-xl shadow-[0_4px_14px_0_rgb(0,0,0,0.1)] hover:shadow-[0_6px_20px_rgba(99,102,241,0.23)] hover:-translate-y-0.5 transition-all">Start Free Trial</Button>
+            <Button className="font-bold text-sm px-8 py-2 rounded-full bg-primary-950 text-white hover:bg-primary-800 transition-all">
+              Sign Up
+            </Button>
           </Link>
         </div>
 
@@ -60,10 +58,10 @@ export function Header() {
         <div className="md:hidden flex items-center space-x-4">
           <ThemeToggle />
           <button 
-            className="text-(--color-text-main) hover:text-(--color-primary-600) focus:outline-none"
+            className="text-text-main hover:text-primary-600 focus:outline-none"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {mobileMenuOpen ? <X className="w-8 h-8" /> : <Menu className="w-8 h-8" />}
           </button>
         </div>
       </div>
@@ -76,17 +74,16 @@ export function Header() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
-            className="md:hidden absolute top-20 left-0 w-full bg-(--color-surface) border-b border-(--color-border-main) shadow-lg"
+            className="md:hidden absolute top-28 left-0 w-full bg-surface border-b border-border-main shadow-2xl"
           >
-            <div className="px-6 py-6 space-y-4 flex flex-col">
-              <a href="#features" className="block py-2 text-sm font-semibold text-(--color-text-main) hover:text-(--color-primary-600)">Platform Features</a>
-              <a href="#use-cases" className="block py-2 text-sm font-semibold text-(--color-text-main) hover:text-(--color-primary-600)">Sensor Integrations</a>
-              <div className="pt-6 border-t border-(--color-border-main) flex flex-col space-y-3">
-                <Link to="/login" className="w-full">
-                  <Button variant="secondary" className="w-full justify-center rounded-xl">Sign In</Button>
-                </Link>
-                <Link to="/register" className="w-full">
-                  <Button className="w-full justify-center rounded-xl">Start Free Trial</Button>
+            <div className="px-6 py-8 space-y-6 flex flex-col">
+              <a href="#" onClick={() => setMobileMenuOpen(false)} className="block text-lg font-bold text-text-main hover:text-primary-600">Home</a>
+              <a href="#product" onClick={() => setMobileMenuOpen(false)} className="block text-lg font-bold text-text-main hover:text-primary-600">Product</a>
+              <a href="#integrations" onClick={() => setMobileMenuOpen(false)} className="block text-lg font-bold text-text-main hover:text-primary-600">Integrations</a>
+              <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="block text-lg font-bold text-text-main hover:text-primary-600">Pricing</a>
+              <div className="pt-8 border-t border-border-main flex flex-col">
+                <Link to="/register" onClick={() => setMobileMenuOpen(false)} className="w-full">
+                  <Button className="w-full justify-center rounded-full py-6 text-lg bg-primary-950 text-white">Get Started</Button>
                 </Link>
               </div>
             </div>

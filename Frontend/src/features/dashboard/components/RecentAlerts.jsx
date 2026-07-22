@@ -7,32 +7,32 @@ const ALERTS = [
 ];
 
 const SEVERITY = {
-  critical: { badge: 'bg-red-100 text-red-700',    dot: 'bg-red-500' },
-  high:     { badge: 'bg-orange-100 text-orange-700', dot: 'bg-orange-500' },
-  medium:   { badge: 'bg-amber-100 text-amber-700',  dot: 'bg-amber-500' },
-  low:      { badge: 'bg-blue-100 text-blue-700',   dot: 'bg-blue-500' },
+  critical: { badge: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400',    dot: 'bg-red-500' },
+  high:     { badge: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400', dot: 'bg-orange-500' },
+  medium:   { badge: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400',  dot: 'bg-amber-500' },
+  low:      { badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400',   dot: 'bg-blue-500' },
 };
 
 export default function RecentAlerts() {
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-200">
-      <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-        <h3 className="text-sm font-semibold text-gray-900">Recent Alerts</h3>
-        <button className="text-xs text-blue-600 font-medium hover:text-blue-700 transition-colors">View all</button>
+    <div className="bg-surface border border-border-main rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-200">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-border-main">
+        <h3 className="text-sm font-semibold text-text-main">Recent Alerts</h3>
+        <button className="text-xs text-blue-600 dark:text-blue-400 font-medium hover:text-blue-700 dark:hover:text-blue-300 transition-colors">View all</button>
       </div>
-      <div className="divide-y divide-gray-50">
+      <div className="divide-y divide-border-main">
         {ALERTS.map((a) => (
-          <div key={a.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-gray-50 transition-colors">
+          <div key={a.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-surface-hover transition-colors">
             <span className={`w-2 h-2 rounded-full shrink-0 ${SEVERITY[a.severity].dot}`} />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">{a.type}</p>
-              <p className="text-xs text-gray-400 truncate">{a.device}</p>
+              <p className="text-sm font-medium text-text-main truncate">{a.type}</p>
+              <p className="text-xs text-text-muted truncate">{a.device}</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <span className={`text-xs font-medium px-2 py-0.5 rounded-lg capitalize ${SEVERITY[a.severity].badge}`}>
                 {a.severity}
               </span>
-              <span className="text-xs text-gray-400 w-16 text-right">{a.time}</span>
+              <span className="text-xs text-text-muted w-16 text-right">{a.time}</span>
             </div>
           </div>
         ))}

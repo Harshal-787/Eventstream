@@ -2,33 +2,41 @@ package workers
 
 import (
 	"database/sql"
+	"eventstream/internal/services"
 	"log"
 	"time"
 )
 
 type HeartbeatMonitor struct {
-	db       *sql.DB
-	interval time.Duration
-	stopChan chan struct{}
+	db        *sql.DB
+	interval  time.Duration
+	ticker    *time.Ticker
+	quit      chan struct{}
+	healthSvc *services.HealthService
 }
 
-func NewHeartbeatMonitor(db *sql.DB, interval time.Duration) *HeartbeatMonitor {
+func NewHeartbeatMonitor(db *sql.DB, interval time.Duration, healthSvc *services.HealthService) *HeartbeatMonitor {
 	return &HeartbeatMonitor{
-		db:       db,
-		interval: interval,
-		stopChan: make(chan struct{}),
+		db:        db,
+		interval:  interval,
+		quit:      make(chan struct{}),
+		healthSvc: healthSvc,
 	}
 }
 
 func (m *HeartbeatMonitor) Start() {
+	m.ticker = time.NewTicker(m.interval)
 	go func() {
-		ticker := time.NewTicker(m.interval)
-		defer ticker.Stop()
 		for {
 			select {
-			case <-ticker.C:
+			case <-m.ticker.C:
 				m.checkHeartbeats()
-			case <-m.stopChan:
+				m.updateHealthScores()
+				if m.healthSvc != nil {
+					m.healthSvc.PingWorker("HeartbeatMonitor")
+				}
+			case <-m.quit:
+				m.ticker.Stop()
 				return
 			}
 		}
@@ -36,7 +44,7 @@ func (m *HeartbeatMonitor) Start() {
 }
 
 func (m *HeartbeatMonitor) Stop() {
-	close(m.stopChan)
+	close(m.quit)
 }
 
 func (m *HeartbeatMonitor) checkHeartbeats() {
@@ -66,5 +74,30 @@ func (m *HeartbeatMonitor) checkHeartbeats() {
 			m.db.Exec(alertQuery, orgID, id, "Device "+name+" missed expected heartbeat and is now offline.")
 			log.Printf("HeartbeatMonitor: Marked device %d (%s) as offline", id, name)
 		}
+	}
+}
+
+func (m *HeartbeatMonitor) updateHealthScores() {
+	query := `
+		UPDATE device_twins
+		SET health_score = GREATEST(0, 100 - (
+			-- Penalty for being offline
+			CASE WHEN (SELECT status FROM devices WHERE id = device_twins.device_id) = 'offline' THEN 20 ELSE 0 END
+			+
+			-- Penalty for open medium alerts
+			(SELECT COUNT(*) * 10 FROM alerts WHERE device_id = device_twins.device_id AND status = 'open' AND severity = 'medium')
+			+
+			-- Penalty for open high/critical alerts
+			(SELECT COUNT(*) * 25 FROM alerts WHERE device_id = device_twins.device_id AND status = 'open' AND severity IN ('high', 'critical'))
+		))
+	`
+	res, err := m.db.Exec(query)
+	if err != nil {
+		log.Printf("HeartbeatMonitor: Failed to update health scores: %v", err)
+		return
+	}
+	
+	if rows, err := res.RowsAffected(); err == nil && rows > 0 {
+		log.Printf("HeartbeatMonitor: Updated health scores for %d devices", rows)
 	}
 }

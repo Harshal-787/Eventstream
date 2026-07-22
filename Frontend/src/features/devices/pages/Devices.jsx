@@ -3,7 +3,7 @@ import { deviceService } from '../services/deviceService';
 import { Box } from '../../../components/ui/Box';
 import { Spinner } from '../../../components/ui/Spinner';
 import { EmptyState } from '../../../components/ui/EmptyState';
-import { Cpu, Plus, Upload, Server, Search, Filter, Inbox, CheckCircle, Package, Trash2, Settings2, RefreshCcw, LogOut, AlertTriangle, Key, Activity, Folder } from 'lucide-react';
+import { Cpu, Plus, Upload, Server, Search, Filter, Inbox, CheckCircle, Package, Trash2, Settings2, RefreshCcw, LogOut, AlertTriangle, Key, Activity, Folder, Sparkles, X } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { Badge } from '../../../components/ui/Badge';
 import { Input } from '../../../components/ui/Input';
@@ -11,11 +11,13 @@ import { Modal } from '../../../components/ui/Modal';
 import { Select } from '../../../components/ui/Select';
 import { Tabs } from '../../../components/ui/Tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../components/ui/Table';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { useTelemetry } from '../../../hooks/useTelemetry';
 import { useLiveAlerts } from '../../alerts/hooks/useLiveAlerts';
 import { DeviceGroupsTab } from '../components/DeviceGroupsTab';
+import { aiService } from '../../../services/aiService';
+import ReactMarkdown from 'react-markdown';
 
 export function Devices({ role }) {
   const [activeTab, setActiveTab] = useState('inventory'); // inventory, requests, models
@@ -61,6 +63,10 @@ export function Devices({ role }) {
   const [deviceTwin, setDeviceTwin] = useState(null);
   const [desiredStateInput, setDesiredStateInput] = useState('');
   const [configInput, setConfigInput] = useState('');
+
+  const [healthDeviceId, setHealthDeviceId] = useState(null);
+  const [healthResult, setHealthResult] = useState('');
+  const [healthLoading, setHealthLoading] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -314,9 +320,24 @@ export function Devices({ role }) {
     }
   };
 
+  const handleGenerateHealthReport = async (device) => {
+    setHealthDeviceId(device.id);
+    setHealthResult('');
+    setHealthLoading(true);
+    try {
+      const data = await aiService.generateDeviceHealthSummary(device.id);
+      setHealthResult(data.summary || JSON.stringify(data));
+    } catch (err) {
+      console.error(err);
+      setHealthResult('**Error:** Failed to generate health summary. Ensure AI Settings are configured.');
+    } finally {
+      setHealthLoading(false);
+    }
+  };
+
   const renderLiveData = (device) => {
     const telemetry = telemetryMap[device.id];
-    if (!telemetry) return <span className="text-xs text-(--color-text-muted)">--</span>;
+    if (!telemetry) return <span className="text-xs text-text-muted">--</span>;
 
     const payload = telemetry.payload || {};
     
@@ -324,20 +345,20 @@ export function Devices({ role }) {
       case 'temperature':
         return (
           <div>
-            <div className="text-sm font-bold text-(--color-text-main)">{payload.temperature != null ? `${payload.temperature.toFixed(2)} °C` : '--'}</div>
-            {payload.humidity != null && <div className="text-xs text-(--color-text-muted)">{payload.humidity.toFixed(2)} %</div>}
+            <div className="text-sm font-bold text-text-main">{payload.temperature != null ? `${payload.temperature.toFixed(2)} °C` : '--'}</div>
+            {payload.humidity != null && <div className="text-xs text-text-muted">{payload.humidity.toFixed(2)} %</div>}
           </div>
         );
       case 'humidity':
-        return <div className="text-sm font-bold text-(--color-text-main)">{payload.humidity?.toFixed(2) || '--'} %</div>;
+        return <div className="text-sm font-bold text-text-main">{payload.humidity?.toFixed(2) || '--'} %</div>;
       case 'temperature_humidity':
       case 'multisensor':
         return (
-          <div className="text-sm font-bold text-(--color-text-main)">
+          <div className="text-sm font-bold text-text-main">
             {payload.temperature && <div>{payload.temperature.toFixed(2)} °C</div>}
-            {payload.humidity && <div className="text-(--color-text-muted)">{payload.humidity.toFixed(2)} %</div>}
+            {payload.humidity && <div className="text-text-muted">{payload.humidity.toFixed(2)} %</div>}
             {payload.motion_detected !== undefined && (
-              <div className={payload.motion_detected ? "text-amber-500" : "text-(--color-text-muted)"}>
+              <div className={payload.motion_detected ? "text-amber-500" : "text-text-muted"}>
                 {payload.motion_detected ? 'MOTION' : 'CLEAR'}
               </div>
             )}
@@ -363,7 +384,7 @@ export function Devices({ role }) {
         );
       case 'motion':
         return (
-          <div className={`text-sm font-bold ${payload.motion_detected ? 'text-amber-500 animate-pulse' : 'text-(--color-text-muted)'}`}>
+          <div className={`text-sm font-bold ${payload.motion_detected ? 'text-amber-500 animate-pulse' : 'text-text-muted'}`}>
             {payload.motion_detected ? 'MOTION DETECTED' : 'CLEAR'}
           </div>
         );
@@ -375,17 +396,17 @@ export function Devices({ role }) {
         return <div className={`text-sm font-bold ${aqiColor}`}>{aqi.toFixed(0)} AQI</div>;
       case 'power':
         return (
-          <div className="text-sm font-bold text-(--color-text-main)">
+          <div className="text-sm font-bold text-text-main">
             {payload.power_usage?.toFixed(2) || '--'} kW
-            <div className="text-xs text-(--color-text-muted)">{payload.voltage?.toFixed(1) || '--'} V</div>
+            <div className="text-xs text-text-muted">{payload.voltage?.toFixed(1) || '--'} V</div>
           </div>
         );
       default:
         // Fallback for legacy data without payload
         return (
-          <div className="text-sm font-bold text-(--color-text-main)">
+          <div className="text-sm font-bold text-text-main">
             {telemetry.temperature && <div>{telemetry.temperature.toFixed(2)} °C</div>}
-            {telemetry.humidity && <div className="text-(--color-text-muted)">{telemetry.humidity.toFixed(2)} %</div>}
+            {telemetry.humidity && <div className="text-text-muted">{telemetry.humidity.toFixed(2)} %</div>}
           </div>
         );
     }
@@ -397,8 +418,8 @@ export function Devices({ role }) {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-(--color-text-main)">Device Management</h1>
-          <p className="text-sm text-(--color-text-muted)">Manage virtual sensors and fulfill deployments</p>
+          <h1 className="text-2xl font-bold text-text-main">Device Management</h1>
+          <p className="text-sm text-text-muted">Manage virtual sensors and fulfill deployments</p>
         </div>
         
         {role === 'admin' && activeTab === 'inventory' && (
@@ -437,15 +458,15 @@ export function Devices({ role }) {
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-(--color-surface) rounded-2xl border border-(--color-border-main) shadow-sm overflow-hidden"
+          className="bg-surface rounded-2xl border border-border-main shadow-sm overflow-hidden"
         >
-          <div className="p-4 border-b border-(--color-border-main) bg-slate-50 dark:bg-(--color-surface) flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="p-4 border-b border-border-main bg-slate-50 dark:bg-surface flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <Filter className="w-5 h-5 text-slate-400" />
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="bg-transparent border-none text-sm font-semibold text-(--color-text-main) focus:ring-0 cursor-pointer outline-none"
+                className="bg-transparent border-none text-sm font-semibold text-text-main focus:ring-0 cursor-pointer outline-none"
               >
                 <option value="">All Statuses</option>
                 {role === 'admin' && <option value="unassigned">Unassigned (Inventory)</option>}
@@ -460,7 +481,7 @@ export function Devices({ role }) {
                 placeholder="Search hardware ID or model..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-11 pr-4 py-2.5 bg-white dark:bg-(--color-surface) border border-slate-200 dark:border-(--color-border-main) rounded-xl text-sm w-full font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                className="pl-11 pr-4 py-2.5 bg-white dark:bg-surface border border-slate-200 dark:border-border-main rounded-xl text-sm w-full font-medium focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
               />
             </div>
           </div>
@@ -477,18 +498,18 @@ export function Devices({ role }) {
             <div className="overflow-x-auto custom-scrollbar">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-slate-50 dark:bg-(--color-surface) border-b border-(--color-border-main)">
-                    <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Hardware ID</TableHead>
-                    <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Brand / Model</TableHead>
-                    <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Type</TableHead>
-                    <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Location</TableHead>
-                    <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Live Data</TableHead>
-                    <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Status</TableHead>
-                    <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Health</TableHead>
-                    {role === 'admin' && <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider text-right">Actions</TableHead>}
+                  <TableRow className="bg-slate-50 dark:bg-surface border-b border-border-main">
+                    <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Hardware ID</TableHead>
+                    <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Brand / Model</TableHead>
+                    <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Type</TableHead>
+                    <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Location</TableHead>
+                    <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Live Data</TableHead>
+                    <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Status</TableHead>
+                    <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Health</TableHead>
+                    {role === 'admin' && <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider text-right">Actions</TableHead>}
                   </TableRow>
                 </TableHeader>
-                <TableBody className="divide-y divide-(--color-border-main)">
+                <TableBody className="divide-y divide-border-main">
                   {filteredDevices.map(device => {
                     const hasActiveAlert = liveAlerts.find(a => a.device_id === device.id && a.status === 'open');
                     return (
@@ -506,8 +527,8 @@ export function Devices({ role }) {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="text-sm font-medium text-(--color-text-main)">{device.brand || 'Generic'}</div>
-                        <div className="text-xs text-(--color-text-muted)">{device.model_name || 'Standard'}</div>
+                        <div className="text-sm font-medium text-text-main">{device.brand || 'Generic'}</div>
+                        <div className="text-xs text-text-muted">{device.model_name || 'Standard'}</div>
                       </TableCell>
                       <TableCell className="capitalize">
                         {device.type}
@@ -515,11 +536,11 @@ export function Devices({ role }) {
                       <TableCell>
                         {device.building_id ? (
                           <div>
-                            <div className="text-sm font-medium text-(--color-text-main)">{device.building_name}</div>
-                            <div className="text-xs text-(--color-text-muted)">{device.floor_name || 'Unmapped'} / {device.room_name || 'Unmapped'}</div>
+                            <div className="text-sm font-medium text-text-main">{device.building_name}</div>
+                            <div className="text-xs text-text-muted">{device.floor_name || 'Unmapped'} / {device.room_name || 'Unmapped'}</div>
                           </div>
                         ) : (
-                          <span className="text-sm text-(--color-text-muted) italic">Warehouse Shelf</span>
+                          <span className="text-sm text-text-muted italic">Warehouse Shelf</span>
                         )}
                       </TableCell>
                       <TableCell>
@@ -538,21 +559,27 @@ export function Devices({ role }) {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {device.status === 'active' ? (
-                          <div className="flex items-center gap-2">
-                            <div className="w-16 h-2 bg-(--color-border) rounded-full overflow-hidden">
-                              <div className={`h-full ${device.battery_pct > 20 ? 'bg-green-500' : 'bg-red-500'}`} style={{ width: `${device.battery_pct || 100}%` }} />
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-center gap-2" title="Health Score">
+                            <div className="w-16 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                              <div className={`h-full transition-all duration-500 ${device.health_score > 80 ? 'bg-emerald-500' : device.health_score > 50 ? 'bg-amber-500' : 'bg-rose-500'}`} style={{ width: `${device.health_score ?? 100}%` }} />
                             </div>
-                            <span className="text-xs font-medium text-(--color-text-main)">{device.battery_pct || 100}%</span>
+                            <span className={`text-[10px] font-bold ${device.health_score > 80 ? 'text-emerald-600' : device.health_score > 50 ? 'text-amber-600' : 'text-rose-600'}`}>{device.health_score ?? 100}</span>
                           </div>
-                        ) : (
-                          <span className="text-xs text-(--color-text-muted)">N/A</span>
-                        )}
+                          {device.status === 'active' && (
+                            <div className="flex items-center gap-2" title="Battery">
+                              <div className="w-16 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                                <div className={`h-full ${device.battery_pct > 20 ? 'bg-blue-500' : 'bg-red-500'}`} style={{ width: `${device.battery_pct || 100}%` }} />
+                              </div>
+                              <span className="text-[10px] font-medium text-text-muted">{device.battery_pct || 100}% ⚡</span>
+                            </div>
+                          )}
+                        </div>
                       </TableCell>
                       {role === 'admin' && (
                         <TableCell className="py-4 text-right whitespace-nowrap">
                           {device.building_id && (
-                            <Button size="icon" variant="ghost" className="h-8 w-8 rounded-md text-indigo-600 hover:bg-indigo-50 transition-colors mr-1" onClick={() => handleUnassign(device.id)} title="Unassign">
+                            <Button size="icon" variant="ghost" className="h-8 w-8 rounded-md text-teal-600 hover:bg-teal-50 transition-colors mr-1" onClick={() => handleUnassign(device.id)} title="Unassign">
                               <LogOut className="w-4 h-4" />
                             </Button>
                           )}
@@ -561,6 +588,9 @@ export function Devices({ role }) {
                           </Button>
                           <Button size="icon" variant="ghost" className="h-8 w-8 rounded-md text-emerald-600 hover:bg-emerald-50 transition-colors mr-1" onClick={() => handleOpenTwin(device)} title="Digital Twin">
                             <Activity className="w-4 h-4" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-8 w-8 rounded-md text-teal-600 hover:bg-teal-50 transition-colors mr-1" onClick={() => handleGenerateHealthReport(device)} title="AI Health Summary">
+                            <Sparkles className="w-4 h-4" />
                           </Button>
                           <Button 
                             size="icon" 
@@ -593,7 +623,7 @@ export function Devices({ role }) {
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-(--color-surface) rounded-2xl border border-(--color-border-main) shadow-sm overflow-hidden"
+          className="bg-surface rounded-2xl border border-border-main shadow-sm overflow-hidden"
         >
           {models.length === 0 ? (
             <EmptyState 
@@ -605,23 +635,23 @@ export function Devices({ role }) {
             <div className="overflow-x-auto custom-scrollbar">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-slate-50 dark:bg-(--color-surface) border-b border-(--color-border-main)">
-                    <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">ID</TableHead>
-                    <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Brand</TableHead>
-                    <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Model Name</TableHead>
-                    <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Sensor Type</TableHead>
-                    <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Protocol</TableHead>
-                    <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Power</TableHead>
-                    <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">IP Rating</TableHead>
-                    <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Docs</TableHead>
+                  <TableRow className="bg-slate-50 dark:bg-surface border-b border-border-main">
+                    <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">ID</TableHead>
+                    <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Brand</TableHead>
+                    <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Model Name</TableHead>
+                    <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Sensor Type</TableHead>
+                    <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Protocol</TableHead>
+                    <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Power</TableHead>
+                    <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">IP Rating</TableHead>
+                    <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Docs</TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody className="divide-y divide-(--color-border-main)">
+                <TableBody className="divide-y divide-border-main">
                   {filteredModels.map(model => (
                     <TableRow key={model.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                      <TableCell className="font-medium text-(--color-text-muted)">
+                      <TableCell className="font-medium text-text-muted">
                         {model.image_url ? (
-                           <img src={model.image_url} alt={model.model_name} className="w-8 h-8 object-contain bg-white inline-block mr-2 border border-(--color-border)" />
+                           <img src={model.image_url} alt={model.model_name} className="w-8 h-8 object-contain bg-white inline-block mr-2 border border-border-main" />
                         ) : null}
                         #{model.id}
                       </TableCell>
@@ -649,7 +679,7 @@ export function Devices({ role }) {
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-(--color-surface) rounded-2xl border border-(--color-border-main) shadow-sm overflow-hidden"
+          className="bg-surface rounded-2xl border border-border-main shadow-sm overflow-hidden"
         >
           {requests.length === 0 ? (
             <EmptyState 
@@ -662,19 +692,19 @@ export function Devices({ role }) {
             <div className="overflow-x-auto custom-scrollbar">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-slate-50 dark:bg-(--color-surface) border-b border-(--color-border-main)">
-                    <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Date</TableHead>
-                    <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Requested By</TableHead>
-                    <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Hardware</TableHead>
-                    <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Location</TableHead>
-                    <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Status</TableHead>
-                    <TableHead className="py-4 text-xs font-bold text-(--color-text-muted) uppercase tracking-wider">Action</TableHead>
+                  <TableRow className="bg-slate-50 dark:bg-surface border-b border-border-main">
+                    <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Date</TableHead>
+                    <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Requested By</TableHead>
+                    <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Hardware</TableHead>
+                    <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Location</TableHead>
+                    <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Status</TableHead>
+                    <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Action</TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody className="divide-y divide-(--color-border-main)">
+                <TableBody className="divide-y divide-border-main">
                   {requests.map(req => (
                     <TableRow key={req.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                      <TableCell className="text-(--color-text-muted)">
+                      <TableCell className="text-text-muted">
                         {new Date(req.created_at).toLocaleDateString()}
                       </TableCell>
                       <TableCell className="font-medium">
@@ -683,19 +713,19 @@ export function Devices({ role }) {
                       <TableCell>
                         {req.hardware_id ? (
                           <>
-                            <div className="text-sm font-bold capitalize text-(--color-text-main)">{req.brand} {req.model_name}</div>
-                            <div className="text-xs text-(--color-text-muted)">ID: {req.hardware_id}</div>
+                            <div className="text-sm font-bold capitalize text-text-main">{req.brand} {req.model_name}</div>
+                            <div className="text-xs text-text-muted">ID: {req.hardware_id}</div>
                           </>
                         ) : (
                           <>
-                            <div className="text-sm font-bold capitalize text-(--color-text-main)">IT Request</div>
-                            <div className="text-xs text-(--color-text-muted)">Needs {req.sensor_type}</div>
+                            <div className="text-sm font-bold capitalize text-text-main">IT Request</div>
+                            <div className="text-xs text-text-muted">Needs {req.sensor_type}</div>
                           </>
                         )}
                       </TableCell>
                       <TableCell>
-                        <div className="text-sm font-medium text-(--color-text-main)">{req.building_name}</div>
-                        <div className="text-xs text-(--color-text-muted)">{req.floor_name} - {req.room_name}</div>
+                        <div className="text-sm font-medium text-text-main">{req.building_name}</div>
+                        <div className="text-xs text-text-muted">{req.floor_name} - {req.room_name}</div>
                       </TableCell>
                       <TableCell>
                         <Badge variant={getStatusColor(req.status)}>
@@ -713,7 +743,7 @@ export function Devices({ role }) {
                               <CheckCircle className="w-3 h-3 mr-2" /> Fulfill
                             </Button>
                           ) : (
-                            <span className="text-xs text-(--color-text-muted)">Completed</span>
+                            <span className="text-xs text-text-muted">Completed</span>
                           )}
                           {role === 'admin' && (
                             <Button size="icon" variant="ghost" className="h-8 w-8 rounded-md text-rose-500 hover:bg-rose-50 transition-colors" onClick={() => handleDeleteRequest(req.id)} title="Delete Request">
@@ -731,12 +761,53 @@ export function Devices({ role }) {
         </motion.div>
       )}
 
+      {/* AI Health Modal */}
+      <AnimatePresence>
+        {healthDeviceId && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-2xl border border-gray-200 dark:border-gray-800 flex flex-col max-h-[85vh]"
+            >
+              <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-800 shrink-0">
+                <h3 className="text-lg font-bold flex items-center gap-2 text-teal-600 dark:text-teal-400">
+                  <Sparkles className="w-5 h-5" />
+                  AI Device Health Summary
+                </h3>
+                <button onClick={() => setHealthDeviceId(null)} className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-500">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="p-6 overflow-y-auto flex-1">
+                {healthLoading ? (
+                  <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                    <div className="flex gap-1">
+                      <div className="w-3 h-3 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <div className="w-3 h-3 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <div className="w-3 h-3 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                    <p className="text-sm font-medium text-gray-500 animate-pulse">Generating health report...</p>
+                  </div>
+                ) : (
+                  <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none">
+                    <ReactMarkdown>{healthResult}</ReactMarkdown>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Modals */}
       <Modal isOpen={isRegisterOpen} onClose={() => setIsRegisterOpen(false)} title="Add to Global Inventory">
         <form onSubmit={handleRegister} className="space-y-4">
           <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
             <p className="text-sm text-blue-400 font-medium">Virtual Provisioning</p>
-            <p className="text-xs text-(--color-text-muted) mt-1">This will register a virtual sensor to the global warehouse. You can assign it to a building later.</p>
+            <p className="text-xs text-text-muted mt-1">This will register a virtual sensor to the global warehouse. You can assign it to a building later.</p>
           </div>
           
           <Select
@@ -769,25 +840,25 @@ export function Devices({ role }) {
       <Modal isOpen={isFulfillOpen} onClose={() => setIsFulfillOpen(false)} title="Register & Deploy Sensor">
         {selectedRequest && (
           <form onSubmit={handleFulfill} className="space-y-4">
-            <div className="p-4 bg-(--color-surface-hover) border border-(--color-border) rounded-xl mb-4">
-              <p className="text-xs text-(--color-text-muted) uppercase font-bold tracking-wider mb-1">Hardware Information</p>
+            <div className="p-4 bg-surface-hover border border-border-main rounded-xl mb-4">
+              <p className="text-xs text-text-muted uppercase font-bold tracking-wider mb-1">Hardware Information</p>
               {selectedRequest.hardware_id ? (
                 <>
                   <p className="text-sm font-medium">{selectedRequest.brand} {selectedRequest.model_name}</p>
-                  <p className="text-xs text-(--color-text-muted) mt-1">MAC/EUI: {selectedRequest.hardware_id}</p>
+                  <p className="text-xs text-text-muted mt-1">MAC/EUI: {selectedRequest.hardware_id}</p>
                 </>
               ) : (
-                <p className="text-sm font-medium text-purple-400">IT Request (Pending Assignment)</p>
+                <p className="text-sm font-medium text-teal-400">IT Request (Pending Assignment)</p>
               )}
-              <p className="text-xs text-(--color-text-muted) mt-1">Type: <span className="capitalize font-bold">{selectedRequest.sensor_type}</span></p>
+              <p className="text-xs text-text-muted mt-1">Type: <span className="capitalize font-bold">{selectedRequest.sensor_type}</span></p>
               
-              <div className="mt-4 border-t border-(--color-border) pt-4">
-                <p className="text-xs text-(--color-text-muted) uppercase font-bold tracking-wider mb-1">Deployment Target</p>
+              <div className="mt-4 border-t border-border-main pt-4">
+                <p className="text-xs text-text-muted uppercase font-bold tracking-wider mb-1">Deployment Target</p>
                 <p className="text-sm font-medium">{selectedRequest.building_name} &rarr; {selectedRequest.floor_name} &rarr; {selectedRequest.room_name}</p>
               </div>
 
-              <div className="mt-4 border-t border-(--color-border) pt-4">
-                <p className="text-xs text-(--color-text-muted) uppercase font-bold tracking-wider mb-1">User Notes</p>
+              <div className="mt-4 border-t border-border-main pt-4">
+                <p className="text-xs text-text-muted uppercase font-bold tracking-wider mb-1">User Notes</p>
                 <p className="text-sm italic">"{selectedRequest.reason}"</p>
               </div>
             </div>
@@ -795,11 +866,11 @@ export function Devices({ role }) {
             {selectedRequest.hardware_id ? (
               <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
                 <p className="text-sm text-green-400 font-medium">Automatic Registration</p>
-                <p className="text-xs text-(--color-text-muted) mt-1">Clicking "Register & Deploy" will automatically add this hardware ID to your inventory and link it to the room.</p>
+                <p className="text-xs text-text-muted mt-1">Clicking "Register & Deploy" will automatically add this hardware ID to your inventory and link it to the room.</p>
               </div>
             ) : (
-              <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-xl">
-                <p className="text-sm text-purple-400 font-medium mb-3">Warehouse Assignment</p>
+              <div className="p-4 bg-teal-500/10 border border-teal-500/20 rounded-xl">
+                <p className="text-sm text-teal-400 font-medium mb-3">Warehouse Assignment</p>
                 
                 <Select
                   label="Select Sensor from Inventory"
@@ -956,7 +1027,7 @@ export function Devices({ role }) {
             placeholder="e.g. https://example.com/sensor.png"
           />
 
-          <div className="flex justify-end gap-2 pt-4 border-t border-(--color-border)">
+          <div className="flex justify-end gap-2 pt-4 border-t border-border-main">
             <Button type="button" variant="secondary" onClick={() => setIsModelModalOpen(false)}>Cancel</Button>
             <Button type="submit">Add Model</Button>
           </div>
@@ -965,9 +1036,9 @@ export function Devices({ role }) {
       {/* Bulk CSV Upload Modal */}
       <Modal isOpen={isBulkOpen} onClose={() => setIsBulkOpen(false)} title="Bulk CSV Import">
         <form onSubmit={handleBulkSubmit} className="space-y-4">
-          <div className="p-4 bg-(--color-surface-hover) border border-(--color-border) rounded-lg mb-4">
-            <p className="text-sm font-medium text-(--color-text-main)">Paste CSV Data</p>
-            <p className="text-xs text-(--color-text-muted) mt-1">Format: HardwareID, ModelID, Name, Type</p>
+          <div className="p-4 bg-surface-hover border border-border-main rounded-lg mb-4">
+            <p className="text-sm font-medium text-text-main">Paste CSV Data</p>
+            <p className="text-xs text-text-muted mt-1">Format: HardwareID, ModelID, Name, Type</p>
           </div>
           <textarea
             required
@@ -975,9 +1046,9 @@ export function Devices({ role }) {
             onChange={(e) => setBulkCsvText(e.target.value)}
             placeholder="HW-1001, 1, Entrance Sensor, door&#10;HW-1002, 2, Office Temp, temperature"
             rows={8}
-            className="w-full bg-(--color-background) border border-(--color-border) rounded-xl p-3 text-sm font-mono text-(--color-text-main) focus:ring-2 focus:ring-(--color-primary) focus:outline-none transition-all shadow-inner"
+            className="w-full bg-background border border-border-main rounded-xl p-3 text-sm font-mono text-text-main focus:ring-2 focus:ring-(--color-primary) focus:outline-none transition-all shadow-inner"
           />
-          <div className="flex justify-end gap-3 pt-4 border-t border-(--color-border)">
+          <div className="flex justify-end gap-3 pt-4 border-t border-border-main">
             <Button type="button" variant="secondary" onClick={() => setIsBulkOpen(false)}>Cancel</Button>
             <Button type="submit">Import Devices</Button>
           </div>
@@ -989,16 +1060,16 @@ export function Devices({ role }) {
         <div className="space-y-4">
           <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
             <p className="text-sm font-medium text-amber-500">Security Token Generated</p>
-            <p className="text-xs text-(--color-text-muted) mt-1">This token must be programmed into the physical device. It is used to securely identify the device via Webhooks.</p>
+            <p className="text-xs text-text-muted mt-1">This token must be programmed into the physical device. It is used to securely identify the device via Webhooks.</p>
           </div>
-          <div className="bg-(--color-surface-hover) border border-(--color-border) p-4 rounded-xl flex items-center justify-between">
-            <code className="text-sm font-mono text-(--color-text-main) break-all">{provisionToken}</code>
+          <div className="bg-surface-hover border border-border-main p-4 rounded-xl flex items-center justify-between">
+            <code className="text-sm font-mono text-text-main break-all">{provisionToken}</code>
             <Button size="sm" variant="secondary" onClick={() => {
               navigator.clipboard.writeText(provisionToken);
               toast.success('Token copied to clipboard');
             }}>Copy</Button>
           </div>
-          <div className="flex justify-end gap-3 pt-4 border-t border-(--color-border)">
+          <div className="flex justify-end gap-3 pt-4 border-t border-border-main">
             <Button onClick={() => setIsProvisionOpen(false)}>Done</Button>
           </div>
         </div>
@@ -1007,32 +1078,41 @@ export function Devices({ role }) {
       {/* Digital Twin Modal */}
       <Modal isOpen={isTwinOpen} onClose={() => setIsTwinOpen(false)} title="Device Digital Twin">
         <div className="space-y-4">
-          <div className="p-4 bg-(--color-surface-hover) border border-(--color-border) rounded-xl mb-4">
-            <p className="text-xs font-bold uppercase tracking-wider text-(--color-text-muted) mb-2">Reported State (Read-Only)</p>
-            <pre className="text-xs font-mono text-(--color-text-main) bg-slate-900/5 dark:bg-black/30 p-3 rounded-lg overflow-x-auto">
+          <div className="flex items-center gap-6 p-6 bg-surface-hover border border-border-main rounded-xl mb-4">
+             <div className="relative w-24 h-24 flex items-center justify-center rounded-full border-8" style={{ borderColor: (deviceTwin?.health_score ?? 100) > 80 ? '#10b981' : (deviceTwin?.health_score ?? 100) > 50 ? '#f59e0b' : '#f43f5e' }}>
+               <span className="text-3xl font-bold" style={{ color: (deviceTwin?.health_score ?? 100) > 80 ? '#10b981' : (deviceTwin?.health_score ?? 100) > 50 ? '#f59e0b' : '#f43f5e' }}>{deviceTwin?.health_score ?? 100}</span>
+             </div>
+             <div>
+               <h3 className="text-lg font-bold text-text-main">Device Health Score</h3>
+               <p className="text-sm text-text-muted">Calculated automatically based on uptime and open alerts.</p>
+             </div>
+          </div>
+          <div className="p-4 bg-surface-hover border border-border-main rounded-xl mb-4">
+            <p className="text-xs font-bold uppercase tracking-wider text-text-muted mb-2">Reported State (Read-Only)</p>
+            <pre className="text-xs font-mono text-text-main bg-slate-900/5 dark:bg-black/30 p-3 rounded-lg overflow-x-auto">
               {deviceTwin?.reported_state ? JSON.stringify(deviceTwin.reported_state, null, 2) : 'No state reported yet'}
             </pre>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-(--color-text-muted) mb-2">Desired State (JSON)</p>
+              <p className="text-xs font-bold uppercase tracking-wider text-text-muted mb-2">Desired State (JSON)</p>
               <textarea
                 value={desiredStateInput}
                 onChange={e => setDesiredStateInput(e.target.value)}
-                className="w-full bg-(--color-background) border border-(--color-border) rounded-xl p-3 text-xs font-mono focus:ring-2 focus:ring-(--color-primary) focus:outline-none transition-all shadow-inner h-48"
+                className="w-full bg-background border border-border-main rounded-xl p-3 text-xs font-mono focus:ring-2 focus:ring-(--color-primary) focus:outline-none transition-all shadow-inner h-48"
               />
             </div>
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-(--color-text-muted) mb-2">Configuration (JSON)</p>
+              <p className="text-xs font-bold uppercase tracking-wider text-text-muted mb-2">Configuration (JSON)</p>
               <textarea
                 value={configInput}
                 onChange={e => setConfigInput(e.target.value)}
-                className="w-full bg-(--color-background) border border-(--color-border) rounded-xl p-3 text-xs font-mono focus:ring-2 focus:ring-(--color-primary) focus:outline-none transition-all shadow-inner h-48"
+                className="w-full bg-background border border-border-main rounded-xl p-3 text-xs font-mono focus:ring-2 focus:ring-(--color-primary) focus:outline-none transition-all shadow-inner h-48"
               />
             </div>
           </div>
-          <div className="flex justify-end gap-3 pt-4 border-t border-(--color-border)">
+          <div className="flex justify-end gap-3 pt-4 border-t border-border-main">
             <Button type="button" variant="secondary" onClick={() => setIsTwinOpen(false)}>Cancel</Button>
             <Button type="button" onClick={handleSaveTwin}>Sync Twin</Button>
           </div>
