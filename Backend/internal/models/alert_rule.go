@@ -15,6 +15,10 @@ type AlertRule struct {
 	IsActive       bool       `json:"is_active"`
 	TargetType     string     `json:"target_type"` // 'global', 'building', 'room', 'device'
 	TargetID       *int       `json:"target_id,omitempty"`
+	Conditions     []byte     `json:"conditions,omitempty"`
+	TimeWindows    []byte     `json:"time_windows,omitempty"`
+	SuppressionWin int        `json:"suppression_window_minutes,omitempty"`
+	EscalationPol  *int       `json:"escalation_policy_id,omitempty"`
 	CreatedBy      *int       `json:"created_by,omitempty"`
 	CreatedAt      *time.Time `json:"created_at,omitempty"`
 	

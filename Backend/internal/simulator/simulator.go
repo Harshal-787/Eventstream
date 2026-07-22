@@ -44,7 +44,7 @@ func (s *Simulator) Run() {
 		}
 
 		// Fetch active devices that should generate telemetry
-		rows, err := s.db.Query("SELECT d.id, d.type, d.room_id, d.building_id FROM devices d WHERE d.status = 'active'")
+		rows, err := s.db.Query("SELECT d.id, d.organization_id, d.type, d.room_id, d.building_id FROM devices d WHERE d.status = 'active'")
 		if err != nil {
 			log.Printf("simulator: error querying devices: %v", err)
 			continue
@@ -52,19 +52,21 @@ func (s *Simulator) Run() {
 
 		for rows.Next() {
 			var deviceID int
+			var orgID int
 			var sensorType string
 			var roomID sql.NullInt32
 			var buildingID sql.NullInt32
 			
-			if err := rows.Scan(&deviceID, &sensorType, &roomID, &buildingID); err != nil {
+			if err := rows.Scan(&deviceID, &orgID, &sensorType, &roomID, &buildingID); err != nil {
 				continue
 			}
 
 			// Generate fake telemetry based on sensor type
 			t := &models.Telemetry{
-				DeviceID:  deviceID,
-				Timestamp: time.Now(),
-				Payload:   make(map[string]interface{}),
+				DeviceID:       deviceID,
+				OrganizationID: orgID,
+				Timestamp:      time.Now(),
+				Payload:        make(map[string]interface{}),
 			}
 
 			status := "ok"
@@ -117,6 +119,12 @@ func (s *Simulator) Run() {
 			// Generate safe baseline payload
 			temp := 22.0 + (rand.Float64() * 2) - 1 // 21 to 23 C
 			hum := 45.0 + (rand.Float64() * 10) - 5 // 40% to 50%
+			
+			// Simulate battery and signal for all devices
+			batt := 85.0 + (rand.Float64() * 10) - 5 // 80 to 95%
+			sig := -60.0 + (rand.Float64() * 10) - 5 // -65 to -55 dBm
+			t.Payload["battery_pct"] = batt
+			t.Payload["signal_strength"] = sig
 
 			switch sensorType {
 			case "temperature":

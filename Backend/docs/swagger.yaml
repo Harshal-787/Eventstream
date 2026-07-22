@@ -5,6 +5,13 @@ definitions:
       note:
         type: string
     type: object
+  handlers.forgotPasswordRequest:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
   handlers.loginRequest:
     properties:
       email:
@@ -15,8 +22,39 @@ definitions:
     - email
     - password
     type: object
+  handlers.registerBuilding:
+    properties:
+      address:
+        type: string
+      bin:
+        type: string
+      city:
+        type: string
+      latitude:
+        type: number
+      longitude:
+        type: number
+      name:
+        type: string
+      parcel_number:
+        type: string
+      state:
+        type: string
+      ubid:
+        type: string
+      zip_code:
+        type: string
+    type: object
   handlers.registerRequest:
     properties:
+      buildings:
+        items:
+          $ref: '#/definitions/handlers.registerBuilding'
+        type: array
+      contact_number:
+        type: string
+      driving_license:
+        type: string
       email:
         type: string
       name:
@@ -29,6 +67,129 @@ definitions:
     - name
     - password
     type: object
+  handlers.resetPasswordRequest:
+    properties:
+      email:
+        type: string
+      otp:
+        type: string
+      password:
+        minLength: 6
+        type: string
+    required:
+    - email
+    - otp
+    - password
+    type: object
+  handlers.verifyOTPRequest:
+    properties:
+      email:
+        type: string
+      otp:
+        type: string
+    required:
+    - email
+    - otp
+    type: object
+  models.Alert:
+    properties:
+      acknowledged_at:
+        type: string
+      alert_rule_id:
+        type: integer
+      building_name:
+        type: string
+      device_id:
+        type: integer
+      device_name:
+        description: Joined fields
+        type: string
+      floor_name:
+        type: string
+      hardware_id:
+        type: string
+      id:
+        type: integer
+      message:
+        type: string
+      model_name:
+        type: string
+      organization_id:
+        type: integer
+      resolved_at:
+        type: string
+      room_name:
+        type: string
+      severity:
+        type: string
+      status:
+        type: string
+      triggered_at:
+        type: string
+      type:
+        type: string
+    type: object
+  models.Device:
+    properties:
+      activation_status:
+        description: pending, active, inactive, disabled
+        type: string
+      battery_pct:
+        type: integer
+      brand:
+        type: string
+      building_id:
+        type: integer
+      building_name:
+        type: string
+      created_at:
+        type: string
+      device_group_id:
+        type: integer
+      firmware_version:
+        type: string
+      floor_id:
+        type: integer
+      floor_name:
+        type: string
+      hardware_id:
+        type: string
+      id:
+        type: integer
+      is_maintenance:
+        type: boolean
+      last_communication_at:
+        type: string
+      map_x:
+        type: number
+      map_y:
+        type: number
+      metadata:
+        description: JSONB as string for simple handling, or map[string]interface{}
+        type: string
+      model_id:
+        type: integer
+      model_name:
+        description: Joined fields for easier UI rendering
+        type: string
+      name:
+        type: string
+      organization_id:
+        type: integer
+      provisioning_token:
+        type: string
+      room_id:
+        type: integer
+      room_name:
+        type: string
+      signal_strength:
+        type: string
+      status:
+        description: unassigned, active, offline, maintenance, retired
+        type: string
+      type:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact: {}
@@ -39,7 +200,11 @@ info:
 paths:
   /alerts:
     get:
-      description: Returns all alerts, optionally filtered by status
+      consumes:
+      - application/json
+      description: |-
+        Returns all alerts, optionally filtered by status
+        Get a list of alerts
       parameters:
       - description: 'Filter by status: open, acknowledged, resolved'
         in: query
@@ -47,12 +212,14 @@ paths:
         type: string
       produces:
       - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            items:
+              $ref: '#/definitions/models.Alert'
+            type: array
         "500":
           description: Internal Server Error
           schema:
@@ -64,7 +231,42 @@ paths:
       summary: List alerts
       tags:
       - Alerts
+      - alerts
   /alerts/{id}:
+    delete:
+      description: Permanently deletes an alert
+      parameters:
+      - description: Alert ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete an alert
+      tags:
+      - Alerts
     get:
       description: Returns a single alert with its activity log
       parameters:
@@ -182,6 +384,69 @@ paths:
       summary: Resolve an alert
       tags:
       - Alerts
+  /api/v1/alerts:
+    get:
+      consumes:
+      - application/json
+      description: |-
+        Returns all alerts, optionally filtered by status
+        Get a list of alerts
+      parameters:
+      - description: 'Filter by status: open, acknowledged, resolved'
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Alert'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List alerts
+      tags:
+      - Alerts
+      - alerts
+  /auth/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Sends a password reset OTP if the account exists
+      parameters:
+      - description: Forgot Password payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.forgotPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Request password reset
+      tags:
+      - Auth
   /auth/login:
     post:
       consumes:
@@ -217,6 +482,21 @@ paths:
       summary: Login
       tags:
       - Auth
+  /auth/logout:
+    post:
+      description: Logs out a user and clears the JWT cookie
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Logout
+      tags:
+      - Auth
   /auth/me:
     get:
       description: Returns the authenticated user's profile
@@ -243,6 +523,65 @@ paths:
       security:
       - BearerAuth: []
       summary: Get current user
+      tags:
+      - Auth
+  /auth/reapply:
+    post:
+      consumes:
+      - application/json
+      description: Re-submits user info if previously rejected
+      parameters:
+      - description: Reapply payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.registerRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Reapply for an account
+      tags:
+      - Auth
+  /auth/refresh:
+    post:
+      description: Silently refreshes the access token if the current one is still
+        valid
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Refresh token
       tags:
       - Auth
   /auth/register:
@@ -280,6 +619,177 @@ paths:
       summary: Register a new user
       tags:
       - Auth
+  /auth/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Resets password using OTP
+      parameters:
+      - description: Reset Password payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.resetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Reset password
+      tags:
+      - Auth
+  /auth/sessions:
+    get:
+      description: Lists all active sessions for the current user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get Active Sessions
+      tags:
+      - Auth
+  /auth/sessions/:id:
+    delete:
+      description: Revokes a specific session by ID
+      parameters:
+      - description: Session ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Revoke Session
+      tags:
+      - Auth
+  /auth/verify-otp:
+    post:
+      consumes:
+      - application/json
+      description: Verifies the OTP and returns a JWT token
+      parameters:
+      - description: Verify OTP payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.verifyOTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Verify OTP
+      tags:
+      - Auth
+  /devices:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of devices with optional building and status filters
+      parameters:
+      - description: Building ID
+        in: query
+        name: building_id
+        type: integer
+      - description: Device Status
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Device'
+            type: array
+      summary: List devices
+      tags:
+      - devices
+  /reports/export:
+    get:
+      consumes:
+      - application/json
+      description: Export various reports in CSV, PDF, or Excel formats
+      parameters:
+      - description: Report type (event_statistics, alert_trends, device_availability,
+          device_health, building_performance, sensor_activity, user_activity, audit_logs)
+        in: query
+        name: type
+        required: true
+        type: string
+      - description: Export format (csv, pdf, excel)
+        in: query
+        name: format
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      summary: Export reports
+      tags:
+      - reports
+  /stream:
+    get:
+      description: Establishes an SSE connection for real-time telemetry updates
+      produces:
+      - text/event-stream
+      responses:
+        "200":
+          description: SSE Stream
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Real-time telemetry stream
+      tags:
+      - Telemetry
 securityDefinitions:
   BearerAuth:
     description: 'Enter: Bearer <your_token>'

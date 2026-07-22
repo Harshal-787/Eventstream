@@ -33,6 +33,10 @@ export const deviceService = {
     const response = await apiClient.patch(`/devices/${id}/status`, { status });
     return response.data;
   },
+  toggleMaintenance: async (id, isMaintenance) => {
+    const response = await apiClient.patch(`/devices/${id}/maintenance`, { is_maintenance: isMaintenance });
+    return response.data;
+  },
   createModel: async (modelData) => {
     const response = await apiClient.post('/devices/models', modelData);
     return response.data;
@@ -76,6 +80,36 @@ export const deviceService = {
   },
   deleteSensorRequest: async (id) => {
     const response = await apiClient.delete(`/sensor-requests/${id}`);
+    return response.data;
+  },
+  
+  // --- Device Groups ---
+  getDeviceGroups: async () => {
+    const response = await apiClient.get('/device-groups');
+    return response.data;
+  },
+  createDeviceGroup: async (data) => {
+    const response = await apiClient.post('/device-groups', data);
+    return response.data;
+  },
+  updateDeviceGroup: async (id, data) => {
+    const response = await apiClient.put(`/device-groups/${id}`, data);
+    return response.data;
+  },
+  deleteDeviceGroup: async (id) => {
+    const response = await apiClient.delete(`/device-groups/${id}`);
+    return response.data;
+  },
+  getDeviceGroupMembers: async (id) => {
+    const response = await apiClient.get(`/device-groups/${id}/members`);
+    return response.data;
+  },
+  addDeviceGroupMembers: async (id, deviceIds) => {
+    const response = await apiClient.post(`/device-groups/${id}/members`, { device_ids: deviceIds });
+    return response.data;
+  },
+  removeDeviceGroupMember: async (id, deviceId) => {
+    const response = await apiClient.delete(`/device-groups/${id}/members/${deviceId}`);
     return response.data;
   }
 };

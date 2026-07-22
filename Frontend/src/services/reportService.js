@@ -1,15 +1,13 @@
 import apiClient from './apiClient';
 
 const reportService = {
-  downloadTelemetryCSV: async (deviceId) => {
-    const response = await apiClient.get(`/reports/telemetry/${deviceId}`, {
-      responseType: 'blob'
-    });
-    return response.data;
-  },
-
-  downloadBuildingHealthPDF: async (buildingId) => {
-    const response = await apiClient.get(`/reports/building-health/${buildingId}`, {
+  downloadReport: async (type, format, filters = {}) => {
+    let url = `/reports/export?type=${type}&format=${format}`;
+    if (filters.buildingId) url += `&building_id=${filters.buildingId}`;
+    if (filters.startDate) url += `&start_date=${filters.startDate}`;
+    if (filters.endDate) url += `&end_date=${filters.endDate}`;
+    
+    const response = await apiClient.get(url, {
       responseType: 'blob'
     });
     return response.data;
