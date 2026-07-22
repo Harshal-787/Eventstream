@@ -6,6 +6,11 @@ type Building struct {
 	ID        int       `json:"id"`
 	Name      string    `json:"name"`
 	Address   string    `json:"address"`
+	City      string    `json:"city"`
+	State     string    `json:"state"`
+	ZipCode   string    `json:"zip_code"`
+	OwnerID   *int      `json:"owner_id"`
+	Status    string    `json:"status"` // 'pending_approval', 'active', 'suspended'
 	CreatedAt time.Time `json:"created_at"`
 }
 
