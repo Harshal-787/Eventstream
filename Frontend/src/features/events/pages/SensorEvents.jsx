@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import apiClient from "../../../services/apiClient";
 import { Button } from "../../../components/ui/Button";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
@@ -9,16 +9,32 @@ export function SensorEvents({ role }) {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  
+  const [filters, setFilters] = useState({
+    start_date: '',
+    end_date: '',
+    building_id: '',
+    device_id: ''
+  });
+  
+  const [buildings, setBuildings] = useState([]);
+  const [devices, setDevices] = useState([]);
+
   const limit = 50;
 
-  useEffect(() => {
-    fetchEvents(page);
-  }, [page]);
-
-  const fetchEvents = async (pageToFetch) => {
+  const fetchEvents = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await apiClient.get(`/events?page=${pageToFetch}&limit=${limit}`);
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+      });
+      if (filters.start_date) params.append("start_date", new Date(filters.start_date).toISOString());
+      if (filters.end_date) params.append("end_date", new Date(filters.end_date).toISOString());
+      if (filters.building_id) params.append("building_id", filters.building_id);
+      if (filters.device_id) params.append("device_id", filters.device_id);
+
+      const res = await apiClient.get(`/events?${params.toString()}`);
       setEvents(res.data.data || []);
       setTotal(res.data.total || 0);
     } catch (error) {
@@ -26,6 +42,42 @@ export function SensorEvents({ role }) {
     } finally {
       setLoading(false);
     }
+  }, [page, filters]);
+
+  useEffect(() => {
+    fetchEvents();
+  }, [fetchEvents]);
+
+  useEffect(() => {
+    const fetchMetadata = async () => {
+      try {
+        const [bRes, dRes] = await Promise.all([
+          apiClient.get('/buildings'),
+          apiClient.get('/devices')
+        ]);
+        setBuildings(bRes.data.data || []);
+        setDevices(dRes.data.data || []);
+      } catch (err) {
+        console.error("Failed to fetch metadata", err);
+      }
+    };
+    fetchMetadata();
+  }, []);
+
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters(prev => ({ ...prev, [name]: value }));
+    setPage(1); // reset to first page on filter change
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      start_date: '',
+      end_date: '',
+      building_id: '',
+      device_id: ''
+    });
+    setPage(1);
   };
 
   const sleekTooltip = { 
@@ -51,6 +103,68 @@ export function SensorEvents({ role }) {
           </p>
         </div>
       </div>
+
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="p-6 bg-(--color-surface) rounded-2xl border border-(--color-border-main) shadow-sm space-y-4"
+      >
+        <div className="flex flex-col md:flex-row gap-4 items-end">
+          <div className="flex-1 w-full space-y-1">
+            <label className="text-xs font-bold text-(--color-text-muted) uppercase">Building</label>
+            <select
+              name="building_id"
+              value={filters.building_id}
+              onChange={handleFilterChange}
+              className="w-full px-4 py-2.5 rounded-xl border border-(--color-border-main) bg-slate-50 dark:bg-(--color-surface-hover) text-(--color-text-main) font-medium focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all"
+            >
+              <option value="">All Buildings</option>
+              {buildings.map(b => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex-1 w-full space-y-1">
+            <label className="text-xs font-bold text-(--color-text-muted) uppercase">Device</label>
+            <select
+              name="device_id"
+              value={filters.device_id}
+              onChange={handleFilterChange}
+              className="w-full px-4 py-2.5 rounded-xl border border-(--color-border-main) bg-slate-50 dark:bg-(--color-surface-hover) text-(--color-text-main) font-medium focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all"
+            >
+              <option value="">All Devices</option>
+              {devices.map(d => (
+                <option key={d.id} value={d.id}>{d.name} ({d.hardware_id})</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex-1 w-full space-y-1">
+            <label className="text-xs font-bold text-(--color-text-muted) uppercase">Start Date</label>
+            <input
+              type="datetime-local"
+              name="start_date"
+              value={filters.start_date}
+              onChange={handleFilterChange}
+              className="w-full px-4 py-2.5 rounded-xl border border-(--color-border-main) bg-slate-50 dark:bg-(--color-surface-hover) text-(--color-text-main) font-medium focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all [color-scheme:light] dark:[color-scheme:dark]"
+            />
+          </div>
+          <div className="flex-1 w-full space-y-1">
+            <label className="text-xs font-bold text-(--color-text-muted) uppercase">End Date</label>
+            <input
+              type="datetime-local"
+              name="end_date"
+              value={filters.end_date}
+              onChange={handleFilterChange}
+              className="w-full px-4 py-2.5 rounded-xl border border-(--color-border-main) bg-slate-50 dark:bg-(--color-surface-hover) text-(--color-text-main) font-medium focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all [color-scheme:light] dark:[color-scheme:dark]"
+            />
+          </div>
+          <div className="flex-none pb-0.5">
+            <Button variant="secondary" onClick={clearFilters}>
+              Clear Filters
+            </Button>
+          </div>
+        </div>
+      </motion.div>
 
       {events.length > 0 && (
         <motion.div 
@@ -202,7 +316,7 @@ export function SensorEvents({ role }) {
                       #{evt.device_id}
                     </td>
                     <td className="p-4">
-                      <span className={`px-2.5 py-1 rounded-md text-xs font-bold uppercase ${evt.status === 'ok' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
+                      <span className={`px-2.5 py-1 rounded-md text-xs font-bold uppercase ${evt.status === 'ok' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400'}`}>
                         {evt.status || 'UNKNOWN'}
                       </span>
                     </td>
@@ -228,7 +342,7 @@ export function SensorEvents({ role }) {
         {/* Pagination Controls */}
         <div className="p-4 border-t border-(--color-border-main) bg-slate-50 dark:bg-(--color-surface) flex flex-col sm:flex-row justify-between items-center gap-4">
           <span className="text-sm text-(--color-text-muted) font-medium">
-            Showing <span className="font-bold text-(--color-text-main)">{(page - 1) * limit + 1}</span> to <span className="font-bold text-(--color-text-main)">{Math.min(page * limit, total)}</span> of <span className="font-bold text-(--color-text-main)">{total}</span> entries
+            Showing <span className="font-bold text-(--color-text-main)">{total === 0 ? 0 : (page - 1) * limit + 1}</span> to <span className="font-bold text-(--color-text-main)">{Math.min(page * limit, total)}</span> of <span className="font-bold text-(--color-text-main)">{total}</span> entries
           </span>
           <div className="flex gap-2">
             <Button

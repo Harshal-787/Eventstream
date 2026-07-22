@@ -13,6 +13,8 @@ import {
 } from 'recharts';
 import { motion } from 'framer-motion';
 import { SessionsList } from '../../auth/components/SessionsList';
+import { failedEventsService } from '../services/failedEventsService';
+import { BuildingMap } from '../components/BuildingMap';
 
 const STATUS_COLORS = { open: '#ef4444', acknowledged: '#f59e0b', resolved: '#10b981' };
 const BATTERY_COLORS = { Good: '#10b981', Low: '#f59e0b', Critical: '#ef4444' };
@@ -22,6 +24,7 @@ export function AdminDashboard() {
   const [buildings, setBuildings] = useState([]);
   const [devices, setDevices] = useState([]);
   const [alerts, setAlerts] = useState([]);
+  const [failedEvents, setFailedEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [liveEvents, setLiveEvents] = useState([]);
 
@@ -32,14 +35,16 @@ export function AdminDashboard() {
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const [bRes, dRes, aRes] = await Promise.all([
+        const [bRes, dRes, aRes, fRes] = await Promise.all([
           buildingService.getBuildings(),
           deviceService.getDevices(),
-          alertService.getAlerts()
+          alertService.getAlerts(),
+          failedEventsService.getFailedEvents(1, 5) // Fetch 5 most recent for widget
         ]);
         setBuildings(bRes || []);
         setDevices(dRes || []);
         setAlerts(aRes || []);
+        setFailedEvents(fRes.data || []);
       } catch (err) {
         console.error("Error fetching dashboard data", err);
       } finally {
@@ -287,6 +292,11 @@ export function AdminDashboard() {
         </motion.div>
       </div>
 
+      {/* Building Map Full Width Row */}
+      <div className="grid grid-cols-1 gap-6">
+        <BuildingMap />
+      </div>
+
       {/* Main Charts Grid Row 2 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
@@ -347,8 +357,50 @@ export function AdminDashboard() {
 
       </div>
 
-      <div className="grid grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <SessionsList />
+        
+        {/* Failed Events Widget */}
+        <motion.div 
+          whileHover={{ y: -4 }}
+          className="p-6 bg-(--color-surface) rounded-2xl border border-(--color-border-main) shadow-sm flex flex-col"
+        >
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-lg font-bold text-(--color-text-main) flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-rose-500" />
+              Recent Failed Events
+            </h3>
+            <span className="flex items-center gap-1.5 text-xs font-bold bg-rose-50 text-rose-600 rounded-full px-3 py-1 border border-rose-100 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20">
+              <Activity size={14}/> {failedEvents.length > 0 ? 'NEEDS ATTENTION' : 'ALL CLEAR'}
+            </span>
+          </div>
+          <div className="flex-1 overflow-auto">
+            {failedEvents.length === 0 ? (
+               <div className="flex flex-col items-center justify-center h-full text-(--color-text-muted) py-8">
+                 <div className="w-12 h-12 bg-slate-50 dark:bg-(--color-surface-hover) rounded-full flex items-center justify-center mb-3">
+                   <Server className="w-6 h-6 opacity-50" />
+                 </div>
+                 <p className="text-sm font-medium">No failed events logged.</p>
+               </div>
+            ) : (
+              <div className="space-y-3">
+                {failedEvents.map(event => (
+                  <div key={event.id} className="p-3 bg-slate-50 dark:bg-(--color-surface-hover) rounded-xl border border-(--color-border-main) text-sm">
+                    <div className="flex justify-between items-start mb-1">
+                      <span className="font-bold text-rose-600 dark:text-rose-400">{event.error_reason}</span>
+                      <span className="text-xs font-semibold text-(--color-text-muted)">
+                        {new Date(event.attempted_at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    <div className="font-mono text-xs text-(--color-text-muted) break-all line-clamp-2">
+                      {typeof event.payload === 'object' ? JSON.stringify(event.payload) : event.payload}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </motion.div>
       </div>
     </div>
   );

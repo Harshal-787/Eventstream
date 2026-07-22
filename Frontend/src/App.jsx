@@ -22,8 +22,11 @@ import { Devices } from './features/devices/pages/Devices';
 import { SensorEvents } from './features/events/pages/SensorEvents';
 import { Alerts } from './features/alerts/pages/Alerts';
 import { AlertRules } from './features/alerts/pages/AlertRules';
+import NotificationChannels from './features/alerts/pages/NotificationChannels';
 import { Users } from './features/users/pages/Users';
 import AuditLogs from './features/audit/pages/AuditLogs';
+import { IndoorMap } from './features/dashboard/pages/IndoorMap';
+import Reports from './features/reports/pages/Reports';
 
 export default function App() {
   const { checkAuth, isCheckingAuth, isAuthenticated, user } = useAuthStore();
@@ -80,10 +83,13 @@ export default function App() {
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="buildings" element={<Buildings role="admin" />} />
             <Route path="buildings/:id" element={<BuildingDetails role="admin" />} />
+            <Route path="floors/:id/map" element={<IndoorMap role="admin" />} />
             <Route path="devices" element={<Devices role="admin" />} />
             <Route path="events" element={<SensorEvents role="admin" />} />
             <Route path="alerts" element={<Alerts role="admin" />} />
             <Route path="alert-rules" element={<AlertRules />} />
+            <Route path="notification-channels" element={<NotificationChannels />} />
+            <Route path="reports" element={<Reports />} />
             <Route path="users" element={<Users />} />
             <Route path="audit-logs" element={<AuditLogs />} />
           </Route>
@@ -94,6 +100,7 @@ export default function App() {
             <Route path="dashboard" element={<UserDashboard />} />
             <Route path="buildings" element={<Buildings role="user" />} />
             <Route path="buildings/:id" element={<BuildingDetails role="user" />} />
+            <Route path="floors/:id/map" element={<IndoorMap role="user" />} />
             <Route path="devices" element={<Devices role="user" />} />
             <Route path="events" element={<SensorEvents role="user" />} />
             <Route path="alerts" element={<Alerts role="user" />} />

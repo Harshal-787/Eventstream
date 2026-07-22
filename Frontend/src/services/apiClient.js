@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-  baseURL: '/api/v1', // Assuming a proxy or same-domain deployment
+  baseURL: import.meta.env.VITE_API_URL || '/api/v1',
   withCredentials: true, // Send HTTP-Only cookies with every request
   headers: {
     'Content-Type': 'application/json',
