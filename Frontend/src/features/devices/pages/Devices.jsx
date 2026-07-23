@@ -329,7 +329,8 @@ export function Devices({ role }) {
       setHealthResult(data.summary || JSON.stringify(data));
     } catch (err) {
       console.error(err);
-      setHealthResult('**Error:** Failed to generate health summary. Ensure AI Settings are configured.');
+      const backendError = err.response?.data?.error || err.message;
+      setHealthResult(`**Error:** Failed to generate health summary. ${backendError}`);
     } finally {
       setHealthLoading(false);
     }

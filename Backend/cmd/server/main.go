@@ -114,6 +114,7 @@ func main() {
 	reportScheduleHandler := handlers.NewReportScheduleHandler(reportScheduleRepo)
 	healthHandler := handlers.NewHealthHandler(healthService)
 	escalationPolicyHandler := handlers.NewEscalationPolicyHandler(escalationPolicyRepo)
+	simulationHandler := handlers.NewSimulationHandler(db)
 
 	// Start Background Workers
 	brokerURL := "tls://f381fbc095e04364ab626a5789f2a057.s1.eu.hivemq.cloud:8883" // Replace with cfg.MQTTBroker if it was in config
@@ -334,6 +335,8 @@ func main() {
 		system := v1.Group("/system", middleware.AuthMiddleware(cfg, sessionRepo))
 		{
 			system.GET("/health", healthHandler.GetSystemHealth)
+			system.GET("/simulation", simulationHandler.GetStatus)
+			system.POST("/simulation/toggle", middleware.RequireRole("admin"), simulationHandler.ToggleStatus)
 		}
 
 		escalationPolicies := v1.Group("/escalation-policies", middleware.AuthMiddleware(cfg, sessionRepo))

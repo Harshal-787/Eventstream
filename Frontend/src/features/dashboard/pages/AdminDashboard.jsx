@@ -184,7 +184,8 @@ export function AdminDashboard() {
       setExecReport(data.report || JSON.stringify(data));
     } catch (err) {
       console.error(err);
-      setExecReport('**Error:** Failed to generate executive report. Ensure AI Settings are configured.');
+      const backendError = err.response?.data?.error || err.message;
+      setExecReport(`**Error:** Failed to generate executive report. ${backendError}`);
     } finally {
       setExecLoading(false);
     }

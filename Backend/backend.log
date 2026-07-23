@@ -1,14 +1,15 @@
-2026/07/16 10:19:03 connected to database
-2026/07/16 10:19:03 migrations applied successfully
-2026/07/16 10:19:03 MQTT Worker failed to connect: network Error : dial tcp 127.0.0.1:1883: connect: connection refused
+2026/07/23 10:58:22 connected to database
+2026/07/23 10:58:22 migrations applied successfully
+2026/07/23 10:58:23 MQTT Worker failed to connect: not Authorized
+2026/07/23 10:58:23 Starting Report Scheduler worker...
 [GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
 
 [GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
  - using env:	export GIN_MODE=release
  - using code:	gin.SetMode(gin.ReleaseMode)
 
+2026/07/23 10:58:23 Sensor simulator started...
 [GIN-debug] GET    /health                   --> main.main.func2 (5 handlers)
-2026/07/16 10:19:03 Sensor simulator started...
 [GIN-debug] GET    /swagger/*any             --> github.com/swaggo/gin-swagger.CustomWrapHandler.func1 (5 handlers)
 [GIN-debug] POST   /api/v1/auth/register     --> eventstream/internal/handlers.(*AuthHandler).Register-fm (6 handlers)
 [GIN-debug] POST   /api/v1/auth/login        --> eventstream/internal/handlers.(*AuthHandler).Login-fm (6 handlers)
@@ -49,6 +50,7 @@
 [GIN-debug] POST   /api/v1/devices/bulk      --> eventstream/internal/handlers.(*DeviceHandler).BulkCreateDevices-fm (6 handlers)
 [GIN-debug] PATCH  /api/v1/devices/:id/assign --> eventstream/internal/handlers.(*DeviceHandler).AssignDevice-fm (6 handlers)
 [GIN-debug] PATCH  /api/v1/devices/:id/status --> eventstream/internal/handlers.(*DeviceHandler).UpdateDeviceStatus-fm (6 handlers)
+[GIN-debug] PATCH  /api/v1/devices/:id/maintenance --> eventstream/internal/handlers.(*DeviceHandler).ToggleMaintenance-fm (6 handlers)
 [GIN-debug] DELETE /api/v1/devices/:id       --> eventstream/internal/handlers.(*DeviceHandler).DeleteDevice-fm (6 handlers)
 [GIN-debug] GET    /api/v1/devices/models    --> eventstream/internal/handlers.(*DeviceHandler).GetModels-fm (6 handlers)
 [GIN-debug] POST   /api/v1/devices/models    --> eventstream/internal/handlers.(*DeviceHandler).CreateModel-fm (6 handlers)
@@ -73,14 +75,52 @@
 [GIN-debug] POST   /api/v1/notification-channels --> eventstream/internal/handlers.(*NotificationChannelHandler).Create-fm (6 handlers)
 [GIN-debug] PUT    /api/v1/notification-channels/:id --> eventstream/internal/handlers.(*NotificationChannelHandler).Update-fm (6 handlers)
 [GIN-debug] DELETE /api/v1/notification-channels/:id --> eventstream/internal/handlers.(*NotificationChannelHandler).Delete-fm (6 handlers)
-[GIN-debug] GET    /api/v1/reports/telemetry/:deviceId --> eventstream/internal/handlers.(*ReportHandler).DownloadTelemetryCSV-fm (6 handlers)
-[GIN-debug] GET    /api/v1/reports/building-health/:buildingId --> eventstream/internal/handlers.(*ReportHandler).DownloadBuildingHealthPDF-fm (6 handlers)
+[GIN-debug] GET    /api/v1/device-groups     --> eventstream/internal/handlers.(*DeviceGroupHandler).List-fm (6 handlers)
+[GIN-debug] POST   /api/v1/device-groups     --> eventstream/internal/handlers.(*DeviceGroupHandler).Create-fm (6 handlers)
+[GIN-debug] DELETE /api/v1/device-groups/:id --> eventstream/internal/handlers.(*DeviceGroupHandler).Delete-fm (6 handlers)
+[GIN-debug] POST   /api/v1/device-groups/:id/members/:deviceId --> eventstream/internal/handlers.(*DeviceGroupHandler).AddMember-fm (6 handlers)
+[GIN-debug] DELETE /api/v1/device-groups/:id/members/:deviceId --> eventstream/internal/handlers.(*DeviceGroupHandler).RemoveMember-fm (6 handlers)
+[GIN-debug] GET    /api/v1/reports/export    --> eventstream/internal/handlers.(*ReportHandler).ExportReport-fm (6 handlers)
+[GIN-debug] GET    /api/v1/reports/schedules --> eventstream/internal/handlers.(*ReportScheduleHandler).GetSchedules-fm (6 handlers)
+[GIN-debug] POST   /api/v1/reports/schedules --> eventstream/internal/handlers.(*ReportScheduleHandler).CreateSchedule-fm (6 handlers)
+[GIN-debug] DELETE /api/v1/reports/schedules/:id --> eventstream/internal/handlers.(*ReportScheduleHandler).DeleteSchedule-fm (6 handlers)
+[GIN-debug] GET    /api/v1/ai/config         --> eventstream/internal/handlers.(*AIHandler).GetConfig-fm (6 handlers)
+[GIN-debug] POST   /api/v1/ai/config         --> eventstream/internal/handlers.(*AIHandler).SetConfig-fm (6 handlers)
+[GIN-debug] GET    /api/v1/ai/summary        --> eventstream/internal/handlers.(*AIHandler).GenerateEventSummary-fm (6 handlers)
+[GIN-debug] GET    /api/v1/ai/alerts/:id/rca --> eventstream/internal/handlers.(*AIHandler).AnalyzeAlertRCA-fm (6 handlers)
+[GIN-debug] GET    /api/v1/ai/devices/:id/predictive-maintenance --> eventstream/internal/handlers.(*AIHandler).PredictMaintenance-fm (6 handlers)
+[GIN-debug] GET    /api/v1/ai/devices/:id/health-summary --> eventstream/internal/handlers.(*AIHandler).GenerateDeviceHealthSummary-fm (6 handlers)
+[GIN-debug] GET    /api/v1/ai/executive-report --> eventstream/internal/handlers.(*AIHandler).GenerateExecutiveReport-fm (6 handlers)
+[GIN-debug] GET    /api/v1/ai/incidents/:id/summary --> eventstream/internal/handlers.(*AIHandler).GenerateIncidentSummary-fm (6 handlers)
+[GIN-debug] POST   /api/v1/ai/chat           --> eventstream/internal/handlers.(*AIHandler).Chat-fm (6 handlers)
+[GIN-debug] POST   /api/v1/ai/models         --> eventstream/internal/handlers.(*AIHandler).GetModels-fm (6 handlers)
 [GIN-debug] GET    /api/v1/alert-rules       --> eventstream/internal/handlers.(*AlertRuleHandler).List-fm (6 handlers)
 [GIN-debug] POST   /api/v1/alert-rules       --> eventstream/internal/handlers.(*AlertRuleHandler).Create-fm (7 handlers)
 [GIN-debug] PUT    /api/v1/alert-rules/:id   --> eventstream/internal/handlers.(*AlertRuleHandler).Update-fm (7 handlers)
 [GIN-debug] DELETE /api/v1/alert-rules/:id   --> eventstream/internal/handlers.(*AlertRuleHandler).Delete-fm (7 handlers)
-2026/07/16 10:19:03 server starting on port 8080
+[GIN-debug] GET    /api/v1/search            --> eventstream/internal/handlers.(*SearchHandler).GlobalSearch-fm (6 handlers)
+[GIN-debug] GET    /api/v1/system/health     --> eventstream/internal/handlers.(*HealthHandler).GetSystemHealth-fm (6 handlers)
+[GIN-debug] GET    /api/v1/system/simulation --> eventstream/internal/handlers.(*SimulationHandler).GetStatus-fm (6 handlers)
+[GIN-debug] POST   /api/v1/system/simulation/toggle --> eventstream/internal/handlers.(*SimulationHandler).ToggleStatus-fm (7 handlers)
+[GIN-debug] GET    /api/v1/escalation-policies --> eventstream/internal/handlers.(*EscalationPolicyHandler).List-fm (6 handlers)
+[GIN-debug] GET    /api/v1/api-keys          --> eventstream/internal/handlers.(*APIKeyHandler).List-fm (6 handlers)
+[GIN-debug] POST   /api/v1/api-keys          --> eventstream/internal/handlers.(*APIKeyHandler).Create-fm (6 handlers)
+[GIN-debug] DELETE /api/v1/api-keys/:id      --> eventstream/internal/handlers.(*APIKeyHandler).Revoke-fm (6 handlers)
+[GIN-debug] GET    /api/v1/api-logs          --> eventstream/internal/handlers.(*APILogHandler).GetLogs-fm (6 handlers)
+[GIN-debug] GET    /api/v1/external/devices  --> eventstream/internal/handlers.(*DeviceHandler).ListDevices-fm (8 handlers)
+[GIN-debug] GET    /api/v1/external/alerts   --> eventstream/internal/handlers.(*AlertHandler).List-fm (8 handlers)
+[GIN-debug] POST   /api/v1/external/events   --> eventstream/internal/handlers.(*TelemetryHandler).IngestEvent-fm (8 handlers)
+2026/07/23 10:58:23 server starting on port 8080
 [GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
 Please check https://github.com/gin-gonic/gin/blob/master/docs/doc.md#dont-trust-all-proxies for details.
 [GIN-debug] Listening and serving HTTP on :8080
-[GIN] 2026/07/16 - 10:19:06 | 200 |   34.4ms |             ::1 | GET      "/api/v1/devices/11/twin"
+[GIN] 2026/07/23 - 10:58:37 | 401 | 58.083µs |             ::1 | GET      "/api/v1/system/simulation"
+2026/07/23 10:59:23 HeartbeatMonitor: Updated health scores for 1 devices
+2026/07/23 11:00:23 HeartbeatMonitor: Updated health scores for 1 devices
+2026/07/23 11:01:23 HeartbeatMonitor: Updated health scores for 1 devices
+2026/07/23 11:02:23 HeartbeatMonitor: Updated health scores for 1 devices
+2026/07/23 11:03:23 HeartbeatMonitor: Updated health scores for 1 devices
+[GIN] 2026/07/23 - 11:04:20 | 401 |  83.24ms |             ::1 | POST     "/api/v1/auth/login"
+2026/07/23 11:04:23 HeartbeatMonitor: Updated health scores for 1 devices
+[GIN] 2026/07/23 - 11:04:53 | 200 | 117.41ms |             ::1 | POST     "/api/v1/auth/login"
+2026/07/23 11:05:23 HeartbeatMonitor: Updated health scores for 1 devices

@@ -72,7 +72,11 @@ func (s *AIService) PredictiveMaintenance(organizationID int, device *models.Dev
 		return "", errors.New("no active AI configuration found for this organization")
 	}
 
-	prompt := fmt.Sprintf("You are an expert IoT maintenance engineer. Predict maintenance needs for the following device using a highly professional and analytical tone:\nDevice: %s (Type: %s)\nStatus: %s\nBattery: %d%%\n\nRecent History:\n", device.Name, device.Type, device.Status, *device.BatteryPct)
+	batt := "Unknown"
+	if device.BatteryPct != nil {
+		batt = fmt.Sprintf("%d%%", *device.BatteryPct)
+	}
+	prompt := fmt.Sprintf("You are an expert IoT maintenance engineer. Predict maintenance needs for the following device using a highly professional and analytical tone:\nDevice: %s (Type: %s)\nStatus: %s\nBattery: %s\n\nRecent History:\n", device.Name, device.Type, device.Status, batt)
 	for _, e := range history {
 		payloadBytes, _ := json.Marshal(e.Payload)
 		prompt += fmt.Sprintf("- %s: %s\n", e.Timestamp.Format("2006-01-02 15:04:05"), string(payloadBytes))
@@ -92,7 +96,11 @@ func (s *AIService) GenerateDeviceHealthSummary(organizationID int, device *mode
 		return "", errors.New("no active AI configuration found for this organization")
 	}
 
-	prompt := fmt.Sprintf("You are a professional IoT systems analyst. Generate a detailed, highly professional health summary for the following device:\nDevice: %s (Type: %s)\nStatus: %s\nBattery: %d%%\n\nRecent History:\n", device.Name, device.Type, device.Status, *device.BatteryPct)
+	batt := "Unknown"
+	if device.BatteryPct != nil {
+		batt = fmt.Sprintf("%d%%", *device.BatteryPct)
+	}
+	prompt := fmt.Sprintf("You are a professional IoT systems analyst. Generate a detailed, highly professional health summary for the following device:\nDevice: %s (Type: %s)\nStatus: %s\nBattery: %s\n\nRecent History:\n", device.Name, device.Type, device.Status, batt)
 	for _, e := range history {
 		payloadBytes, _ := json.Marshal(e.Payload)
 		prompt += fmt.Sprintf("- %s: %s\n", e.Timestamp.Format("2006-01-02 15:04:05"), string(payloadBytes))

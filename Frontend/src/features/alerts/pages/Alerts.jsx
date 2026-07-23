@@ -152,7 +152,8 @@ export function Alerts({ role }) {
       setRcaResult(data.summary || data.analysis || JSON.stringify(data));
     } catch (err) {
       console.error(err);
-      setRcaResult('**Error:** Failed to generate root cause analysis. Ensure AI Settings are configured.');
+      const backendError = err.response?.data?.error || err.message;
+      setRcaResult(`**Error:** Failed to generate root cause analysis. ${backendError}`);
     } finally {
       setRcaLoading(false);
     }

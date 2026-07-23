@@ -37,6 +37,12 @@ func (s *Simulator) Run() {
 	for {
 		<-ticker.C
 
+		var isSimulationActive bool
+		err := s.db.QueryRow("SELECT is_enabled FROM feature_flags WHERE feature_key = 'simulation_active' AND organization_id IS NULL LIMIT 1").Scan(&isSimulationActive)
+		if err == nil && !isSimulationActive {
+			continue
+		}
+
 		// Fetch active rules once per tick for telemetry generation
 		activeRules, err := s.ruleRepo.GetActiveRules()
 		if err != nil {

@@ -4,20 +4,38 @@ import healthService from '../../../services/healthService';
 
 const SystemHealth = () => {
   const [healthData, setHealthData] = useState(null);
+  const [simulationActive, setSimulationActive] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [toggling, setToggling] = useState(false);
   const [error, setError] = useState('');
 
   const fetchHealth = async () => {
     setLoading(true);
     try {
-      const data = await healthService.getSystemHealth();
+      const [data, simData] = await Promise.all([
+        healthService.getSystemHealth(),
+        healthService.getSimulationStatus()
+      ]);
       setHealthData(data);
+      setSimulationActive(simData.simulation_active);
       setError('');
     } catch (err) {
-      setError('Failed to load system health metrics.');
+      setError('Failed to load system metrics.');
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleToggleSimulation = async () => {
+    setToggling(true);
+    try {
+      const response = await healthService.toggleSimulationStatus(!simulationActive);
+      setSimulationActive(response.simulation_active);
+    } catch (err) {
+      console.error("Failed to toggle simulation:", err);
+    } finally {
+      setToggling(false);
     }
   };
 
@@ -129,6 +147,28 @@ const SystemHealth = () => {
             <span>Failed Events Count</span>
           </div>
         </div>
+      </div>
+
+      {/* Simulator Control */}
+      <div className="rounded-xl border border-border-main bg-surface p-6 shadow-sm flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-medium text-text-main">Global Sensor Simulator</h2>
+          <p className="text-sm text-text-muted">Master switch to dynamically start or stop the fake telemetry generator.</p>
+        </div>
+        <button
+          onClick={handleToggleSimulation}
+          disabled={toggling}
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 ${
+            simulationActive ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'
+          } ${toggling ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
+          <span className="sr-only">Toggle Simulation</span>
+          <span
+            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+              simulationActive ? 'translate-x-6' : 'translate-x-1'
+            }`}
+          />
+        </button>
       </div>
 
       {/* Workers Status */}
