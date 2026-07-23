@@ -1,2 +1,5 @@
 Backend/.env
 Backend/eventstream.db
+Backend/server_bin
+Backend/main
+Backend/backend.log

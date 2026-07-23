@@ -42,7 +42,6 @@ func (s *Simulator) Run() {
 		if err == nil && !isSimulationActive {
 			continue
 		}
-
 		// Fetch active rules once per tick for telemetry generation
 		activeRules, err := s.ruleRepo.GetActiveRules()
 		if err != nil {
