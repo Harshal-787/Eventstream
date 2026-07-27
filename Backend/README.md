@@ -1,88 +1,53 @@
-# EventStream Go — Backend Setup Guide
+# EventStream Go — Backend API
 
-## Overview
-
-The backend is a **Golang** REST API built with **Gin**, connected to **PostgreSQL**. It handles authentication, alert management, device monitoring, and exposes a Swagger UI for API exploration.
+The backend for **EventStream** is an enterprise-grade REST API built with **Golang** and **Gin**, persisting data securely to **PostgreSQL**. It operates as the core nervous system for the IoT platform, handling massive telemetry ingestion, device twin management, multi-tenant organizations, alerting, and autonomous AI integrations.
 
 ---
 
-## Prerequisites
+## 🚀 Key Capabilities
 
-Make sure the following are installed on your machine:
+- **Real-Time Telemetry & WebSockets (SSE)**: Streams live sensor data directly to connected clients via Server-Sent Events (`/api/v1/stream`), bypassing the need for aggressive HTTP polling.
+- **Enterprise Multi-Tenancy**: Data is fully isolated across Organizations. Role-Based Access Control (RBAC) securely gates actions between system `admin` users and standard `user` accounts.
+- **Hardware Digital Twins**: Synchronizes physical IoT states using Azure IoT-style device twins (Desired vs. Reported states).
+- **Automated Alerting & Escalation**: An integrated Alert Engine evaluates telemetry against complex Alert Rules. Unresolved critical alerts are automatically processed by an Escalation Background Worker.
+- **AI Diagnostics**: Integrates with LLMs to automatically diagnose system anomalies, generate executive health reports, and explain hardware failures.
+- **Automated Reporting**: A background scheduler generates and emails PDF/CSV reports based on configurable crons.
+- **Full Text Search**: Employs PostgreSQL's native `tsvector` features to provide lightning-fast global search across devices, buildings, and users.
+- **Auto-Migrations**: The system manages 36+ database schemas seamlessly at startup utilizing `golang-migrate`.
 
-| Tool | Version | Install |
+---
+
+## 🛠️ Prerequisites
+
+| Tool | Version | Documentation |
 |---|---|---|
-| Go | 1.21+ | https://go.dev/dl |
-| PostgreSQL | 14+ | https://www.postgresql.org/download |
+| Go | 1.21+ | [Install Go](https://go.dev/dl) |
+| PostgreSQL | 14+ | [Install Postgres](https://www.postgresql.org/download) |
 | swag CLI | latest | `go install github.com/swaggo/swag/cmd/swag@latest` |
 
 ---
 
-## Project Structure
+## 🔧 Getting Started
 
-```
-Backend/
-├── cmd/
-│   └── server/
-│       └── main.go              # Entry point
-├── docs/                        # Auto-generated Swagger docs
-├── internal/
-│   ├── config/
-│   │   └── config.go            # Env config loader
-│   ├── database/
-│   │   └── db.go                # DB connection + auto migration runner
-│   ├── handlers/
-│   │   ├── auth_handler.go      # Login, Register, Me
-│   │   └── alert_handler.go     # List, Get, Acknowledge, Resolve
-│   ├── middleware/
-│   │   └── auth_middleware.go   # JWT generation + validation
-│   ├── models/
-│   │   ├── user.go              # User model
-│   │   └── alert.go             # Alert, AlertRule, Device, Building models
-│   ├── repository/
-│   │   ├── user_repo.go         # User DB queries
-│   │   └── alert_repo.go        # Alert DB queries
-│   └── services/                # (reserved for future business logic)
-├── migrations/
-│   ├── 000001_create_users_table.up.sql
-│   ├── 000002_create_buildings_table.up.sql
-│   ├── 000003_create_devices_table.up.sql
-│   ├── 000004_create_alert_rules_table.up.sql
-│   └── 000005_create_alerts_table.up.sql
-├── .env
-├── .env.example
-├── go.mod
-└── go.sum
-```
+### 1. Database Setup
 
----
-
-## 1. Database Setup
-
-### Create the database
+Ensure PostgreSQL is running. Create the database:
 
 ```bash
-psql -U postgres
+psql -U postgres -c "CREATE DATABASE eventstream_db;"
 ```
 
-```sql
-CREATE DATABASE eventstream_db;
-\q
-```
+> **Note:** Do not run SQL schema scripts manually. The Go application executes all necessary `up.sql` migrations automatically on boot.
 
-> Migrations run **automatically** when the server starts. No manual SQL execution needed.
+### 2. Environment Configuration
 
----
-
-## 2. Environment Configuration
-
-Copy the example env file and fill in your values:
+Copy the example environment configuration:
 
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env`:
+Ensure your `.env` contains the correct database credentials:
 
 ```env
 DB_HOST=localhost
@@ -92,190 +57,75 @@ DB_PASS=your_postgres_password
 DB_NAME=eventstream_db
 DB_SSLMODE=disable
 
-JWT_SECRET=your-super-secret-key-change-in-production
+JWT_SECRET=your-secure-jwt-secret
 JWT_EXPIRY_HOURS=24
-
 SERVER_PORT=8080
 ```
 
-> **Never commit `.env` to version control.**
-
----
-
-## 3. Install Dependencies
+### 3. Run the Server
 
 ```bash
 go mod tidy
-```
-
----
-
-## 4. Run the Server
-
-```bash
 go run cmd/server/main.go
 ```
 
-On first run, the server will:
-1. Connect to PostgreSQL
-2. Auto-run all pending migrations
-3. Seed default data (admin user, buildings, devices, alert rules, dummy alerts)
-4. Start the HTTP server on port `8080`
-
-Expected output:
-```
-connected to database
-migrations applied successfully
-[GIN-debug] Listening and serving HTTP on :8080
-```
+On startup, the server automatically:
+1. Connects to the PostgreSQL instance.
+2. Applies any pending database migrations.
+3. Seeds essential default data (Admin, Buildings, Devices, Alert Rules).
+4. Spins up background workers (Heartbeat Monitor, Escalation Engine, Report Scheduler, MQTT Ingest).
+5. Serves HTTP requests on port `8080`.
 
 ---
 
-## 5. Default Seed Data
+## 📡 API Documentation (Swagger)
 
-### Admin User
+The API is fully documented using Swagger UI.
 
-| Field | Value |
-|---|---|
-| Email | `admin@eventstream.com` |
-| Password | `admin123` |
-| Role | `admin` |
+1. Ensure the server is running.
+2. Navigate to: [http://localhost:8080/swagger/index.html](http://localhost:8080/swagger/index.html)
 
-> Users registered via `POST /api/v1/auth/register` are automatically assigned the `user` role.
+**Testing Secured Endpoints in Swagger:**
+1. Call `POST /api/v1/auth/login` using the default admin credentials (`admin@eventstream.com` / `admin123`).
+2. Copy the resulting token.
+3. Click the green **Authorize** button at the top right of the Swagger interface.
+4. Enter `Bearer <your_token>` and save.
 
-### Seeded Records
-
-| Table | Count |
-|---|---|
-| Buildings | 5 |
-| Devices | 10 |
-| Alert Rules | 8 |
-| Alerts | 10 (mix of open / acknowledged / resolved) |
-| Activity Logs | 8 |
-
----
-
-## 6. API Endpoints
-
-### Base URL
-```
-http://localhost:8080/api/v1
-```
-
-### Auth
-
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| `POST` | `/auth/register` | No | Register a new user (role: user) |
-| `POST` | `/auth/login` | No | Login and receive JWT token |
-| `GET` | `/auth/me` | Yes | Get current user profile |
-
-### Alerts
-
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| `GET` | `/alerts` | Yes | List all alerts (optional `?status=open\|acknowledged\|resolved`) |
-| `GET` | `/alerts/:id` | Yes | Get alert detail + activity log |
-| `POST` | `/alerts/:id/acknowledge` | Yes | Acknowledge an open alert |
-| `POST` | `/alerts/:id/resolve` | Yes | Resolve an alert |
-
-### Other
-
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| `GET` | `/health` | No | Health check |
-
----
-
-## 7. Authentication
-
-All protected endpoints require a `Bearer` token in the `Authorization` header:
-
-```
-Authorization: Bearer <your_jwt_token>
-```
-
-**Login example:**
-```bash
-curl -X POST http://localhost:8080/api/v1/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email": "admin@eventstream.com", "password": "admin123"}'
-```
-
-**Response:**
-```json
-{
-  "token": "<jwt_token>",
-  "user": {
-    "id": 1,
-    "name": "Admin User",
-    "email": "admin@eventstream.com",
-    "role": "admin"
-  }
-}
-```
-
----
-
-## 8. Swagger UI
-
-Swagger is available at:
-
-```
-http://localhost:8080/swagger/index.html
-```
-
-### To test protected endpoints in Swagger:
-1. Call `POST /auth/login` and copy the token
-2. Click the **Authorize** button (top right)
-3. Enter `Bearer <your_token>`
-4. All secured endpoints will use it automatically
-
-### Regenerate Swagger docs after adding new endpoints:
-
+If you modify any Go handler comments, regenerate the Swagger docs via:
 ```bash
 swag init -g cmd/server/main.go -o docs
 ```
 
 ---
 
-## 9. Migrations
+## 🧪 Built-In IoT Simulator
 
-Migrations are managed using `golang-migrate` and run automatically on server startup.
+To facilitate testing without physical hardware, the backend includes a robust **Simulator Engine**.
 
-Migration files are located in `migrations/` and follow the naming convention:
-
-```
-000001_create_users_table.up.sql
-000001_create_users_table.down.sql
-```
-
-### To rollback manually (if needed):
-
-```bash
-# Install migrate CLI
-go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
-
-# Rollback last migration
-migrate -path migrations -database "postgres://postgres:password@localhost:5432/eventstream_db?sslmode=disable" down 1
-```
+When the simulation feature flag is globally enabled via the frontend settings panel, the backend will artificially generate randomized temperature, humidity, and status telemetry for all registered devices on a ticker loop. This allows you to immediately test SSE streaming, alert thresholds, and dashboard visualizations.
 
 ---
 
-## 10. Build for Production
+## 📁 Architecture Overview
 
-```bash
-go build -o eventstream-server cmd/server/main.go
-./eventstream-server
 ```
-
----
-
-## Roles
-
-| Role | How assigned | Access |
-|---|---|---|
-| `admin` | Seeded manually | Full access |
-| `user` | Via `/auth/register` | Standard access |
-
-> Role-based access control (RBAC) on specific routes will be enforced as the project grows.
+Backend/
+├── cmd/
+│   └── server/
+│       └── main.go              # Application entry point
+├── docs/                        # Auto-generated Swagger documentation
+├── internal/
+│   ├── config/                  # Environment variables and setups
+│   ├── database/                # DB connectivity and migration engine
+│   ├── events/                  # Server-Sent Events (SSE) hub
+│   ├── handlers/                # HTTP route controllers (Gin)
+│   ├── middleware/              # Auth, Logging, Rate Limiting
+│   ├── models/                  # Domain entity structs
+│   ├── repository/              # PostgreSQL data access layer
+│   ├── services/                # Core business logic & AI orchestration
+│   ├── simulator/               # IoT telemetry mocking engine
+│   └── workers/                 # Background chron-jobs (MQTT, Escalation)
+├── migrations/                  # Versioned up/down SQL schema definitions
+├── .env                         # Local configuration
+└── go.mod                       # Go module dependencies
+```

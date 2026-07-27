@@ -1,70 +1,83 @@
-# Getting Started with Create React App
+# EventStream — Frontend Application
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This is the official frontend for **EventStream**, a modern, real-time enterprise IoT and Smart Building monitoring platform.
 
-## Available Scripts
+## 🚀 Tech Stack
 
-In the project directory, you can run:
+The frontend has been built with a focus on high performance, modern styling, and scalable state management:
 
-### `npm start`
+- **Framework**: [React 19](https://react.dev/) + [Vite](https://vitejs.dev/) for lightning-fast HMR and optimized builds.
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/) for utility-first responsive design.
+- **State Management**: [Zustand](https://zustand-demo.pmnd.rs/) for lightweight, scalable global state.
+- **Routing**: [React Router v7](https://reactrouter.com/) for declarative client-side routing.
+- **Data Visualization**: [Recharts](https://recharts.org/) for analytics and sensor telemetry trends.
+- **Mapping**: [Leaflet](https://leafletjs.com/) + `react-leaflet` for interactive indoor building maps.
+- **Animations**: [Framer Motion](https://www.framer.com/motion/) for fluid UI micro-interactions.
+- **Notifications**: `react-hot-toast` for elegant toast notifications.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## 🌟 Key Features
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- **Real-Time Telemetry**: Connects directly to the backend's Server-Sent Events (SSE) stream to provide sub-second updates for device telemetry without polling.
+- **Interactive Indoor Maps**: Visualize floor plans, rooms, and physical device locations dynamically using Leaflet.
+- **Device Management & Twins**: Manage physical hardware via digital twins (Desired vs. Reported states).
+- **Advanced Alerting**: Configure hierarchical alert rules, acknowledge anomalies, and track resolution workflows.
+- **AI-Powered Diagnostics**: Built-in chatbot for autonomous diagnostic analysis of building events and hardware failures.
+- **Multi-Tenant Architecture**: Supports isolated Organization data with distinct Admin and User roles.
+- **Dark Mode Support**: Seamless toggle between light and dark modes utilizing `next-themes`.
 
-### `npm test`
+---
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## 🛠️ Getting Started
 
-### `npm run build`
+### Prerequisites
+- [Node.js](https://nodejs.org/) (v18 or higher recommended)
+- `npm`
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Installation
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+2. Start the development server:
+   ```bash
+   npm run dev
+   ```
 
-### `npm run eject`
+3. Open your browser:
+   Navigate to [http://localhost:5173](http://localhost:5173) (Vite's default port).
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### Building for Production
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+To create an optimized production build:
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+```bash
+npm run build
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+The compiled assets will be output to the `/dist` directory. You can preview the production build locally using:
 
-## Learn More
+```bash
+npm run preview
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## 📁 Project Structure
 
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+```
+Frontend/
+├── public/                 # Static assets (images, icons)
+├── src/
+│   ├── components/         # Reusable UI components (buttons, modals, tables)
+│   ├── features/           # Feature-based modules (alerts, auth, buildings, devices, etc.)
+│   ├── hooks/              # Custom React hooks (e.g., useTelemetry)
+│   ├── lib/                # Utility libraries and helpers
+│   ├── providers/          # Global context providers (StreamProvider, SessionProvider)
+│   ├── services/           # Axios-based API client services
+│   ├── store/              # Zustand global state stores
+│   ├── App.jsx             # Main application router and layout wrapper
+│   └── main.jsx            # React DOM entry point
+├── index.html              # Vite HTML template
+├── tailwind.css            # Tailwind global stylesheet
+└── vite.config.js          # Vite configuration
+```
