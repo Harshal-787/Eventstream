@@ -34,6 +34,7 @@ export function Sidebar({ role }) {
     { title: 'Alerts', icon: Bell, path: '/admin/alerts' },
     { title: 'Alert Rules', icon: Settings, path: '/admin/alert-rules' },
     { title: 'Channels', icon: Webhook, path: '/admin/notification-channels' },
+    { title: 'Escalation Policies', icon: Settings, path: '/admin/escalation-policies' },
     { title: 'Reports', icon: FileText, path: '/admin/reports' },
     { title: 'Users', icon: Users, path: '/admin/users' },
     { title: 'Audit Logs', icon: ClipboardList, path: '/admin/audit-logs' },

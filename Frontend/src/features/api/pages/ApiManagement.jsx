@@ -1,26 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { useAuthStore } from '../../auth/store/useAuthStore';
 import { Key, Activity, Copy, CheckCircle, Trash2, Plus, RefreshCw, Server, Shield } from 'lucide-react';
 import { Badge } from '../../../components/ui/Badge';
+import apiClient from '../../../services/apiClient';
 
 export default function ApiManagement() {
-  const { token } = useAuthStore();
   const [keys, setKeys] = useState([]);
   const [logs, setLogs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCopied, setIsCopied] = useState(null);
   const [newKeyName, setNewKeyName] = useState('');
+  const [newlyCreatedKey, setNewlyCreatedKey] = useState(null);
 
   const fetchData = async () => {
     setIsLoading(true);
     try {
       const [keysRes, logsRes] = await Promise.all([
-        fetch('/api/v1/api-keys', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/v1/api-logs?limit=50', { headers: { 'Authorization': `Bearer ${token}` } })
+        apiClient.get('/api-keys'),
+        apiClient.get('/api-logs?limit=50')
       ]);
       
-      if (keysRes.ok) setKeys(await keysRes.json() || []);
-      if (logsRes.ok) setLogs(await logsRes.json() || []);
+      setKeys(keysRes.data || []);
+      setLogs(logsRes.data || []);
     } catch (err) {
       console.error('Failed to fetch API data', err);
     } finally {
@@ -30,38 +30,35 @@ export default function ApiManagement() {
 
   useEffect(() => {
     fetchData();
-  }, [token]);
+  }, []);
 
   const handleCreateKey = async (e) => {
     e.preventDefault();
-    if (!newKeyName.trim()) return;
+    if (!newKeyName.trim()) {
+      alert('Please enter a name for the new API key.');
+      return;
+    }
 
     try {
-      const res = await fetch('/api/v1/api-keys', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ name: newKeyName, scopes: 'read,write' })
-      });
-      if (res.ok) {
-        setNewKeyName('');
-        fetchData();
-      }
+      setIsLoading(true);
+      const res = await apiClient.post('/api-keys', { name: newKeyName, scopes: ['read', 'write'] });
+      setNewlyCreatedKey(res.data.token);
+      setNewKeyName('');
+      alert('API Key created successfully!');
+      await fetchData();
     } catch (err) {
       console.error('Failed to create key', err);
+      alert(`Failed to create key: ${err.response?.data?.error || err.message || 'Unknown error'}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleRevoke = async (id) => {
     if (!window.confirm('Are you sure you want to revoke this API key?')) return;
     try {
-      const res = await fetch(`/api/v1/api-keys/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) fetchData();
+      await apiClient.delete(`/api-keys/${id}`);
+      fetchData();
     } catch (err) {
       console.error('Failed to revoke key', err);
     }
@@ -134,12 +131,36 @@ export default function ApiManagement() {
               />
               <button
                 type="submit"
-                disabled={!newKeyName.trim()}
-                className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm shadow-primary-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                onClick={handleCreateKey}
+                className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm shadow-primary-500/20 transition-all flex items-center gap-2 shrink-0"
               >
                 <Plus className="w-4 h-4" /> Create
               </button>
             </form>
+            
+            {newlyCreatedKey && (
+              <div className="mt-4 p-4 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl">
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <h4 className="text-emerald-800 dark:text-emerald-400 font-bold text-sm">API Key Created Successfully</h4>
+                    <p className="text-emerald-600 dark:text-emerald-500/80 text-xs mt-1">
+                      Please copy your API key now. You won't be able to see it again!
+                    </p>
+                    <div className="mt-3 flex items-center gap-2 bg-white dark:bg-surface p-2 rounded-lg border border-emerald-100 dark:border-emerald-500/20">
+                      <code className="text-sm font-mono text-text-main flex-1 break-all">{newlyCreatedKey}</code>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard(newlyCreatedKey, 'new')}
+                        className="p-2 text-slate-400 hover:text-text-main transition-colors shrink-0"
+                      >
+                        {isCopied === 'new' ? <CheckCircle className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex-1 overflow-y-auto p-2">
@@ -149,27 +170,28 @@ export default function ApiManagement() {
               <ul className="space-y-2">
                 {keys.map(key => (
                   <li key={key.id} className="p-4 rounded-xl border border-border-main hover:border-slate-300 dark:hover:border-slate-600 transition-colors">
-                    <div className="flex justify-between items-start">
+                    <div className={`flex justify-between items-start ${!key.is_active ? 'opacity-50' : ''}`}>
                       <div>
-                        <div className="font-bold text-text-main text-sm">{key.name}</div>
+                        <div className="font-bold text-text-main text-sm flex items-center gap-2">
+                          {key.name}
+                          {!key.is_active && (
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400">REVOKED</span>
+                          )}
+                        </div>
                         <div className="text-xs text-text-muted mt-1 font-mono bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded inline-flex items-center gap-2">
-                          {key.key.substring(0, 8)}...{key.key.substring(key.key.length - 4)}
-                          <button 
-                            onClick={() => copyToClipboard(key.key, key.id)}
-                            className="text-slate-400 hover:text-text-main"
-                          >
-                            {isCopied === key.id ? <CheckCircle className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-                          </button>
+                          {key.preview}****************
                         </div>
                         <div className="text-[11px] text-slate-400 mt-2 font-medium">Created: {new Date(key.created_at).toLocaleDateString()}</div>
                       </div>
-                      <button 
-                        onClick={() => handleRevoke(key.id)}
-                        className="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors"
-                        title="Revoke Key"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {key.is_active && (
+                        <button 
+                          onClick={() => handleRevoke(key.id)}
+                          className="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors"
+                          title="Revoke Key"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </li>
                 ))}

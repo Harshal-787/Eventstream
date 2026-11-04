@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { Hero } from '../components/Hero';
 import { ServicesGrid } from '../components/ServicesGrid';
@@ -30,11 +31,11 @@ export function LandingPage() {
             <p className="text-lg text-primary-200 mb-10 max-w-2xl mx-auto font-medium">
               Accelerate your operations with our technology. Reduce downtime and optimize costs. Get a special offer now!
             </p>
-            <a href="/register">
+            <Link to="/register">
               <button className="bg-white text-primary-950 font-bold py-4 px-10 rounded-full text-lg shadow-lg hover:shadow-xl hover:bg-primary-50 hover:-translate-y-1 transition-all duration-300">
                 Work With Us
               </button>
-            </a>
+            </Link>
           </div>
         </section>
       </main>

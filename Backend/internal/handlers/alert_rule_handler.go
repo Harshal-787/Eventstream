@@ -21,7 +21,8 @@ func NewAlertRuleHandler(repo *repository.AlertRuleRepository, logger *services.
 }
 
 func (h *AlertRuleHandler) List(c *gin.Context) {
-	rules, err := h.ruleRepo.List()
+	orgID := c.GetInt("organization_id")
+	rules, err := h.ruleRepo.List(orgID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch alert rules"})
 		return
@@ -40,7 +41,9 @@ func (h *AlertRuleHandler) Create(c *gin.Context) {
 	}
 
 	userID := c.GetInt("user_id")
+	orgID := c.GetInt("organization_id")
 	rule.CreatedBy = &userID
+	rule.OrganizationID = orgID
 
 	if err := h.ruleRepo.Create(&rule); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create rule"})

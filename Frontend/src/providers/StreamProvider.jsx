@@ -35,7 +35,7 @@ export function StreamProvider({ children }) {
           if (window.Notification && Notification.permission === 'granted') {
             new Notification('EventStream Alert', {
               body: `${newAlert.type.toUpperCase()}: ${newAlert.message}`,
-              icon: '/vite.svg', // Assuming vite.svg is the public icon, can be customized
+              icon: `${import.meta.env.BASE_URL}vite.svg`, // Assuming vite.svg is the public icon, can be customized
               requireInteraction: newAlert.severity === 'critical'
             });
           }

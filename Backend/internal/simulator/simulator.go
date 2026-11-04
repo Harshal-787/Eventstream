@@ -48,6 +48,22 @@ func (s *Simulator) Run() {
 			activeRules = []models.AlertRule{}
 		}
 
+		// Parse dynamically from .env file so user doesn't need to restart server
+		envMap, err := godotenv.Read(".env")
+		simulateAlerts := false
+		spikeProb := 0.05
+		
+		if err == nil {
+			if val, ok := envMap["SIMULATE_ALERTS"]; ok {
+				simulateAlerts, _ = strconv.ParseBool(val)
+			}
+			if val, ok := envMap["SIMULATE_SPIKE_PROBABILITY"]; ok {
+				if p, err := strconv.ParseFloat(val, 64); err == nil {
+					spikeProb = p
+				}
+			}
+		}
+
 		// Fetch active devices that should generate telemetry
 		rows, err := s.db.Query("SELECT d.id, d.organization_id, d.type, d.room_id, d.building_id FROM devices d WHERE d.status = 'active'")
 		if err != nil {
@@ -77,24 +93,7 @@ func (s *Simulator) Run() {
 			status := "ok"
 			t.Status = &status
 
-			// Parse dynamically from .env file so user doesn't need to restart server
-			envMap, err := godotenv.Read(".env")
-			simulateAlerts := false
-			spikeProb := 0.05
-			
-			if err == nil {
-				if val, ok := envMap["SIMULATE_ALERTS"]; ok {
-					simulateAlerts, _ = strconv.ParseBool(val)
-				}
-				if val, ok := envMap["SIMULATE_SPIKE_PROBABILITY"]; ok {
-					if p, err := strconv.ParseFloat(val, 64); err == nil {
-						spikeProb = p
-					}
-				}
-			}
-
 			isSpike := simulateAlerts && rand.Float64() < spikeProb
-
 
 
 			var applicableRules []models.AlertRule
@@ -293,6 +292,8 @@ func (s *Simulator) Run() {
 									"severity":     rule.Severity,
 									"message":      "Rule Triggered: " + rule.Name,
 									"triggered_at": time.Now(),
+									"building_id":  buildingID.Int32,
+									"building_name": bName.String,
 								},
 							}
 

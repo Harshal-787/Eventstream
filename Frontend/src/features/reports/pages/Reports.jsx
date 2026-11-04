@@ -123,9 +123,11 @@ const Reports = () => {
 
   const handleCreateSchedule = async () => {
     const { reportId, format } = modalConfig;
-    if (!reportId || !format || !scheduleData.recipients) return;
-
     try {
+      if (!scheduleData.recipients || !scheduleData.recipients.trim()) {
+        toast.error('Please enter at least one recipient email.');
+        return;
+      }
       setLoading(prev => ({ ...prev, schedule_create: true }));
       const recipients = scheduleData.recipients.split(',').map(e => e.trim()).filter(e => e);
       
@@ -274,7 +276,7 @@ const Reports = () => {
                     <div className="flex flex-col items-center">
                       <Calendar className="h-12 w-12 text-slate-300 dark:text-slate-700 mb-4" />
                       <p>No report schedules found.</p>
-                      <Button variant="outline" className="mt-4" onClick={() => setActiveTab('generate')}>
+                      <Button variant="primary" className="mt-4 bg-primary-600 hover:bg-primary-700 text-white font-medium" onClick={() => setActiveTab('generate')}>
                         Go Create One
                       </Button>
                     </div>
@@ -401,7 +403,7 @@ const Reports = () => {
               {modalConfig.isSchedule ? (
                 <Button 
                   onClick={handleCreateSchedule}
-                  disabled={loading.schedule_create || !scheduleData.recipients}
+                  disabled={loading.schedule_create}
                 >
                   {loading.schedule_create ? 'Saving...' : 'Save Schedule'}
                 </Button>

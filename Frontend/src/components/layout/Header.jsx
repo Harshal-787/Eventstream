@@ -15,15 +15,18 @@ export function Header() {
 
   const [isAlertsOpen, setIsAlertsOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const activeAlerts = liveAlerts.filter(a => alertUpdates[a.id] !== 'resolved' && alertUpdates[a.id] !== 'acknowledged');
   const unreadCount = activeAlerts.length;
 
   const alertsRef = useRef(null);
+  const profileRef = useRef(null);
 
   useEffect(() => {
     function handleClickOutside(event) {
       if (alertsRef.current && !alertsRef.current.contains(event.target)) setIsAlertsOpen(false);
+      if (profileRef.current && !profileRef.current.contains(event.target)) setIsProfileOpen(false);
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -51,7 +54,7 @@ export function Header() {
             <Search className="w-4 h-4 mr-3" />
             <span className="text-sm font-medium">Search globally...</span>
           </div>
-          <div className="flex items-center gap-1 hidden sm:flex">
+          <div className="flex items-center gap-1 ml-auto">
             <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-text-muted border border-border-main">Ctrl</kbd>
             <span className="text-text-muted text-xs">+</span>
             <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-text-muted border border-border-main">K</kbd>
@@ -125,14 +128,48 @@ export function Header() {
 
         <div className="h-8 w-px bg-border-main mx-1 hidden sm:block"></div>
         
-        <div className="flex items-center gap-3 cursor-pointer group pl-2">
-          <div className="text-right hidden sm:block">
-            <div className="text-sm font-bold text-text-main">{user?.name || 'User'}</div>
-            <div className="text-xs font-medium text-text-muted capitalize">{user?.role || 'operator'}</div>
-          </div>
-          <div className="w-10 h-10 rounded-full border-2 border-transparent bg-teal-50 dark:bg-teal-500/10 flex items-center justify-center text-primary-600 group-hover:border-primary-200 dark:group-hover:border-primary-800 transition-all">
-            <User className="w-5 h-5" />
-          </div>
+        <div className="relative" ref={profileRef}>
+          <button 
+            onClick={() => setIsProfileOpen(!isProfileOpen)}
+            className="flex items-center gap-3 cursor-pointer group pl-2 text-left"
+            title="Profile Options"
+          >
+            <div className="hidden sm:block text-right">
+              <div className="text-sm font-bold text-text-main">{user?.name || 'User'}</div>
+              <div className="text-xs font-medium text-text-muted capitalize">{user?.role || 'operator'}</div>
+            </div>
+            <div className="w-10 h-10 rounded-full border-2 border-transparent bg-teal-50 dark:bg-teal-500/10 flex items-center justify-center text-primary-600 group-hover:border-primary-200 dark:group-hover:border-primary-800 transition-all">
+              <User className="w-5 h-5" />
+            </div>
+          </button>
+          
+          <AnimatePresence>
+            {isProfileOpen && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                transition={{ duration: 0.15 }}
+                className="absolute top-[calc(100%+8px)] right-0 w-56 bg-surface border border-border-main rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden origin-top-right"
+              >
+                <div className="p-4 border-b border-border-main bg-slate-50/50 dark:bg-surface">
+                  <div className="font-bold text-sm text-text-main truncate">{user?.name || 'User'}</div>
+                  <div className="text-xs text-text-muted truncate">{user?.email || 'admin@example.com'}</div>
+                </div>
+                <div className="p-2">
+                  <button 
+                    onClick={() => {
+                      useAuthStore.getState().logout();
+                      navigate('/login');
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors"
+                  >
+                    Log Out
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </header>

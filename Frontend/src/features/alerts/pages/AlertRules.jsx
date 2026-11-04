@@ -291,6 +291,7 @@ export function AlertRules() {
                   <th className="p-4 text-xs font-bold text-text-muted uppercase tracking-wider">Scope</th>
                   <th className="p-4 text-xs font-bold text-text-muted uppercase tracking-wider">Target</th>
                   <th className="p-4 text-xs font-bold text-text-muted uppercase tracking-wider">Conditions</th>
+                  <th className="p-4 text-xs font-bold text-text-muted uppercase tracking-wider">Channel</th>
                   <th className="p-4 text-xs font-bold text-text-muted uppercase tracking-wider">Severity</th>
                   <th className="p-4 text-xs font-bold text-text-muted uppercase tracking-wider">Status</th>
                   <th className="p-4 text-xs font-bold text-text-muted uppercase tracking-wider text-right">Actions</th>
@@ -336,6 +337,15 @@ export function AlertRules() {
                         <div className="bg-slate-100 dark:bg-surface-hover rounded-md px-3 py-1.5 inline-flex items-center gap-2 border border-slate-200 dark:border-border-main">
                           <span className="font-mono text-sm font-bold text-text-main">{conditionCount} condition{conditionCount > 1 ? 's' : ''}</span>
                         </div>
+                      </td>
+                      <td className="p-4">
+                        {rule.escalation_policy_id ? (
+                          <span className="text-sm font-semibold text-text-main">
+                            {escalationPolicies.find(ep => ep.id === rule.escalation_policy_id)?.name || 'Unknown Channel'}
+                          </span>
+                        ) : (
+                          <span className="text-sm italic text-text-muted">None</span>
+                        )}
                       </td>
                       <td className="p-4">
                         <span className={`px-2.5 py-1 rounded-md text-xs font-bold uppercase ${

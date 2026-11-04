@@ -22,7 +22,7 @@ export function Buildings({ role }) {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editBuilding, setEditBuilding] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   // Tab state for Users
   const [activeTab, setActiveTab] = useState('buildings');
 
@@ -70,8 +70,8 @@ export function Buildings({ role }) {
     }
   };
 
-  const filteredBuildings = buildings.filter(b => 
-    !searchQuery || 
+  const filteredBuildings = buildings.filter(b =>
+    !searchQuery ||
     (b.name && b.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
     (b.address && b.address.toLowerCase().includes(searchQuery.toLowerCase())) ||
     (b.city && b.city.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -104,7 +104,7 @@ export function Buildings({ role }) {
 
       {/* Admin View or User "buildings" tab */}
       {(role === 'admin' || activeTab === 'buildings') && (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-surface rounded-2xl border border-border-main shadow-sm overflow-hidden"
@@ -112,83 +112,83 @@ export function Buildings({ role }) {
           <div className="p-4 border-b border-border-main bg-slate-50 dark:bg-surface">
             <div className="relative max-w-md">
               <Search className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input 
-                type="text" 
-                placeholder="Search buildings..." 
+              <input
+                type="text"
+                placeholder="Search buildings..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-11 pr-4 py-2.5 bg-white dark:bg-surface border border-slate-200 dark:border-border-main rounded-xl text-sm w-full font-medium focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
               />
             </div>
           </div>
-          
-        {filteredBuildings.length === 0 ? (
-          <EmptyState 
-            title="No Buildings Found" 
-            description="Get started by adding your first smart building to the platform."
-            icon={Building2}
-            action={role === 'admin' && <Button variant="secondary" onClick={() => setIsAddModalOpen(true)}>Add Building</Button>}
-            className="py-20"
-          />
-        ) : (
-          <div className="overflow-x-auto custom-scrollbar">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-slate-50 dark:bg-surface border-b border-border-main">
-                  <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Name</TableHead>
-                  <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Address</TableHead>
-                  <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Location</TableHead>
-                  <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Assigned User</TableHead>
-                  <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Status</TableHead>
-                  {role === 'admin' && <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Details</TableHead>}
-                  <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody className="divide-y divide-border-main">
-                {filteredBuildings.map((bldg, index) => (
-                  <TableRow 
-                    key={bldg.id}
-                    as={motion.tr}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
-                  >
-                    <TableCell className="py-4 font-bold text-text-main">{bldg.name}</TableCell>
-                    <TableCell className="py-4 text-sm text-text-muted font-medium">{bldg.address}</TableCell>
-                    <TableCell className="py-4 text-sm text-text-muted font-medium">{bldg.city}, {bldg.state} {bldg.zip_code}</TableCell>
-                    <TableCell className="py-4 text-sm font-semibold text-text-main">{bldg.owner_name || '-'}</TableCell>
-                    <TableCell className="py-4">
-                      <StatusActionDropdown
-                        status={bldg.status}
-                        pendingLabel="Pending Setup"
-                        onApprove={() => handleApprove(bldg.id)}
-                        onReject={() => handleReject(bldg.id)}
-                      />
-                    </TableCell>
-                    {role === 'admin' && (
-                      <TableCell className="py-4">
-                        <Link to={`/${role}/buildings/${bldg.id}`}>
-                          <Button size="sm" variant="secondary" className="rounded-lg h-auto py-1.5"><Eye className="w-4 h-4 mr-2" /> Details</Button>
-                        </Link>
-                      </TableCell>
-                    )}
-                    <TableCell className="py-4 text-right space-x-2">
-                      <Button size="icon" variant="ghost" className="h-8 w-8 rounded-md text-teal-600 hover:bg-teal-50 transition-colors" onClick={() => setEditBuilding(bldg)} title="Edit Details">
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      {role === 'admin' && (
-                        <Button size="icon" variant="ghost" className="h-8 w-8 rounded-md text-rose-500 hover:bg-rose-50 transition-colors" onClick={() => handleDelete(bldg.id)} title="Delete Building">
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      )}
-                    </TableCell>
+
+          {filteredBuildings.length === 0 ? (
+            <EmptyState
+              title="No Buildings Found"
+              description="Get started by adding your first smart building to the platform."
+              icon={Building2}
+              action={role === 'admin' && <Button variant="secondary" onClick={() => setIsAddModalOpen(true)}>Add Building</Button>}
+              className="py-20"
+            />
+          ) : (
+            <div className="overflow-x-auto custom-scrollbar">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-slate-50 dark:bg-surface border-b border-border-main">
+                    <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Name</TableHead>
+                    <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Address</TableHead>
+                    <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Location</TableHead>
+                    <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Assigned User</TableHead>
+                    <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Status</TableHead>
+                    {role === 'admin' && <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider">Details</TableHead>}
+                    <TableHead className="py-4 text-xs font-bold text-text-muted uppercase tracking-wider text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
+                </TableHeader>
+                <TableBody className="divide-y divide-border-main">
+                  {filteredBuildings.map((bldg, index) => (
+                    <TableRow
+                      key={bldg.id}
+                      as={motion.tr}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+                    >
+                      <TableCell className="py-4 font-bold text-text-main">{bldg.name}</TableCell>
+                      <TableCell className="py-4 text-sm text-text-muted font-medium">{bldg.address}</TableCell>
+                      <TableCell className="py-4 text-sm text-text-muted font-medium">{bldg.city}, {bldg.state} {bldg.zip_code}</TableCell>
+                      <TableCell className="py-4 text-sm font-semibold text-text-main">{bldg.owner_name || '-'}</TableCell>
+                      <TableCell className="py-4">
+                        <StatusActionDropdown
+                          status={bldg.status}
+                          pendingLabel="Pending Setup"
+                          onApprove={() => handleApprove(bldg.id)}
+                          onReject={() => handleReject(bldg.id)}
+                        />
+                      </TableCell>
+                      {role === 'admin' && (
+                        <TableCell className="py-4">
+                          <Link to={`/${role}/buildings/${bldg.id}`}>
+                            <Button size="sm" variant="secondary" className="rounded-lg h-auto py-1.5"><Eye className="w-4 h-4 mr-2" /> Details</Button>
+                          </Link>
+                        </TableCell>
+                      )}
+                      <TableCell className="py-4 text-right space-x-2">
+                        <Button size="icon" variant="ghost" className="h-8 w-8 rounded-md text-teal-600 hover:bg-teal-50 transition-colors" onClick={() => setEditBuilding(bldg)} title="Edit Details">
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        {role === 'admin' && (
+                          <Button size="icon" variant="ghost" className="h-8 w-8 rounded-md text-rose-500 hover:bg-rose-50 transition-colors" onClick={() => handleDelete(bldg.id)} title="Delete Building">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </motion.div>
       )}
 
@@ -201,10 +201,10 @@ export function Buildings({ role }) {
       )}
 
       {role === 'admin' && (
-        <AddBuildingModal 
-          isOpen={isAddModalOpen} 
-          onClose={() => setIsAddModalOpen(false)} 
-          onBuildingAdded={fetchBuildings} 
+        <AddBuildingModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          onBuildingAdded={fetchBuildings}
         />
       )}
 

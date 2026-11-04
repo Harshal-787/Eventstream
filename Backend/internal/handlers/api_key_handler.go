@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"eventstream/internal/repository"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -99,5 +100,25 @@ func (h *APIKeyHandler) List(c *gin.Context) {
 }
 
 func (h *APIKeyHandler) Revoke(c *gin.Context) {
-	// Not implemented here for brevity, but it's a simple update
+	orgIDStr, exists := c.Get("organization_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "organization_id missing"})
+		return
+	}
+	orgID := orgIDStr.(int)
+
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid API key ID"})
+		return
+	}
+
+	err = h.repo.RevokeAPIKey(id, orgID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not revoke API key"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "API key revoked successfully"})
 }

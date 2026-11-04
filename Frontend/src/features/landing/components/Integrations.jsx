@@ -22,7 +22,7 @@ export function Integrations() {
   };
 
   return (
-    <section className="min-h-screen flex flex-col justify-center py-24 bg-white dark:bg-background overflow-hidden relative">
+    <section id="integrations" className="min-h-screen flex flex-col justify-center py-24 bg-white dark:bg-background overflow-hidden relative">
       <div className="max-w-[1400px] w-full mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           
@@ -52,7 +52,7 @@ export function Integrations() {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              <Button size="lg" className="rounded-full px-8 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 shadow-none font-bold">
+              <Button onClick={() => window.location.href='/register'} size="lg" className="rounded-full px-8 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 shadow-none font-bold">
                 Work With Us
               </Button>
             </motion.div>

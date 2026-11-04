@@ -61,8 +61,8 @@ export function Users() {
     }
   };
 
-  const filteredUsers = users.filter(u => 
-    !searchQuery || 
+  const filteredUsers = users.filter(u =>
+    !searchQuery ||
     (u.name && u.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
     (u.email && u.email.toLowerCase().includes(searchQuery.toLowerCase()))
   );
@@ -74,7 +74,7 @@ export function Users() {
       <div className="flex justify-between items-center mb-2">
         <h1 className="text-2xl font-bold text-text-main">User Management</h1>
       </div>
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className="bg-surface rounded-2xl border border-border-main shadow-sm overflow-hidden"
@@ -82,19 +82,19 @@ export function Users() {
         <div className="p-4 border-b border-border-main bg-slate-50 dark:bg-surface">
           <div className="relative max-w-md">
             <Search className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input 
-              type="text" 
-              placeholder="Search by name or email..." 
+            <input
+              type="text"
+              placeholder="Search by name or email..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-11 pr-4 py-2.5 bg-white dark:bg-surface border border-slate-200 dark:border-border-main rounded-xl text-sm w-full font-medium focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
             />
           </div>
         </div>
-        
+
         {filteredUsers.length === 0 ? (
-          <EmptyState 
-            title="No Users Found" 
+          <EmptyState
+            title="No Users Found"
             description="Manage platform users and access permissions."
             icon={UsersIcon}
             className="py-20"
@@ -115,7 +115,7 @@ export function Users() {
               </TableHeader>
               <TableBody className="divide-y divide-border-main">
                 {filteredUsers.map((user, index) => (
-                  <TableRow 
+                  <TableRow
                     key={user.id}
                     as={motion.tr}
                     initial={{ opacity: 0, y: 10 }}

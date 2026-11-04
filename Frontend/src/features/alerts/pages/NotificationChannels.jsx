@@ -46,6 +46,16 @@ const NotificationChannels = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (formData.type === 'sms') {
+      const phone = formData.config.phone_number || '';
+      const digitCount = phone.replace(/\D/g, '').length;
+      if (digitCount < 7 || digitCount > 15) {
+        toast.error('Please enter a valid phone number (7-15 digits)');
+        return;
+      }
+    }
+
     try {
       if (editingChannel) {
         await notificationChannelService.updateChannel(editingChannel.id, formData);
@@ -169,7 +179,7 @@ const NotificationChannels = () => {
               label="Phone Number" 
               type="tel"
               value={formData.config.phone_number || ''} 
-              onChange={(e) => setFormData({ ...formData, config: { ...formData.config, phone_number: e.target.value } })} 
+              onChange={(e) => setFormData({ ...formData, config: { ...formData.config, phone_number: e.target.value.replace(/[^\d\+\-\s\(\)]/g, '') } })} 
               placeholder="+1234567890"
               required 
             />

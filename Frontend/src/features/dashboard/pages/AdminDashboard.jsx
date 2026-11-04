@@ -185,7 +185,11 @@ export function AdminDashboard() {
     } catch (err) {
       console.error(err);
       const backendError = err.response?.data?.error || err.message;
-      setExecReport(`**Error:** Failed to generate executive report. ${backendError}`);
+      if (backendError && backendError.toLowerCase().includes("not configured")) {
+        setExecReport(`**Notice:** AI is not configured. Please navigate to Settings > AI Configuration to enable this feature.`);
+      } else {
+        setExecReport(`**Error:** Failed to generate executive report. ${backendError}`);
+      }
     } finally {
       setExecLoading(false);
     }

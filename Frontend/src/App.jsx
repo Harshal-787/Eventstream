@@ -23,6 +23,7 @@ import { SensorEvents } from './features/events/pages/SensorEvents';
 import { Alerts } from './features/alerts/pages/Alerts';
 import { AlertRules } from './features/alerts/pages/AlertRules';
 import NotificationChannels from './features/alerts/pages/NotificationChannels';
+import EscalationPolicies from './features/alerts/pages/EscalationPolicies';
 import { Users } from './features/users/pages/Users';
 import AuditLogs from './features/audit/pages/AuditLogs';
 import { IndoorMap } from './features/dashboard/pages/IndoorMap';
@@ -70,7 +71,7 @@ export default function App() {
   }
 
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.VITE_BASE_PATH || '/'}>
       <SessionProvider>
         <Routes>
           <Route path="/" element={!isAuthenticated ? <LandingPage /> : <Navigate to={user?.role?.toLowerCase() === 'admin' ? '/admin/dashboard' : '/user/dashboard'} />} />
@@ -92,6 +93,7 @@ export default function App() {
             <Route path="alerts" element={<Alerts role="admin" />} />
             <Route path="alert-rules" element={<AlertRules />} />
             <Route path="notification-channels" element={<NotificationChannels />} />
+            <Route path="escalation-policies" element={<EscalationPolicies />} />
             <Route path="reports" element={<Reports />} />
             <Route path="users" element={<Users />} />
             <Route path="audit-logs" element={<AuditLogs />} />

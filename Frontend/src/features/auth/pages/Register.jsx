@@ -201,7 +201,16 @@ export function Register() {
             </AnimatePresence>
 
             {step === 1 && (
-              <form onSubmit={(e) => { e.preventDefault(); setStep(2); }} className="space-y-6">
+              <form onSubmit={(e) => { 
+                e.preventDefault(); 
+                const digitCount = contactNumber.replace(/\D/g, '').length;
+                if (digitCount < 7 || digitCount > 15) {
+                  useAuthStore.setState({ error: 'Please enter a valid contact number (7-15 digits).' });
+                  return;
+                }
+                useAuthStore.setState({ error: null });
+                setStep(2); 
+              }} className="space-y-6">
                 <motion.div 
                   key="step1"
                   initial={{ opacity: 0, x: -20 }}
@@ -224,7 +233,7 @@ export function Register() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div className="space-y-2">
                       <label className="text-sm font-semibold text-text-main">Contact Number</label>
-                      <Input placeholder="+1 234 567 8900" type="tel" value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} required className="rounded-xl" />
+                      <Input placeholder="+1 234 567 8900" type="tel" value={contactNumber} onChange={(e) => setContactNumber(e.target.value.replace(/[^\d\+\-\s\(\)]/g, ''))} required className="rounded-xl" />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-semibold text-text-main">Driving License</label>

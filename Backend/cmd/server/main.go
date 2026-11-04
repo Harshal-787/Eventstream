@@ -104,7 +104,7 @@ func main() {
 	provisioningHandler := handlers.NewProvisioningHandler(deviceRepo)
 	wsIngestHandler := handlers.NewWSIngestHandler(telemetryIngestService, deviceRepo)
 	webhookHandler := handlers.NewWebhookHandler(telemetryIngestService, deviceRepo)
-	notificationChannelHandler := handlers.NewNotificationChannelHandler(notificationChannelRepo)
+	notificationChannelHandler := handlers.NewNotificationChannelHandler(notificationChannelRepo, escalationPolicyRepo)
 	reportHandler := handlers.NewReportHandler(reportingService)
 	deviceGroupHandler := handlers.NewDeviceGroupHandler(deviceGroupRepo)
 	aiHandler := handlers.NewAIHandler(aiConfigRepo, aiService, alertRepo, telemetryRepo, deviceRepo)
@@ -342,6 +342,9 @@ func main() {
 		escalationPolicies := v1.Group("/escalation-policies", middleware.AuthMiddleware(cfg, sessionRepo))
 		{
 			escalationPolicies.GET("", escalationPolicyHandler.List)
+			escalationPolicies.POST("", escalationPolicyHandler.Create)
+			escalationPolicies.PUT("/:id", escalationPolicyHandler.Update)
+			escalationPolicies.DELETE("/:id", escalationPolicyHandler.Delete)
 		}
 
 		apiKeyRoutes := v1.Group("/api-keys", middleware.AuthMiddleware(cfg, sessionRepo))

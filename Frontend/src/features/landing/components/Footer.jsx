@@ -42,9 +42,9 @@ export function Footer() {
             <ul className="space-y-4">
               <li><Link to="/login" className="text-sm font-medium text-primary-200 hover:text-primary-400 transition-colors">hello@eventstream.com</Link></li>
               <li className="flex gap-4 pt-2">
-                <div className="w-8 h-8 rounded-full bg-primary-800 flex items-center justify-center">In</div>
-                <div className="w-8 h-8 rounded-full bg-primary-800 flex items-center justify-center">Tw</div>
-                <div className="w-8 h-8 rounded-full bg-primary-800 flex items-center justify-center">Fb</div>
+                <a href="#" className="w-8 h-8 rounded-full bg-primary-800 flex items-center justify-center hover:bg-primary-700 transition-colors">In</a>
+                <a href="#" className="w-8 h-8 rounded-full bg-primary-800 flex items-center justify-center hover:bg-primary-700 transition-colors">Tw</a>
+                <a href="#" className="w-8 h-8 rounded-full bg-primary-800 flex items-center justify-center hover:bg-primary-700 transition-colors">Fb</a>
               </li>
             </ul>
           </div>

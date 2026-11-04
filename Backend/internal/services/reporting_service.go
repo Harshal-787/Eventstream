@@ -75,7 +75,7 @@ func (s *ReportingService) GetEventStatistics(orgID int, filters ReportFilters) 
 	}
 	for rows.Next() {
 		var sType string
-		var count int
+		var count int64
 		var latest *time.Time
 		if err := rows.Scan(&sType, &count, &latest); err != nil {
 			return ReportData{}, err
@@ -84,7 +84,7 @@ func (s *ReportingService) GetEventStatistics(orgID int, filters ReportFilters) 
 		if latest != nil {
 			lts = latest.Format(time.RFC3339)
 		}
-		data.Rows = append(data.Rows, []string{sType, strconv.Itoa(count), lts})
+		data.Rows = append(data.Rows, []string{sType, strconv.FormatInt(count, 10), lts})
 	}
 	return data, nil
 }
@@ -122,11 +122,11 @@ func (s *ReportingService) GetAlertTrends(orgID int, filters ReportFilters) (Rep
 	}
 	for rows.Next() {
 		var sev, stat string
-		var count int
+		var count int64
 		if err := rows.Scan(&sev, &stat, &count); err != nil {
 			return ReportData{}, err
 		}
-		data.Rows = append(data.Rows, []string{sev, stat, strconv.Itoa(count)})
+		data.Rows = append(data.Rows, []string{sev, stat, strconv.FormatInt(count, 10)})
 	}
 	return data, nil
 }
@@ -234,11 +234,11 @@ func (s *ReportingService) GetBuildingPerformance(orgID int, filters ReportFilte
 	}
 	for rows.Next() {
 		var bName string
-		var devs, alerts int
+		var devs, alerts int64
 		if err := rows.Scan(&bName, &devs, &alerts); err != nil {
 			return ReportData{}, err
 		}
-		data.Rows = append(data.Rows, []string{bName, strconv.Itoa(devs), strconv.Itoa(alerts)})
+		data.Rows = append(data.Rows, []string{bName, strconv.FormatInt(devs, 10), strconv.FormatInt(alerts, 10)})
 	}
 	return data, nil
 }

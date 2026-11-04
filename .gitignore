@@ -3,3 +3,15 @@ Backend/eventstream.db
 Backend/server_bin
 Backend/main
 Backend/backend.log
+
+# Development & test artifacts
+*.sql
+*.zip
+*.log
+Frontend/.env
+Frontend/.env.*
+Backend/server
+Backend/cookies.txt
+ziDkweaU
+Backend/test_*.go
+Frontend/test_*.js

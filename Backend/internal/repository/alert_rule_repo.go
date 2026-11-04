@@ -13,7 +13,7 @@ func NewAlertRuleRepository(db *sql.DB) *AlertRuleRepository {
 	return &AlertRuleRepository{db: db}
 }
 
-func (r *AlertRuleRepository) List() ([]models.AlertRule, error) {
+func (r *AlertRuleRepository) List(orgID int) ([]models.AlertRule, error) {
 	query := `
 		SELECT ar.id, ar.name, ar.device_type, ar.metric, ar.operator, ar.threshold, ar.bool_value, ar.severity, ar.is_active, ar.target_type, ar.target_id, ar.conditions, ar.escalation_policy_id, ar.created_by, ar.created_at,
 		       CASE 
@@ -42,9 +42,10 @@ func (r *AlertRuleRepository) List() ([]models.AlertRule, error) {
 		       END as room_name
 		FROM alert_rules ar
 		LEFT JOIN users u ON ar.created_by = u.id
+		WHERE ar.organization_id = $1
 		ORDER BY ar.created_at DESC
 	`
-	rows, err := r.db.Query(query)
+	rows, err := r.db.Query(query, orgID)
 	if err != nil {
 		return nil, err
 	}
@@ -93,12 +94,12 @@ func (r *AlertRuleRepository) GetActiveRules() ([]models.AlertRule, error) {
 
 func (r *AlertRuleRepository) Create(rule *models.AlertRule) error {
 	query := `
-		INSERT INTO alert_rules (name, device_type, metric, operator, threshold, bool_value, severity, is_active, target_type, target_id, conditions, escalation_policy_id, created_by)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+		INSERT INTO alert_rules (organization_id, name, device_type, metric, operator, threshold, bool_value, severity, is_active, target_type, target_id, conditions, escalation_policy_id, created_by)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
 		RETURNING id, created_at
 	`
 	return r.db.QueryRow(
-		query, rule.Name, rule.DeviceType, rule.Metric, rule.Operator,
+		query, rule.OrganizationID, rule.Name, rule.DeviceType, rule.Metric, rule.Operator,
 		rule.Threshold, rule.BoolValue, rule.Severity, rule.IsActive, rule.TargetType, rule.TargetID, rule.Conditions, rule.EscalationPol, rule.CreatedBy,
 	).Scan(&rule.ID, &rule.CreatedAt)
 }

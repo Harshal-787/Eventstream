@@ -171,6 +171,9 @@ func (e *AlertEngine) evaluateMultiCondition(conditions []map[string]interface{}
 		metricRaw, okMetric := cond["metric"].(string)
 		opRaw, okOp := cond["operator"].(string)
 		valRaw, okVal := cond["value"]
+		if !okVal {
+			valRaw, okVal = cond["threshold"]
+		}
 		
 		if !okMetric || !okOp || !okVal {
 			continue

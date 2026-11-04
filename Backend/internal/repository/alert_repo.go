@@ -28,7 +28,7 @@ func (r *AlertRepository) List(filters map[string]interface{}) ([]*models.Alert,
 	query := `
 		SELECT a.id, a.device_id, a.alert_rule_id, a.type, a.severity, a.status,
 		       a.message, a.triggered_at, a.acknowledged_at, a.resolved_at,
-		       COALESCE(d.name, ''), COALESCE(b.name, ''),
+		       COALESCE(d.name, ''), d.building_id, COALESCE(b.name, ''),
 		       COALESCE(d.hardware_id, ''), COALESCE(dm.model_name, ''),
 		       COALESCE(f.name, ''), COALESCE(r.name, '')
 		FROM alerts a
@@ -92,7 +92,7 @@ func (r *AlertRepository) List(filters map[string]interface{}) ([]*models.Alert,
 		if err := rows.Scan(
 			&a.ID, &a.DeviceID, &a.AlertRuleID, &a.Type, &a.Severity, &a.Status,
 			&a.Message, &a.TriggeredAt, &a.AcknowledgedAt, &a.ResolvedAt,
-			&a.DeviceName, &a.BuildingName,
+			&a.DeviceName, &a.BuildingID, &a.BuildingName,
 			&a.HardwareID, &a.ModelName,
 			&a.FloorName, &a.RoomName,
 		); err != nil {
@@ -107,7 +107,7 @@ func (r *AlertRepository) FindByID(id int) (*models.Alert, error) {
 	query := `
 		SELECT a.id, a.device_id, a.alert_rule_id, a.type, a.severity, a.status,
 		       a.message, a.triggered_at, a.acknowledged_at, a.resolved_at,
-		       COALESCE(d.name, ''), COALESCE(b.name, ''),
+		       COALESCE(d.name, ''), d.building_id, COALESCE(b.name, ''),
 		       COALESCE(d.hardware_id, ''), COALESCE(dm.model_name, ''),
 		       COALESCE(f.name, ''), COALESCE(r.name, '')
 		FROM alerts a
@@ -122,7 +122,7 @@ func (r *AlertRepository) FindByID(id int) (*models.Alert, error) {
 	err := r.db.QueryRow(query, id).Scan(
 		&a.ID, &a.DeviceID, &a.AlertRuleID, &a.Type, &a.Severity, &a.Status,
 		&a.Message, &a.TriggeredAt, &a.AcknowledgedAt, &a.ResolvedAt,
-		&a.DeviceName, &a.BuildingName,
+		&a.DeviceName, &a.BuildingID, &a.BuildingName,
 		&a.HardwareID, &a.ModelName,
 		&a.FloorName, &a.RoomName,
 	)
